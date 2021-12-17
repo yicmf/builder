@@ -1,0 +1,1773 @@
+{neq name='field.type' value='hidden'}
+
+{eq name='field.type' value='item' }
+
+{$field.title}
+
+{else/}
+
+<div class="layui-form-item" id="{$field['jquery_id']}">
+
+  {notempty name='field.title'}  <label class="layui-form-label">{$field.title|htmlspecialchars}</label>{/notempty}
+    {switch name="field.type"}
+    {case value="string"}
+    <div class="layui-input-block">
+        <input type="text" name="{$field.field}" value="{$field.value|htmlspecialchars}" class="layui-input"
+               lay-verify="{$field.verify}" placeholder="{$field.placeholder|raw}"/>
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        {/notempty}
+    </div>
+    {/case}
+
+    {case value="icp"}
+    <div class="layui-input-inline">
+        <input type="text" name="{$field.field}" value="{$field.value|htmlspecialchars}" class="layui-input"
+               lay-verify="{$field.verify}" placeholder="{$field.placeholder|raw}"/>
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    {/case}
+    {case value="inline"}
+    <div class="layui-input-inline">
+        <input type="text" name="{$field.field}" value="{$field.value|htmlspecialchars}" lay-verify="{$field.verify}"
+               class="layui-input" placeholder="{$field.placeholder|raw}"/>
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    {/case}
+
+    {case value="color"}
+    <div class="layui-input-inline">
+
+        <input type="hidden" name="{$field.field}" value="{$field.value}" lay-verify="{$field.verify}"
+               id="yicmf_builder_color_{$field.field}">
+        <div id="test-colorpicker-dome11"></div>
+        <script>
+            layui.use(['admin', 'colorpicker'], function () {
+                var $ = layui.$
+                    , colorpicker = layui.colorpicker;
+                //开启全功能
+                colorpicker.render({
+                    elem: '#test-colorpicker-dome11'
+                    , color: '{$field.value}'
+                    //  ,format: 'rgb'
+                    , predefine: true
+                    , alpha: true
+                    , done: function (color) {
+                        $('#test-colorpicker-all-input').val(color); //向隐藏域赋值
+                        //   layer.tips('给指定隐藏域设置了颜色值：'+ color, this.elem);
+
+                        color || this.change(color); //清空时执行 change
+                    }
+                    , change: function (color) {
+                        //给当前页面头部和左侧设置主题色
+                        //  $('.layui-side-menu,.layui-logo').css('cssText', 'background-color: '+ color + ' !important;');
+                    }
+                });
+            });
+        </script>
+    </div>
+
+    {/case}
+    {case value="html"}
+
+    {$field['options']|raw}
+
+    {/case}
+    {case value="label"}
+    <div class="layui-input-block">
+        <span style="line-height: 38px;    float: left;display: block;">{$field.value}</span>
+
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">（{$field.tips}）</div>
+        {/notempty}
+    </div>
+
+    {/case}
+    {case value="closure"}
+    <div class="layui-input-block">
+        {$field.value|raw}
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        {/notempty}
+    </div>
+
+
+    {/case}
+    {case value="password"}
+    <div class="layui-input-inline">
+        <input type="password" name="{$field.field}" autocomplete="off" lay-verify="{$field.verify}" class="layui-input"
+               value="{$field.value|htmlspecialchars}">
+    </div>
+    {/case}
+    {case value="readonly"}
+    <div class="layui-input-block">
+        <input type="text"  class="layui-input" value="{$field.value|htmlspecialchars}" placeholder="无需填写" readonly>
+
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    </div>
+    {/case}
+    {case value="copy"}
+    <div class="layui-input-block">
+        <input id="copy_{$name_space}_{$field.field}" type="text" onmouseenter="this.select()" data-clipboard-text="{$field.value|htmlspecialchars}"  class="layui-input" value="{$field.value|htmlspecialchars}"  readonly>
+
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    </div>
+
+    <script>
+        layui.use([], function(){
+            var $ = layui.$;
+            var layer = layui.layer;
+
+            var clipboard = new ClipboardJS('#copy_{$name_space}_{$field.field}');
+            clipboard.on('success', function(e) {
+
+                layer.msg('复制成功');
+                clipboard.destroy();  //解决多次弹窗
+                e.clearSelection();
+            });
+            clipboard.on('error', function(e) {
+                layer.msg('复制失败');
+                clipboard.destroy();  //解决多次弹窗
+                e.clearSelection();
+            });
+        });
+
+
+
+    </script>
+    {/case}
+
+    {case value="time_cycle"}
+    {php}
+  dump($field);
+
+    {/php}
+    <div class="layui-input-inline" style="width: 100px;">
+        <input type="text" name="price_min" placeholder="￥" autocomplete="off" class="layui-input">
+    </div>
+    <div class="layui-form-mid">-</div>
+    <div class="layui-input-inline" style="width: 100px;">
+        <select name="interest" lay-filter="aihao">
+            <option value=""></option>
+            <option value="0">写作</option>
+            <option value="1" selected="">阅读</option>
+            <option value="2">游戏</option>
+            <option value="3">音乐</option>
+            <option value="4">旅行</option>
+        </select>
+    </div>
+
+    {/case}
+    {case value="amap"}
+    <div class="layui-input-inline">
+        <span id="{$field.field}_info">{$field['value']['field']|default="暂无选择"}</span>
+
+        <input type="hidden" id="{$field.field}" name="{$field.field}" value="{$field['value']|json_encode|raw}">
+        <button type="button" class="btn-default"
+                data-toggle="dialog"
+                data-options="{id:'amap_{$field.field}_dialog', url:'{:addon_url('Amap://Amap/index')}', title:'地图选点',max:true,width:1100,height:800,mask:true}">
+            地图选点
+        </button>
+        <script type="text/javascript">
+
+            function amapOk(obj) {
+                var flag = true;
+                var info = JSON.parse($('#amap_result').val());
+                console.log(info);
+                $("#{$field.field}").val($('#amap_result').val());
+                $("#{$field.field}_info").html(info.field);
+                if (flag) {
+                    $(this).dialog('close', 'amap_{$field.field}_dialog');
+                } else {
+                    $(this).alertmsg('error', '您未选择需要操作的图片');
+                }
+            }
+
+            function amapNo() {
+                $("#{$field.field}").val(JSON.stringify({}));
+                $("#{$field.field}_info").html('暂无选择');
+            }
+        </script>
+
+    </div>
+    {/case}
+
+    {case value="textarea"}
+    <div class="layui-input-block">
+        <textarea name="{$field.field}" class="layui-textarea" cols="{$field['size'][0]}" rows="{$field['size'][1]}"
+                  lay-verify="{$field['verify']|raw}">{$field.value|htmlspecialchars}</textarea>
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        {/notempty}
+    </div>
+
+
+    {/case}
+    {case value="safe_check"}
+    {php}
+    $arr = explode(',',$field['field']);
+    {/php}
+    <div class="layui-input-inline">
+        <select name="safe_check_type" id="safe_check_type" lay-verify="required">
+            <option value=""></option>
+            {volist name='arr' id='vo'}
+            <option value="{$vo}">{$field['data'][$vo]}</option>
+            {/volist}
+        </select>
+    </div>
+
+    <div class="layui-input-inline">
+        <button type="button" class="layui-btn send_safe_check">发送验证码</button>
+    </div>
+
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+
+    <script>
+
+        var $ = layui.jquery;
+        var send_safe_check_time = {$field.options.wait_time};
+
+        function set_safe_time() {
+            if (send_safe_check_time == 0) {
+                $('.send_safe_check').html('发送验证码');
+                send_safe_check_time = {$field.options.wait_time};
+            } else {
+                $('.send_safe_check').html('请等待' + send_safe_check_time + '秒');
+                send_safe_check_time--;
+                setTimeout("set_safe_time()", 1000)
+            }
+        }
+
+        $('.send_safe_check').click(function () {
+            if (send_safe_check_time == {$field.options.wait_time} && $('#safe_check_type').val()) {
+                var loading = layer.load()
+                $.ajax({
+                    url: "{:url('ucenter/admin.Foreign/safe')}", //请求的url地址
+                    dataType: "json", //返回格式为json
+                    type: "POST", //请求方式
+                    data: {
+                        safe_check_type: $('#safe_check_type').val(),
+                        type: 'safe_code'
+                    }, //请求方式
+                    success: function (req) {
+                        layer.close(loading);
+                        layer.msg(req.message);
+                        //请求成功时处理
+                        if (0 == req.code) {
+                            set_safe_time();
+                        } else {
+                            layer.msg(req.message);
+                        }
+                    },
+                    complete: function () {
+                        //请求完成的处理
+                        layer.close(loading);
+                    },
+                    error: function (err) {
+                        //请求出错处理
+                        layer.close(loading);
+                        layer.msg(JSON.stringify(err));
+                    }
+                });
+            } else {
+
+                if (send_safe_check_time == {$field.options.wait_time}) {
+                    layer.msg('请选择发送方式');
+                } else {
+                    layer.msg('请等待倒计时完毕');
+                }
+
+            }
+
+
+        });
+    </script>
+
+    {/case}
+
+
+    {case value="default"}
+
+    <div class="layui-input-inline">
+        <input type="text" class="layui-input" value="{$field['value']}" size="{$field['size']}" name="{$field.field}"
+               lay-verify="{$field['verify']|raw}" value="{$field['value']}">
+
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    {/case}
+    {case value="email"}
+    <div class="layui-input-inline">
+        <input type="text" class="layui-input" value="{$field['value']}" size="{$field['size']}" name="{$field.field}"
+               lay-verify="{$field['verify']|raw}" value="{$field['value']}">
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    {/case}
+    {case value="number"}
+    <div class="layui-input-inline" style="width:{$field.size}px">
+        <input type="number" name="{$field.field}" value="{$field['value']}" class="layui-input" placeholder="{$field.placeholder}"   lay-verify="{$field['verify']|raw}">
+    </div>
+
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    {/case}
+    {case value="url"}
+    <div class="layui-input-block">
+        <input type="text" class="layui-input" value="{$field['value']}" size="{$field['size']}" name="{$field.field}"
+               lay-verify="{$field['verify']|raw}">
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        {/notempty}
+    </div>
+
+    {/case}
+    {case value="slider"}
+    <div class="layui-input-inline" style="width:{$field.size}px">
+        <div id="slideTest3" class="demo-slider"></div>
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    <script>
+        layui.use('slider', function(){
+            var $ = layui.$
+                ,slider = layui.slider;
+            //默认滑块
+
+            //设置最大最小值
+            slider.render({
+                elem: '#slideTest3'
+                ,min: 20 //最小值
+                ,max: 50 //最大值
+                ,tips: true //关闭默认提示层
+                // ,disabled: true //禁用滑块
+                // ,value: [30, 60] //初始值
+                ,value: 40 //初始值
+                // ,range: true //范围选择
+                ,change: function(value){
+                    $('#test-slider-tips1').html('当前数值：'+ value);
+                    // $('#test-slider-tips2').html('开始值：'+ vals[0] + '、结尾值：'+ vals[1]);
+                }
+            });
+
+        });
+    </script>
+
+    {/case}
+    {case value="belongTo"}<!-- 属于选择 -->
+
+    <div class="layui-input-inline">
+        <input type="hidden" name="{$field['field']}" value="{$field['value']}" id="key_{$field['field']}">
+        <input type="text" name="{$field.field}_{$field['options']['field']}" readonly value="{$field['value']}"
+               id="{$field.field}_{$field['options']['field']}"
+               lay-verify="{$field['verify']|raw}" size="{$field['size']}"
+               data-width='{$field[' size']}' >&nbsp;<p class="fa fa-search" onclick='find_dialog_{$field[' field
+        ']}(this)'>
+        </p>
+        <a href="javascript:;" title="清空选择" onclick="clearFind(this)">清空选择</a>
+        <script type="text/javascript">
+            function clearFind(obj) {
+                $(obj).prev().prev().val('');
+                $(obj).prev().prev().prev().val('');
+            }
+
+            function find_dialog_ {
+                $field['field']
+            }
+
+            (obj)
+            {
+                $(obj).dialog(
+                    {
+                        id: "build_{$field['jquery_id']}",
+                        data: {
+                            field: "{$field['options']['field']}",
+                            value: "{$field['value']}",
+                            callback: "find_set_{$field['field']}",
+                            limit: "{$field['options']['limit']}"
+                        },
+                        //   onClose:'tests',
+                        url: "{$field['options']['url']}",
+                        title: "选择{$field['title']}",
+                        mask: 'true', width: 1200, height: 700
+                    });
+            }
+
+            /*   function tests(ev) {
+                   console.log(this);
+               }*/
+            function find_set_ {
+                $field['field']
+            }
+
+            (id, field)
+            {
+                // 赋值
+                $("#key_{$field['field']}").val(id);
+                $("#{$field.field}_{$field['options']['field']}").val(field);
+                $(this).dialog('close', "build_{$field['jquery_id']}");
+            }
+        </script>
+
+    </div>
+    {/case}
+
+    {case value="belongsToMany"}<!-- 多对多选择 -->
+
+        <div class="layui-input-block">
+            {php}
+            $select_ids = [];
+
+            if($field['value'])
+            {
+                foreach ($field['value'] as $key => $item) {
+                $select_ids[] = $item['id'];
+                }
+            }
+            if (is_array($field['options']['column'])) {
+                $fields = [];
+                foreach ($field['options']['column'] as $key => $item) {
+                    $fields[] = [
+                    'name' => $item,
+                    'selected' => in_array($key,$select_ids),
+                    'value' => $key
+                    ];
+                }
+            } else {
+
+            $fields = [];
+            }
+            {/php}
+
+            <div id="xm-select-{$field.field}-{$uniqid}" class="xm-select-demo"></div>
+            <script type="text/javascript">
+
+                //加载组件
+                layui.use(['xmSelect'], function(){
+                    var xmSelect = layui.xmSelect;
+
+                    //渲染多选
+
+                    var demo1 = xmSelect.render({
+                        el: '#xm-select-{$field.field}-{$uniqid}',
+                        size: 'large',
+                        name: "{$field.field}",
+                        data: {$fields|json_encode|raw}
+                })
+                    /*var demo1 = xmSelect.render({
+                        el: '#demo1',
+                        data: [
+                            {name: '张三', value: 1, selected: true},
+                            {name: '李四', value: 2, selected: true},
+                            {name: '王五', value: 3, disabled: true},
+                        ],
+                        autoRow: true,
+                        toolbar: { show: true },
+                        filterable: true,
+                        remoteSearch: true,
+                        remoteMethod: function(val, cb, show){
+                            //这里如果val为空, 则不触发搜索
+                            if(!val){
+                                return cb([]);
+                            }
+                            //这里引入了一个第三方插件axios, 相当于$.ajax
+                            $.ajax({
+                                method: 'get',
+                                url: 'https://www.fastmock.site/mock/98228b1f16b7e5112d6c0c87921eabc1/xmSelect/search',
+                                params: {
+                                    keyword: val,
+                                }
+                            }).then(response => {
+                                var res = response.data;
+                                cb(res.data)
+                            }).catch(err => {
+                                cb([]);
+                            });
+                        },
+                    })
+        */
+
+                })
+
+            </script>
+
+        </div>
+    {/case}
+    {case value="rate"}
+    <div class="layui-input-inline">
+        <div id="key_s_{$field.field}"></div>
+        <input type="hidden" name="{$field.field}" value="{$field['value']}" id="key_{$field['field']}">
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    <script>
+        layui.use(['rate'], function () {
+            var $ = layui.jquery, rate = layui.rate;
+
+            rate.render({
+                elem: '#key_s_{$field.field}'
+                , value: "{$field['value']}"
+                , setText: function (value) {
+                    $("#key_{$field['field']}").val(value);
+                }
+            })
+
+        });
+    </script>
+    {/case}
+
+    {case value="select"}
+    <div class="layui-input-inline">
+        <!-- 单选菜单 -->
+        <select name="{$field.field}" id="key_{$field.field}" lay-filter="filter_{$name_space}_{$field.field}"  lay-verify="{$field['verify']|raw}" data-width="{$field['size']}" data-toggle="selectpicker" >
+        {volist name="field.options" id="option"}
+        {php} $selected = $field['value']==$key ? 'selected' : '';{/php}
+        <option value="{$key}" {$selected}>{$option}</option>
+        {/volist}
+        </select>
+        <!-- 单选菜单end -->
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    {/case}
+    {case value="select_multiple"}
+    <style>
+        xm-select .scroll-body{
+            padding-left: 10px;
+            overflow: hidden;
+        }
+    </style>
+    <div class="layui-input-block">
+        <!-- 多选菜单 -->
+
+        <!-- 多选菜单end -->
+
+            {php}
+            $ajax = 0;
+            $select_ids = [];
+            if($field['value'])
+            {
+            $select_ids = explode(',',$field['value']);
+            }
+            if (is_array($field['options'])) {
+                $fields = [];
+                foreach ($field['options'] as $key => $item) {
+                    $fields[] = [
+                    'name' => $item,
+                    'selected' => in_array($key,$select_ids),
+                    'value' => $key
+                    ];
+                }
+            }elseif($field['options'] instanceof \Closure)
+            {
+                $ajax = 1;
+                $fields = [];
+            } else {
+                $fields = [];
+            }
+
+            {/php}
+
+            <div id="xm-select-{$field.field}-{$uniqid}" class="xm-select-demo"></div>
+            <script type="text/javascript">
+
+                        //加载组件
+                layui.use(['jquery','xmSelect'], function(){
+                    var xmSelect = layui.xmSelect;
+                        var $ = layui.jquery;
+                    //渲染多选
+                    if({$ajax})
+                    {
+
+                        var demo1 = xmSelect.render({
+                            el: '#xm-select-{$field.field}-{$uniqid}',
+                            size: 'large',
+                            toolbar:{
+                                show: true,
+                            },
+                            autoRow: true,
+                            height: '500px',
+                          //  name: "{$field.field}",
+                            filterable: true,
+                            remoteSearch: true,
+                            remoteMethod: function(val, cb, show){
+                                //这里如果val为空, 则不触发搜索
+                                if(!val){
+                                    return cb([]);
+                                }
+
+                                $.ajax({
+                                   url: "{:url('')}", //请求的url地址
+                                   //  url: 'https://www.fastmock.site/mock/98228b1f16b7e5112d6c0c87921eabc1/xmSelect/search',
+                                    dataType: "json", //返回格式为json
+                                    type: "GET", //请求方式
+                                    data: {
+                                        ajax: '{$field.field}',
+                                        keyword: val,
+                                    }, //请求方式
+                                    success: function (req) {
+                                        cb(req.data)
+                                    },
+                                    complete: function () {
+                                        //请求完成的处理
+                                       // layer.close(loading);
+                                    },
+                                    error: function (err) {
+                                        //请求出错处理
+                                        layer.close(loading);
+                                        layer.msg(JSON.stringify(err));
+                                    }
+                                });
+
+
+                            },
+                        })
+
+
+                    }else{
+
+
+                        var demo1 = xmSelect.render({
+                            el: '#xm-select-{$field.field}-{$uniqid}',
+                            size: 'large',
+                            toolbar:{
+                                show: true,
+                            },
+                            autoRow: true,
+                            height: '500px',
+                            name: "{$field.field}",
+                            data: {$fields|json_encode|raw}
+                    });
+
+
+                }
+                    /*var demo1 = xmSelect.render({
+                         el: '#xm-select-{$field.field}-{$uniqid}',
+                        data: [
+                            {name: '张三', value: 1, selected: true},
+                            {name: '李四', value: 2, selected: true},
+                            {name: '王五', value: 3, disabled: true},
+                        ],
+                        autoRow: true,
+                        toolbar: { show: true },
+                        filterable: true,
+                        remoteSearch: true,
+                        remoteMethod: function(val, cb, show){
+                            //这里如果val为空, 则不触发搜索
+                            if(!val){
+                                return cb([]);
+                            }
+                            //这里引入了一个第三方插件axios, 相当于$.ajax
+                            $.ajax({
+                                method: 'get',
+                                url: 'https://www.fastmock.site/mock/98228b1f16b7e5112d6c0c87921eabc1/xmSelect/search',
+                                params: {
+                                    keyword: val,
+                                }
+                            }).then(response => {
+                                var res = response.data;
+                                cb(res.data)
+                            }).catch(err => {
+                                cb([]);
+                            });
+                        },
+                    })
+        */
+
+                })
+
+            </script>
+
+    </div>
+    {/case}
+  {case value="select_multistage"}
+    <div class="layui-input-inline" style="width: 230px">
+        <!-- 多选菜单 -->
+        <input type="text"  name="{$field.field}" id="key_{$field.field}" value="{$field.value}"  style="display: none;" />
+        <!-- 多选菜单end -->
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+
+    <script type="text/javascript">
+        layui.use(['jquery', 'cascader'], function () {
+            var $ = layui.jquery, cascader = layui.cascader;
+            cascader.render({
+                elem: $('input[name={$field.field}]')[0],
+                multiple: false,
+                multiSeparator: '|',
+                showAllLevels: true,
+                collapseTags: true,
+                props: {
+                    label: 'title',
+                    value: 'id',
+                    children: 'children'
+                },
+                // options: JSON.parse('{$field.options|json_encode}'),
+                options: {$field.options|json_encode|raw},
+            });
+        });
+    </script>
+    {/case}
+
+    {case value="checkbox"}
+    <div class="layui-input-block">
+        {php}
+        $importCheckBox = true;
+        {/php}
+        {php}
+        if(!is_array($field['value']) && !empty($field['value'])){
+        $field['value_array'] = explode(',', $field['value']);
+        }elseif(empty($field['value'])){
+        $field['value_array'] = [];
+        }else{
+        $field['value_array'] = $field['value'];
+        }
+        {/php}
+        {volist name="field.options" id="option"}
+        {php}
+        $checked = in_array($key,$field['value_array']) ? 'checked' : '';
+        $inputId = 'id_'.$field['field'].'_$key';
+        {/php}
+        <input type="checkbox" name="{$field.field}[]" lay-filter="filter_{$name_space}_{$field.field}" lay-verify="{$field['verify']|raw}" value="{$key}" {$checked}
+               title="{$option}">
+        {/volist}
+
+
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+
+    {/case}
+
+
+    {case value="switch"}
+
+    <div class="layui-input-inline">
+        <input type="checkbox" lay-verify="{$field['verify']|raw}"  lay-filter="filter_{$name_space}_{$field.field}"  {php}
+               if($field['value']){ echo 'checked=""';}{/php} value="{$field['value']}" lay-skin="switch"
+        lay-text="{php}echo implode('|',$field['options']);{/php}">
+
+         <input type="hidden"  name="{$field.field}"  id="builder_switch_{$field.field}" value="{$field['value']}">
+
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+    <script type="text/javascript">
+        layui.use(['form'], function () {
+            var form = layui.form,
+                $ = layui.$;
+            //监听指定开关
+            form.on('switch(filter_{$name_space}_{$field.field})', function (data) {
+                if (this.checked) {
+                    $("#builder_switch_{$field.field}").val(1);
+                } else {
+                    $("#builder_switch_{$field.field}").val(0);
+                }
+            });
+        })
+
+    </script>
+    {/case}
+
+    {case value="position"}
+    <div class="layui-input-inline">
+        {php}
+        //dump($field);
+        {/php}
+        <div id='key_show_{$field[' field
+        ']}'>
+    </div>
+    <script type="text/javascript">
+
+        function getOptions({$field['field']}, {$field['options']['field']}) {
+            $.ajax({
+                type: "POST",
+                url: "{:\\think\\facade\\Url::build($field['options']['ajax_url'])}",
+                data: "{$field['options']['field']}=" + {$field['options']['field']} + "&{$field['field']}=" + {$field['field']} + "&id=" + $("#key_id").val(),
+                //返回数据的格式
+                datatype: "json",
+                //成功返回之后调用的函数
+                success: function (data) {
+                    // TODO:需要调整
+                    $('#key_show_{$field['
+                    field
+                    ']}'
+                ).
+                    html(data);
+                },
+                //调用出错执行的函数
+                error: function () {
+                    //请求出错处理
+                    $(this).alertmsg('error', '请求异常');
+                }
+            });
+        }
+
+        getOptions({$field['value'] ? : 0}, $("#key_{$field['options']['field']}").val());
+
+        $("#key_{$field['options']['field']}").change(function () {
+            getOptions({$field['value'] ? : 0}, $("#key_{$field['options']['field']}").val());
+        });
+
+    </script>
+
+</div>{/case}
+
+
+{case value="ueditor"}
+
+
+<div class="layui-input-inline">
+    <script id="{$field.id_name}" name="{$field.field}" type="text/plain" style="width:1024px;height:500px;">
+        {$field.value|raw}
+    </script>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    {/notempty}
+</div>
+
+
+<script type="text/javascript">
+
+    //实例化编辑器
+    //建议使用工厂方法getEditor创建和引用编辑器实例，如果在某个闭包下引用该编辑器，直接调用UE.getEditor('editor')就能拿到相关的实例
+
+    layui.use(['ueditor'], function () {
+        var $ = layui.$, ueditor = layui.ueditor;
+        var ieditor = UE.getEditor('{$field.id_name}', {
+            autoHeightEnabled: true,
+            elementPathEnabled: false,
+            wordCount: false,
+            enableAutoSave: true,
+            initialFrameHeight: "{$field.style.height}",
+            initialFrameWidth: "{$field.style.width}",
+            toolbars: {$field.config.items|raw|json_encode}
+            //      serverUrl: "{$field.config.upload}"
+        });
+        /*  var ieditor = UE.getEditor('editor_{$field.field}', {
+               autoHeightEnabled: true,
+               initialFrameHeight:500,
+               toolbars:{$field.config.items|json_encode}
+               //      serverUrl: "{$field.config.upload}"
+           });*/
+        // window.UEDITOR_HOME_URL = layui.setter.base+'lib/extend/ueditor/';
+        /*  window.UEDITOR_HOME_URL = '/static/common/ueditor/';
+           $.when(
+               $.getScript( window.UEDITOR_HOME_URL+'ueditor.config.js' ),
+               $.getScript( window.UEDITOR_HOME_URL+'ueditor.all.js' ),
+               $.Deferred(function( deferred ){
+                   $( deferred.resolve );
+               })
+           ).done(function(d){
+               var ieditor = UE.getEditor('editor_{$field.field}', {
+                   autoHeightEnabled: true,
+                   initialFrameHeight:500,
+                   zIndex:1,
+                   toolbars:{$field.config.items|json_encode}
+             //      serverUrl: "{$field.config.upload}"
+               });
+           });*/
+
+    })
+
+    function isFocus(e) {
+        alert(UE.getEditor('editor').isFocus());
+        UE.dom.domUtils.preventDefault(e)
+    }
+
+    function setblur(e) {
+        UE.getEditor('editor').blur();
+        UE.dom.domUtils.preventDefault(e)
+    }
+
+    function insertHtml() {
+        var value = prompt('插入html代码', '');
+        UE.getEditor('editor').execCommand('insertHtml', value)
+    }
+
+    function createEditor() {
+        enableBtn();
+        UE.getEditor('editor');
+    }
+
+    function getAllHtml() {
+        alert(UE.getEditor('editor').getAllHtml())
+    }
+
+    function getContent() {
+        var arr = [];
+        arr.push("使用editor.getContent()方法可以获得编辑器的内容");
+        arr.push("内容为：");
+        arr.push(UE.getEditor('editor').getContent());
+        alert(arr.join("\n"));
+    }
+
+    function getPlainTxt() {
+        var arr = [];
+        arr.push("使用editor.getPlainTxt()方法可以获得编辑器的带格式的纯文本内容");
+        arr.push("内容为：");
+        arr.push(UE.getEditor('editor').getPlainTxt());
+        alert(arr.join('\n'))
+    }
+
+    function setContent(isAppendTo) {
+        var arr = [];
+        arr.push("使用editor.setContent('欢迎使用ueditor')方法可以设置编辑器的内容");
+        UE.getEditor('editor').setContent('欢迎使用ueditor', isAppendTo);
+        alert(arr.join("\n"));
+    }
+
+    function setDisabled() {
+        UE.getEditor('editor').setDisabled('fullscreen');
+        disableBtn("enable");
+    }
+
+    function setEnabled() {
+        UE.getEditor('editor').setEnabled();
+        enableBtn();
+    }
+
+    function getText() {
+        //当你点击按钮时编辑区域已经失去了焦点，如果直接用getText将不会得到内容，所以要在选回来，然后取得内容
+        var range = UE.getEditor('editor').selection.getRange();
+        range.select();
+        var txt = UE.getEditor('editor').selection.getText();
+        alert(txt)
+    }
+
+    function getContentTxt() {
+        var arr = [];
+        arr.push("使用editor.getContentTxt()方法可以获得编辑器的纯文本内容");
+        arr.push("编辑器的纯文本内容为：");
+        arr.push(UE.getEditor('editor').getContentTxt());
+        alert(arr.join("\n"));
+    }
+
+    function hasContent() {
+        var arr = [];
+        arr.push("使用editor.hasContents()方法判断编辑器里是否有内容");
+        arr.push("判断结果为：");
+        arr.push(UE.getEditor('editor').hasContents());
+        alert(arr.join("\n"));
+    }
+
+    function setFocus() {
+        UE.getEditor('editor').focus();
+    }
+
+    function deleteEditor() {
+        disableBtn();
+        UE.getEditor('editor').destroy();
+    }
+
+    function disableBtn(str) {
+        var div = document.getElementById('btns');
+        var btns = UE.dom.domUtils.getElementsByTagName(div, "button");
+        for (var i = 0, btn; btn = btns[i++];) {
+            if (btn.id == str) {
+                UE.dom.domUtils.removeAttributes(btn, ["disabled"]);
+            } else {
+                btn.setAttribute("disabled", "true");
+            }
+        }
+    }
+
+    function enableBtn() {
+        var div = document.getElementById('btns');
+        var btns = UE.dom.domUtils.getElementsByTagName(div, "button");
+        for (var i = 0, btn; btn = btns[i++];) {
+            UE.dom.domUtils.removeAttributes(btn, ["disabled"]);
+        }
+    }
+
+    function getLocalData() {
+        alert(UE.getEditor('editor').execCommand("getlocaldata"));
+    }
+
+    function clearLocalData() {
+        UE.getEditor('editor').execCommand("clearlocaldata");
+        alert("已清空草稿箱")
+    }
+</script>
+
+{/case}
+
+{case value="date"}
+
+{php}if(is_array($field['field'])){
+$field['field_a'] = implode('|',$field['field']);
+$field['value_a'] = implode(' - ',$field['value']);
+{/php}
+<div class="layui-input-inline" style="width: 320px">
+    <input type="text" class="layui-input" readonly size="{$field['size']}" id="j_builder_{$field.field_a|md5}"
+           value="{$field.value_a}">
+    <input type="hidden" name="{$field.field[0]}" id="j_builder_{$field.field[0]}" value="{$field.value[0]}">
+    <input type="hidden" name="{$field.field[1]}" id="j_builder_{$field.field[1]}" value="{$field.value[1]}">
+</div>
+{php}}else{{/php}
+<div class="layui-input-inline"  style="width: 320px">
+    <input type="text" class="layui-input" name="{$field.field}" size="{$field['size']}" id="j_builder_{$field.field}" value="{$field.value}">
+</div>
+{php}}{/php}
+{notempty name='field.tips'}
+<div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+{/notempty}
+<script>
+    layui.use('laydate', function () {
+        var laydate = layui.laydate, $ = layui.$;
+
+        //执行一个laydate实例
+        {php}if (is_array($field['field'])) {{/php}
+                var options = {$field.options|json_encode|raw};
+                options['done'] = function (value, date) {
+                    var arr = value.split(" - ")
+                    console.log(arr);
+                    $("#j_builder_{$field.field[0]}").val(arr[0]);
+                    $("#j_builder_{$field.field[1]}").val(arr[1]);
+                };
+                laydate.render(options);
+
+                {php} }else{  {/php}
+                    laydate.render({$field.options|json_encode|raw});
+
+                    {php} } {/php}
+                }
+            );
+</script>
+
+{/case}
+
+<!--添加城市选择（需安装城市联动插件）-->
+{case value="city"}
+<script src="/static/admin/lib/extend/city-picker/city-picker.data.js"></script>
+<script src="/static/admin/lib/extend/city-picker/city-picker.js"></script>
+<link href="/static/admin/lib/extend/city-picker/city-picker.css" rel="stylesheet"/>
+<div class="layui-inline" style="width: 260px">
+    <input type="text" autocomplete="on" class="layui-input" id="city-picker" name="city-picker" readonly="readonly" data-toggle="city-picker" placeholder="请选择">
+</div>
+
+<script>
+
+    layui.use([], function () {
+        var $ = layui.$, cityPicker = layui.citypicker;
+        var currentPicker = new cityPicker("#city-picker", {
+            provincename: "provinceId",
+            cityname: "cityId",
+            districtname: "districtId",
+            level: 'districtId',// 级别
+        });
+        currentPicker.setValue("河南省/信阳市/新县");
+    });
+
+</script>
+{/case}
+{case value="sourse"}
+<div class="layui-input-inline">
+    <input type="text" name="{$field.field}_input" size="{$field['size']}" value=""
+           placeholder='来源站点名|http://www.baidu.com'>
+    <select name="{$field.field}" id="{$field.field}" data-toggle="selectpicker">
+        <option value="0">选择已有站点</option>
+        {volist name="field.options" id="option"}
+        {php} $selected = $field['value']==$key ? 'selected' : '';{/php}
+        <option value="{$key}" {$selected}>{$option}</option>
+        {/volist}
+    </select>
+
+</div>{/case}
+{case value="radio"}
+
+<div class="class=" layui-input-inline"">
+{php}
+
+foreach ($field['options'] as $key => $option) {
+$checked = $field['value']==$key ? 'checked' : '';
+{/php}
+
+<input type="radio" name="{$field.field}" lay-filter="filter_{$name_space}_{$field.field}" value="{$key}" {$checked}
+       title="{$option|htmlspecialchars}" {$field.disabled?'disabled=""':''}>
+
+{php}
+}
+{/php}
+
+</div>
+{notempty name='field.tips'}
+<div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+{/notempty}
+{/case}
+{case value='dragsort_li'}
+<div class="layui-input-inline">
+    <script src="__COMMON__/dragsort/jquery.dragsort-0.5.2.min.js"></script>
+    <input type="hidden" name="{$field.field}" value="{$field['value']}">
+    {empty name="field.value"}
+    空
+    {else /}<br>
+    <ul id="sortUl" class="dragsort">
+        {volist name=":explode(',',$field['value'])" id="addons_vo"}
+        <li>{$key+1}--<span>{$addons_vo}</span></li>
+        <br>
+        {/volist}
+    </ul>
+    <script type="text/javascript">
+        $(function () {
+            $("#sortUl").dragsort({
+                dragSelector: 'li',
+                placeHolderTemplate: '<li class="draging-place">&nbsp;</li>',
+                dragEnd: function () {
+                    updateVal();
+                }
+            });
+
+            $('#sortUl li b').click(function () {
+                $(this).parent().remove();
+                updateVal();
+            });
+
+            // 更新排序后的隐藏域的值
+            function updateVal() {
+                var sortVal = [];
+                $('#sortUl li').each(function () {
+                    alert($('em', this).text());
+                    sortVal.push($('em', this).text());
+                });
+                $("input[name='{$field.field}']").val(sortVal.join(','));
+            }
+        })
+    </script>
+    {/empty}
+
+</div>{/case}
+{case value="hasTags"}
+<div class="layui-input-inline">
+    {present name="field['value']"}
+    {volist name="field['value']" id='vo2'}
+    <span style="margin-left: 1px; margin-top: 1px;" data-value="{$vo2}" class="">
+		<i class="fa fa-tag"></i> {$vo2}&nbsp;&nbsp;</span>
+    <input type="hidden" name="{$field.field}" value="{$vo2}">
+    {/volist}
+    {/present}
+
+</div>{/case}
+{case value="tags"}
+<link rel="stylesheet" href="/static/admin/src/controller/inputTags.css">
+
+<div class="layui-input-inline tags" id="tags">
+    <input type="text" name="" id='tags_{$field.field}' placeholder="回车生成标签" autocomplete="off">
+    <script type="text/javascript">
+        layui.use(['inputTags'], function () {
+            var inputTags = layui.inputTags;
+            inputTags.render({
+                elem: '#tags_{$field.field}',
+                content: ['标题一', '标题二'],
+                aldaBtn: true,
+                done: function (value) {
+                    console.log(value)
+                }
+            })
+
+        })
+    </script>
+</div>
+
+{/case}
+
+{case value="ImageMultiple"}
+<div class="layui-input-block">
+    {php}
+    if(is_string($field['value']))
+    {
+      $images = \app\file\model\Image::where('id','in',$field['value'])->select();
+    }else{
+        $images = $field['value'];
+    }
+    {/php}
+
+
+    <script src="/static/common/sortable.min.js"></script>
+
+
+    <button type="button" class="layui-btn" id="button-upload-MultipleImage-{$field.field}">上传图片</button>
+    <div class="layui-upload-list">
+        <input type="hidden" name="{$field.field}" id="file_value_{$field.field}" value="$field['value']"/>
+        <img class="layui-upload-img" style="display: none" id="test-upload-normal-img" src="/static/common/images/default_image_240.gif">
+            <div class="layui-upload-list" id="upload-MultipleImage-list-{$field.field}">
+
+                {volist name='images' id='vo'}
+<div class="thumbnail"  data-id="{$vo.id}">
+    <i class="icon iconfont icon-tuodong remove-picture"></i>
+    <i class="layui-icon layui-icon-close-fill remove-picture" onclick="removeUploadImg(this,'{$field.field}')"></i>
+    <img class="layui-upload-img"  src="{$vo['url']}" >
+</div>
+
+                {/volist}
+            </div>
+
+    </div>
+
+    <script>
+        layui.use(['admin', 'upload'], function () {
+            var $ = layui.jquery
+                , upload = layui.upload
+        ,element = layui.element;
+            var limit = "{$field.options.limit}";
+            //获取对象
+            var el = document.getElementById('upload-MultipleImage-list-{$field.field}');
+            //设置配置
+            var ops = {
+                animation: 1000,
+                //拖动结束
+                onEnd: function (evt) {
+                    console.log(evt);
+                    console.log( evt.item);
+                    //获取拖动后的排序
+                    var arr = sortable.toArray();
+                    // console.log(arr);
+                    getUploadValue('{$field.field}');
+                },
+            };
+            window.removeUploadImg = function (obj,field) {
+                // console.log(obj);
+                $(obj).parent().remove();
+                getUploadValue(field);
+            }
+            window.getUploadValue = function (field) {
+                // console.log(field)
+                var temp = new Array();
+               var items = $('#upload-MultipleImage-list-'+field).children().each(function(index){
+                   $(this).data('id') &&temp.push($(this).data('id'))
+               });
+               $("#file_value_"+field).val(temp.join(','));
+                console.log(field)
+                console.log(temp.join(','))
+            }
+            //初始化
+            var sortable = Sortable.create(el, ops);
+            //普通图片上传
+            var uploadInst = upload.render({
+                elem: '#button-upload-MultipleImage-{$field.field}'
+                ,accept: 'images' //图片
+               ,acceptMime: 'image/*'
+                //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
+                //   ,size: 60 //限制文件大小，单位 KB
+                , url: "{:\\think\\facade\\Url::build('file/Image/upload')}"
+                , multiple: true
+                , before: function (obj) {
+
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                      //  console.log(result);
+                        var html = '<div class="thumbnail"   data-index="index-'+index+'" > \n' +
+                            '    <i class="icon iconfont icon-tuodong remove-picture"></i>\n' +
+                            '    <i class="layui-icon layui-icon-close-fill remove-picture" onclick="removeUploadImg(this,\'{$field.field}\')"></i>\n' +
+                            '    <img class="layui-upload-img"  src="' + result + '" " alt="' + file.name + '">\n' +
+                            '\n' +
+                            '                <div class="layui-progress layui-progress-big" id="progress-{$field.field}-'+index+'" lay-showpercent="yes" lay-filter="progress-{$field.field}-'+index+'">\n' +
+                            '                   <div class="layui-progress-bar" lay-percent="0%" style="width: 0%;"><span class="layui-progress-text"></span></div>\n' +
+                            '                </div>' +
+                            '<div class="upload-msg" id="upload-msg-{$field.field}-'+index+'"></div>' +
+                            '</div>';
+                        $('#upload-MultipleImage-list-{$field.field}').append(html)
+
+                        //单个重传
+                        // tr.find('.demo-reload').on('click', function(){
+                        //     obj.upload(index, file);
+                        // });
+
+                    });
+                }
+                ,progress: function(n, elem, res, index){
+                    // console.log(elem); //得到当前触发的元素 DOM 对象。可通过该元素定义的属性值匹配到对应的进度条。
+                    // console.log(res); //得到 progress 响应信息
+                    $('#progress-{$field.field}-'+index).removeClass('layui-hide');
+                    element.progress('progress-{$field.field}-'+index, n + '%'); //进度条
+                    // if(n == 100){
+                    //     layer.msg('上传完毕', {icon: 1});
+                    // }
+                }
+                , done: function (res, index, upload) {
+                    //如果上传失败
+                    // console.log($("[data-index=\'index-"+index+"\']"));
+                   // console.log(upload)
+                  //  alert(limit>0)
+                    if(limit>0 && $("#upload-MultipleImage-list-{$field.field}").children().length>limit)
+                    {
+                        $("#upload-MultipleImage-list-{$field.field}").children().eq(0).remove();
+                    }
+                    if (res.code > 0) {
+                        //演示失败状态，并实现重传
+                        $('#progress-{$field.field}-'+index).addClass('layui-hide');
+                        var demoText = $('#upload-msg-{$field.field}-'+index);
+                        demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                        demoText.find('.demo-reload').on('click', function(){
+                            uploadInst.upload();
+                        });
+                        return layer.msg(res.message);
+                    } else {
+                        //上传成功
+                        $("[data-index=\'index-"+index+"\']").attr('data-id',res.data.id);
+                    }
+                }
+                ,allDone: function(obj){ //当文件全部被提交后，才触发
+                   // console.log(obj); //得到总文件数file_value_{$field.field}
+                   //  var arr = new Array();
+                    // $("#upload-MultipleImage-list-{$field.field}").children("img").each(function(){
+                    //    if ($(this).data('id'))
+                    //    {
+                    //        arr.push($(this).data('id'));
+                    //    }
+                    // });
+                    // $("#file_value_{$field.field}").val(arr.join(','));
+                    getUploadValue('{$field.field}');
+                }
+                , error: function(index, upload){ //错误回调
+                    // var that = this;
+                    // var tr = that.elemList.find('tr#upload-'+ index)
+                    //     ,tds = tr.children();
+                    // tds.eq(3).find('.demo-reload').removeClass('layui-hide'); //显示重传
+                    $('#progress-{$field.field}-'+index).addClass('layui-hide');
+                    //演示失败状态，并实现重传
+                    var demoText = $('#upload-msg-{$field.field}-'+index);
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function(){
+                        uploadInst.upload();
+                    });
+
+                }
+                //function () {
+                    //演示失败状态，并实现重传
+                /*    var demoText = $('#test-upload-demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        uploadInst.upload();
+                    });*/
+               // }
+            });
+        });
+    </script>
+
+
+</div>{/case}
+{case value="ImageShowMultiple"}
+<div class="layui-input-block">
+    {php}
+    if(is_string($field['value']))
+    {
+        $images = \app\file\model\Image::where('id','in',$field['value'])->select();
+    }else{
+        $images = $field['value'];
+    }
+
+    {/php}
+    <div class="layui-upload-list">
+            <div class="layui-upload-list" id="upload-MultipleImage-list-{$field.field}">
+                {volist name='images' id='vo'}
+                    <img class="layui-upload-img"  src="{$vo['url']}">
+                {/volist}
+            </div>
+
+    </div>
+
+</div>{/case}
+{case value="auth"}
+<div class="layui-input-block">
+    <style>
+        .layui-upload-img-card {
+            height: 150px;
+            margin: 0 5px 0 0;
+        }
+    </style>
+{php} $auth = isset($field['data']['auth'])?$field['data']['auth']:'';
+
+    {/php}
+    <div class="layui-row" style="    display: flex;">
+        <div class="layui-col-xs2">
+            <div class="layui-upload-list front">
+                <img class="layui-upload-img-card button-upload-auth-image-front"
+                     src="{$field['data']['auth']['front']['url']|default='__COMMON__/images/idcard/f.png'}">
+                <input type="hidden" id="front_id" name="auth[front_id]" value="{$field['data']['auth']['front_id']|default=''}"/>
+                <p id="test-upload-demoText"></p>
+            </div>
+            <button type="button" class="layui-btn button-upload-auth-image-front">身份证正面</button>
+        </div>
+        <div class="layui-col-xs2">
+            <div class="layui-upload-list front">
+                <img class="layui-upload-img-card button-upload-auth-image-back"
+                     src="{$field['data']['auth']['back']['url']|default='__COMMON__/images/idcard/b.png'}">
+                <input type="hidden" id="back_id" name="auth[back_id]"
+                       value="{$field['data']['auth']['back_id']|default=''}"/>
+                <p id="test-upload-demoText"></p>
+            </div>
+            <button type="button" class="layui-btn button-upload-auth-image-back">身份证背面</button>
+        </div>
+  <div class="layui-col-xs2 {php} if( !$field['options']['need_hand'] ||!isset($field['data']['auth'])){ echo 'layui-hide';}{/php} " id="show_hand">
+            <div class="layui-upload-list front">
+                <img class="layui-upload-img-card button-upload-auth-image-hand"
+                     src="{$field['data']['auth']['hand']['url']|default='__COMMON__/images/idcard/h.jpg'}">
+                <input type="hidden" id="hand_id" name="auth[hand_id]"
+                       value="{$field['data']['auth']['hand_id']|default=''}"/>
+                <p id="test-upload-demoText"></p>
+            </div>
+            <button type="button" class="layui-btn button-upload-auth-image-hand">手持身份证</button>
+        </div>
+
+         
+
+    </div>
+    <div class="layui-form-mid   auth-tips" style="color: red"></div>
+</div>
+    <script>
+        layui.use(['admin', 'upload'], function () {
+            var $ = layui.jquery
+                , upload = layui.upload;
+            //普通图片上传
+            var auth_front = upload.render({
+                elem: '.button-upload-auth-image-front'
+                , accept: 'images' //普通文件
+                , exts: 'png|jpg|jpeg'
+                , size: 1024 * 5 //限制文件大小，单位 KB
+                , url: "{:\\think\\facade\\Url::build('file/Image/upload',['module'=>$request->module()])}"
+                , data: {
+                    type: 'idcard',
+                    side: 'front',
+
+                }
+                , before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $(".front .button-upload-auth-image-front").attr('src', result); //图片链接（base64）
+                    });
+                }
+                , done: function (res) {
+                    //如果上传失败
+                    if (res.code > 0) {
+                        return layer.msg(res.message);
+                    } else {
+                        //上传成功
+                        $("#front_id").val(res.data.id);
+                        $("[name='{$field.field}']").val(res.data.id);
+                        $("[name='auth[idcard_name]").val(res.data.info.name);
+                        $("[name='auth[idcard_no]").val(res.data.info.idcard_no);
+
+                        if ("1" == "{$field.options.need_hand}")
+                        {
+                            initHand();
+                            $("#show_hand").removeClass('layui-hide');
+                        }
+                    }
+                }
+                , error: function () {
+                    //演示失败状态，并实现重传
+                   /* var demoText = $('#test-upload-demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        auth_front.upload();
+                    });*/
+                }
+            });
+
+            var auth_back = upload.render({
+                elem: '.button-upload-auth-image-back'
+                , accept: 'images' //普通文件
+                , exts: 'png|jpg|jpeg'
+                , size: 1024 * 2 //限制文件大小，单位 KB
+                , url: "{:\\think\\facade\\Url::build('file/Image/upload')}"
+                , data: {
+                    type: 'idcard',
+                    side: 'back',
+                }
+                , before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $(".front .button-upload-auth-image-back").attr('src', result); //图片链接（base64）
+                    });
+                }
+                , done: function (res) {
+                    //如果上传失败
+                    if (res.code > 0) {
+                        return layer.msg(res.message);
+                    } else {
+                        //上传成功
+                        $("#back_id").val(res.data.id);
+                    }
+                }
+                , error: function () {
+                    //演示失败状态，并实现重传
+                  /*  var demoText = $('#test-upload-demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        auth_back.upload();
+                    });*/
+                }
+            });
+
+
+            function initHand() {
+                var auth_hand = upload.render({
+                    elem: '.button-upload-auth-image-hand'
+                    , accept: 'images' //普通文件
+                    , exts: 'png|jpg|jpeg'
+                    , size: 1024 * 2 //限制文件大小，单位 KB
+                    , url: "{:\\think\\facade\\Url::build('file/Image/upload')}"
+                    , data: {
+                        front_id: $("#front_id").val(),
+                        type: 'hand'
+                    }
+                    , before: function (obj) {
+                        //预读本地文件示例，不支持ie8
+                        obj.preview(function (index, file, result) {
+                            $(".front .button-upload-auth-image-hand").attr('src', result); //图片链接（base64）
+                        });
+                    }
+                    , done: function (res) {
+                        //如果上传失败
+                        if (res.code > 0) {
+                                layer.msg(res.message);
+                        } else {
+
+                            //上传成功
+                            $("#hand_id").val(res.data.id);
+                            if (0 != res.data.info.code)
+                            {
+                                $(".auth-tips").html(res.data.info.error_msg);
+                            }
+
+                        }
+                    }
+                    , error: function () {
+                        //演示失败状态，并实现重传
+                       /* var demoText = $('#test-upload-demoText');
+                        demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                        demoText.find('.demo-reload').on('click', function () {
+                            auth_hand.upload();
+                        });*/
+                    }
+                });
+            }
+
+
+
+        });
+    </script>
+</div>
+
+{/case}
+
+{case value="image"}
+
+{php}
+
+$default_image_url='/static/common/images/default_image_240.gif';
+$images = [];
+    if(is_numeric($field['value']) && $field['value']>0){
+        $Image = \app\file\model\Image::find($field['value']);
+        if($Image){
+        $field['value'] = $Image['id'];
+        $field['url'] = $Image['url'];
+        }else{
+        $field['value'] = '';
+        $field['url'] = $default_image_url;
+        }
+    }elseif(is_object($field['value'])){
+        $picture = $field['value'];
+        $field['value'] = $picture['id'];
+        $field['url'] = $picture['url'];
+
+    }else{
+        if($field['value'])
+        {
+        $field['url'] = $field['value'];
+        }else{
+        $field['value'] = '';
+        $field['url'] = $default_image_url;
+        }
+
+    }
+{/php}
+
+<div class="layui-input-inline">
+    <button type="button" class="layui-btn" id="button-upload-normal-image-{$field.field}">上传图片</button>
+    <div class="layui-upload-list">
+        <input type="hidden" name="{$field.field}" id="upload-normal-image-val-{$field.field}" value="{$field['value']}"/>
+
+        <div class="thumbnail" >
+            <i class="layui-icon layui-icon-close-fill remove-picture" onclick="removeUploadImage(this,'{$field.field}')"></i>
+            <img class="layui-upload-img" id="upload-normal-image-{$field.field}" src="{$field['url']}" >
+            <p id="test-upload-demoText"></p>
+        </div>
+
+
+    </div>
+    <script>
+        layui.use(['admin', 'upload'], function () {
+            var $ = layui.jquery
+                , upload = layui.upload;
+
+            window.removeUploadImage = function (obj,field) {
+                // console.log(obj);
+               // $(obj).parent().remove();
+              //  getUploadValue(field);
+                $("#upload-normal-image-"+field).attr('src','{$default_image_url}')
+                $("#upload-normal-image-val-"+field).val('')
+            }
+            //普通图片上传
+            var uploadInst = upload.render({
+                elem: '#button-upload-normal-image-{$field.field}'
+                ,multiple: 1
+                ,accept: 'images' //图片
+                ,acceptMime: 'image/*'
+                //  ,accept: 'file' //普通文件
+                //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
+                //   ,size: 60 //限制文件大小，单位 KB
+                , url: "{:\\think\\facade\\Url::build('file/Image/upload')}"
+                , before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $("#upload-normal-image-{$field.field}").attr('src', result); //图片链接（base64）
+                    });
+                }
+                , done: function (res) {
+                    //如果上传失败
+                    if (res.code > 0) {
+                        return layer.msg(res.message);
+                    } else {
+                        //上传成功
+                        $("[name='{$field.field}']").val(res.data.id);
+                    }
+                }
+                , error: function () {
+                    //演示失败状态，并实现重传
+                    var demoText = $('#test-upload-demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        uploadInst.upload();
+                    });
+                }
+            });
+
+        });
+    </script>
+
+
+</div>{/case}
+{case value="attachment"}
+
+<div class="layui-input-inline">
+    {php}
+    if(is_numeric($field['value']) && $field['value']>0){
+    $attachment = \app\file\model\Attachment::where('id',$field['value'])->find();
+    }else{
+    $attachment = [];
+    }
+    {/php}
+    <div class="row">
+        <div class="col-md-3">
+            <button type="button" class="layui-btn" id="button-upload-normal-file-{$field.field}"><i class="layui-icon layui-icon-upload"></i>   上传文件</button>
+
+        </div>
+        <div class="col-md-9" id="show-upload-normal-file-{$field.field}">
+            {notempty name='attachment' }
+
+            文件大小：{$attachment['size_info']|default=''}
+            <input type="hidden" id='singel_file_{$field.field}' name="{$field.field}" value="{$field['value']}">
+            {/notempty}
+
+        </div>
+        <script type="text/javascript">
+            layui.use(['admin', 'upload'], function () {
+                var $ = layui.jquery
+                    , upload = layui.upload;
+
+                //普通图片上传
+                var uploadInst = upload.render({
+                    elem: '#button-upload-normal-file-{$field.field}'
+                     ,accept: 'file' //普通文件
+                    //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
+                    //   ,size: 60 //限制文件大小，单位 KB
+                    , url: "{:\\think\\facade\\Url::build('file/Attachment/upload')}"
+                    , before: function (obj) {
+                        //预读本地文件示例，不支持ie8
+                    }
+                    , done: function (res) {
+                        //如果上传失败
+                        if (res.code > 0) {
+                            return layer.msg(res.message);
+                        } else {
+                            //上传成功
+                            $("#show-upload-normal-file-{$field.field}").html('' +
+                                '  文件大小：'+res.data.size +'\n' +
+                                '            <input type="hidden" id=\'singel_file_{$field.field}\' name="{$field.field}" value="'+res.data.id+'">' +
+                                '');
+                            $("[name='{$field.field}']").val(res.data.id);
+                        }
+                    }
+                    , error: function () {
+                        //演示失败状态，并实现重传
+                        var demoText = $('#test-upload-demoText');
+                        demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                        demoText.find('.demo-reload').on('click', function () {
+                            uploadInst.upload();
+                        });
+                    }
+                });
+
+            });
+        </script>
+
+    </div>
+
+
+</div>{/case}
+{case value='showImg'}
+
+<div class="layui-input-inline">
+<span class="pic-box">
+	<a href="{$field['value']}" download="{$field['value']}">
+<img border="0" src="{$field['value']|picture_get_url}" style="height: 260px;" alt="点击下载">
+</a>
+	
+	</span>
+
+</div>{/case}
+{case value="ias"}
+<div class="layui-input-inline">
+    <input type="text" name="{$field['field'][0]}" value="{$field['value'][0]|htmlspecialchars}"
+           size="{$field['config'][0]['size']}">
+    <select name="{$field['field'][1]}" data-toggle="selectpicker" data-width="{$field['config'][1]['width']}">
+        {php}foreach($field['config'][1]['options'] as $key_opt =>$option){{/php}
+        {php}
+        $selected = $field['value'][1]==$key_opt ? 'selected' : '';
+        {/php}
+        <option value="{$key_opt}" {$selected}>{$option|htmlspecialchars}</option>
+        {php}}{/php}
+    </select>
+
+</div>
+{default/}
+<span style="color: #f00;">错误：未知字段类型 {$field.type}</span>
+<input type="hidden" name="{$field.field}" value="{$field.value|htmlspecialchars}"/>
+{/switch}
+
+</div>
+{/eq}
+{/neq}
+					

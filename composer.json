@@ -1,0 +1,30 @@
+{
+    "name": "lilwil/builder",
+    "description": "builder",
+    "license": "Apache-2.0",
+    "type": "think-extend",
+    "authors": [
+        {
+            "name": "lilwil",
+            "email": "lilwil@163.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "overtrue/pinyin": "~3.0"
+
+    },
+    "autoload": {
+        "psr-4": {
+            "yicmf\\builder\\": "src/"
+        },
+        "files": [
+            "src/helper.php"
+        ]
+    },
+    "extra": {
+        "think-config": {
+            "builder": "src/config/builder.php"
+        }
+    }
+}
