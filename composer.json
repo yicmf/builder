@@ -1,12 +1,12 @@
 {
-    "name": "lilwil/builder",
+    "name": "yicmf/builder",
     "description": "builder",
     "license": "Apache-2.0",
     "type": "think-extend",
     "authors": [
         {
-            "name": "lilwil",
-            "email": "lilwil@163.com"
+            "name": "yicmf",
+            "email": "yicmf@qq.com"
         }
     ],
     "require": {
