@@ -725,14 +725,14 @@
 		 * @param array $attr
 		 * @return $this
 		 */
-		public function searchText($field, $title, $des = '', $default = '', $attr = [])
+		public function searchText($field, $title, $placeholder = '', $default = '', $attr = [])
 		{
 			$this->_search[] = [
 				'title' => $title,
 				'field' => $field,
 				'type' => 'text',
 				'condition' => '=',
-				'des' => $des,
+				'placeholder' => $placeholder,
 				'value' => $default,
 				'attr' => $attr,
 			];
@@ -748,7 +748,7 @@
 		 * @param array $attr
 		 * @return $this
 		 */
-		public function searchTextLike($field, $title, $desc = '支持模糊搜索', $default = '', $attr = [])
+		public function searchTextLike($field, $title, $placeholder = '支持模糊搜索', $default = '', $attr = [])
 		{
 			$this->_search[] = [
 				'title' => $title,
@@ -756,7 +756,7 @@
 				'type' => 'text',
 				'condition' => 'like',
 				'value' => $default,
-				'des' => $desc,
+				'placeholder' => $placeholder,
 				'attr' => $attr,
 			];
 			return $this;
@@ -889,14 +889,14 @@
 		 * @author  : 微尘 <yicmf@qq.com>
 		 * @datetime: 2019/5/8 13:15
 		 */
-		public function searchSelect($field, $title, $options = [], $des = '', $default = '', $attr = [])
+		public function searchSelect($field, $title, $options = [], $placeholder= '', $default = '', $attr = [])
 		{
 			$this->_search[] = [
 				'title' => $title,
 				'field' => $field,
 				'default' => $default,
 				'type' => 'select',
-				'des' => $des,
+				'placeholder' => $placeholder,
 				'attr' => $attr,
 				'condition' => '=',
 				'options' => $options,
@@ -914,7 +914,7 @@
 		 * @param        $attr     标签文本
 		 * @return $this
 		 */
-		public function search($title = '搜索', $field = 'key', $type = 'text', $des = '', $default = '', $attr = [], $options = null)
+		public function search($title = '搜索', $field = 'key', $type = 'text', $placeholder = '', $default = '', $attr = [], $options = null)
 		{
 			$this->_search[] = [
 				'title' => $title,
@@ -922,7 +922,7 @@
 				'value' => $default,
 				'type' => $type,
 				'condition' => '=',
-				'des' => $des,
+				'placeholder' => $placeholder,
 				'attr' => $attr,
 				'options' => $options,
 			];
@@ -1430,7 +1430,7 @@ EOF;
 			$common = config('template.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
 			$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
- <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
+ <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar.url:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
 </script>
 EOF;
 			return $this->key($field, $title, $sort, 150, 'normal', $style, '#' . $templet_name);
