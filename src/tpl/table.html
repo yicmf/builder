@@ -16,12 +16,8 @@
 </div>
 
 <div class="layui-fluid">
-
-
             <div class="layui-card">
                 <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="app-forum-list">
-
-
                     <div class="layui-collapse ns-tips" style="display: none">
                         <div class="layui-colla-item">
                             <h2 class="layui-colla-title">操作提示<i class="layui-icon layui-colla-icon"></i></h2>
@@ -31,7 +27,6 @@
                             </ul>
                         </div>
                     </div>
-
                     {notempty name='suggest'}
                     <blockquote class="layui-elem-quote">{$suggest}</blockquote>
                     {/notempty}
@@ -65,8 +60,6 @@
 <script type="text/html" id="{$namespace}-table-search">
     <div class="layui-btn-container">
         {volist name="buttonList" id="button"}
-
-
         {eq name='button.attr.event' value='ajax'}
       <button class="layui-btn layui-btn-sm  {$button.attr.class} " data-title="{$button.title}"
                 data-width="{$button.attr.width|default=''}"
@@ -154,7 +147,7 @@
         var excel_{$namespace}_table =  table.render({
             elem: '#{$namespace}-table'
             ,id: '{$namespace}-table'
-            ,url:'{$searchPostUrl}'
+            ,url:'{$searchPostUrl|raw}'
                 ,cellMinWidth:120
                 ,skin: 'line,row'
                , size: 'lg'
