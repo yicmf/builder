@@ -21,10 +21,11 @@
         "files": [
             "src/helper.php"
         ]
-    },
-    "extra": {
-        "think-config": {
-            "builder": "src/config/builder.php"
+    }, "extra": {
+    "think":{
+        "config":{
+            "builder": "src/config.php"
         }
     }
+}
 }

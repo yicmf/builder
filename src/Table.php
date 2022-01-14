@@ -113,9 +113,9 @@
 				$this->_callback_field = trim($this->request->param('field'));
 			}
 			// 复选框
-			$this->_namespace = $this->request->module() . '_' . str_replace('.', '_', $this->request->controller())
+			$this->_namespace =  app('http')->getName() . '_' . str_replace('.', '_', $this->request->controller())
 				. '_' . $this->request->action() . '_'
-				. md5(json_encode($this->request->except('v,user')));
+				. md5(json_encode($this->request->except(['v','user'])));
 			//                .implode('_',$this->request->except('v'));
 		}
 
@@ -1151,7 +1151,7 @@ EOF;
 		{
 			$templet = uniqid();
 
-			if ($style == '' && 'zh-cn' == $this->request->langset()) {
+			if ($style == '' && 'zh-cn' == $langSet = $this->app->lang->defaultLangSet()) {
 				$style = 'rmb';
 			} elseif ($style == '') {
 				$style = 'dollar';
@@ -2208,7 +2208,7 @@ EOF;
 					}
 				}
 			}
-			$urlFields = $this->request->except('v,page,limit,user,m,field,video,store');
+			$urlFields = $this->request->except(explode(',','v,page,limit,user,m,field,video,store'));
 			if (is_array($urlFields)) {
 				foreach ($urlFields as $field => $field_value) {
 					$out = false;

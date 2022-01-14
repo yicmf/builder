@@ -48,10 +48,8 @@
          */
         public function __construct()
         {
-            $this->app = Container::get('app');
+            $this->app = app();
             $this->request = $this->app['request'];
-            $this->view = $this->app['view'];
-//            Config::set('exception_tmpl',__DIR__.DIRECTORY_SEPARATOR.'tpl'.DIRECTORY_SEPARATOR.'exception.html');
             // 控制器初始化
             $this->initialize();
             // 增加配置
@@ -70,7 +68,9 @@
             //         $this->dialog_height_default = $config['height'];
             //         $this->dialog_width_default = $config['width'];
             // 加载builder语言包
-            Lang::load(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $this->request->langset() . '.php');
+			$langSet = $this->app->lang->defaultLangSet();
+			$lang_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'lang' . DIRECTORY_SEPARATOR . $langSet . '.php';
+			is_file($lang_file) && $this->app->lang->load($lang_file);
         }
 
         // 初始化
