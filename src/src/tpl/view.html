@@ -1,0 +1,80 @@
+<style>
+    .layui-form-item-botton {
+        margin-bottom: 0px;
+    }
+</style>
+
+<title>{$menu_title}</title>
+
+<div class="layui-card layadmin-header">
+    <div class="layui-breadcrumb" lay-filter="breadcrumb">
+        <a lay-href="">{$p_menu_title}</a>
+        {present name='menu_group_title' }
+        <a><cite>{$menu_group_title}</cite></a>
+        {/present}
+        <a><cite>{$menu_title}</cite></a>
+    </div>
+</div>
+
+
+
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">{$title} {if condition="$suggest"}（{$suggest|htmlspecialchars}）{/if}</div>
+                <div class="layui-card-body " pad15>
+
+                    {present name='explaints' }
+                    {volist name='explaints' id='vo'}
+                    <blockquote class="layui-elem-quote" {php}echo $key+1;{/php}>{$vo|raw}</blockquote>
+                    {/volist}
+
+                    {/present}
+                    <div class="layui-form view" lay-filter="">
+
+                        {volist name="keyList" id="field"}
+
+                        <div class="layui-form-item layui-form-item-botton">
+                            <label class="layui-form-label">{$field.title|htmlspecialchars}：</label>
+                            <div class="layui-input-block" style="padding: 8px 10px;">
+                               <span >{$field.value}</span>
+                            </div>
+                        </div>
+
+                        {/volist}
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    layui.define(['form', 'upload'], function(exports) {
+        var $ = layui.$
+            , layer = layui.layer
+            , laytpl = layui.laytpl
+            , setter = layui.setter
+            , view = layui.view
+            , element = layui.element
+            , admin = layui.admin
+            , form = layui.form
+            , upload = layui.upload;
+
+        var $body = $('body');
+
+        form.render();
+    }
+ );
+
+
+</script>
+
+
+
+
