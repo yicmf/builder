@@ -1414,27 +1414,19 @@
 					->where('controller', $this->request->controller())
 					->where('module', $this->module)
 					->find();
-				if ($menu)
-				{
-
-					if ('' === $this->_title) {
-						$this->_title = $menu['title'];
-					}
-					if ($menu['group']) {
-						$this->assign('menu_group_title', $menu['group']);
-					}
-					if ($menu['pid']) {
-						$p_menu = MenuModel::where('status', 1)
-							->where('id', $menu['pid'])
-							->find();
-						if ($p_menu) {
-							$this->assign('p_menu_title', $p_menu['title']);
-						}else{
-							$this->assign('p_menu_title', $menu['title']);
-						}
-					} else {
-						$this->assign('p_menu_title', $menu['title']);
-					}
+				if ($menu && '' === $this->_title) {
+					$this->_title = $menu['title'];
+				}
+				if ($menu['group']) {
+					$this->assign('menu_group_title', $menu['group']);
+				}
+				if ($menu['pid']) {
+					$p_menu = MenuModel::where('status', 1)
+						->where('id', $menu['pid'])
+						->find();
+					$this->assign('p_menu_title', $p_menu['title']);
+				} else {
+					$this->assign('p_menu_title', $menu['title']);
 				}
 				// 显示页面
 				if (false !== $this->_title) {
