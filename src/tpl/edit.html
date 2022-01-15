@@ -6,7 +6,7 @@
 
 <div class="layui-card layadmin-header">
 	<div class="layui-breadcrumb" lay-filter="breadcrumb">
-		<a lay-href="">{$p_menu_title}</a>
+		<a lay-href="">{$p_menu_title|default=''}</a>
 		{present name='menu_group_title' }
 		<a><cite>{$menu_group_title}</cite></a>
 		{/present}

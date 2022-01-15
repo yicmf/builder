@@ -1,4 +1,5 @@
 <?php
+
 	// +----------------------------------------------------------------------
 	// | builder
 	// +----------------------------------------------------------------------
@@ -6,16 +7,16 @@
 	// +----------------------------------------------------------------------
 	// | Author: 微尘 <yicmf@qq.com>
 	// +----------------------------------------------------------------------
+
 	namespace yicmf\builder;
 
 	use app\admin\model\Menu as MenuModel;
 	use Overtrue\Pinyin\Pinyin;
-	use think\Db;
+	use think\facade\Db;
 	use think\Exception;
 	use think\exception\ValidateException;
 	use think\facade\Lang;
 	use think\Model;
-	use think\facade\Url;
 
 	class Edit extends Builder
 	{
@@ -66,9 +67,9 @@
 		{
 
 			// 命名空间
-			$this->_namespace = $this->request->module() . '_' . str_replace('.', '_', $this->request->controller())
+			$this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
 				. '_' . $this->request->action() . '_'
-				. md5(json_encode($this->request->except('v,user')));
+				. md5(json_encode($this->request->except(explode(',','v,user'))));
 			//                .implode('_',$this->request->except('v'));
 		}
 
@@ -841,8 +842,8 @@
 					]
 				];
 			$default_config = [
-				'manager' => Url::build('file/Editor/manager', ['module' => $this->request->module()]),
-				'upload' => Url::build('file/Editor/upload', ['module' => $this->request->module()])
+				'manager' =>  url('file/Editor/manager', ['module' => $this->module]),
+				'upload' =>  url('file/Editor/upload', ['module' => $this->module])
 			];
 			$config = array_merge($default_config, $config);
 			if (isset($config['items'])) {
@@ -1109,11 +1110,10 @@
 		 * @author  : 微尘 <yicmf@qq.com>
 		 * @datetime: 2019/4/12 10:35
 		 */
-		protected
-		function key($field, $title, $tips, $type, $options = null, $default = '', $verify = null, $size = null, $disabled = null, $placeholder = '')
+		protected function key($field, $title, $tips, $type, $options = null, $default = '', $verify = null, $size = null, $disabled = null, $placeholder = '')
 		{
 			if (is_array($verify)) {
-				$verify = implode($verify, '|');
+				$verify = implode('|',$verify);
 			}
 			if (strpos($verify, ',')) {
 				$verify = str_replace(',', '|', $verify);
@@ -1172,9 +1172,9 @@
 		{
 
 			if (is_null($url)) {
-				$url = Url::build();
+				$url =  url();
 			} else {
-				$url = Url::build($url);
+				$url =  url($url);
 			}
 			if (strpos($url, '/Admin')) {
 				$url = str_replace('/Admin', '/admin', $url);
@@ -1412,21 +1412,29 @@
 				$menu = MenuModel::where('status', 1)
 					->where('action', $this->request->action())
 					->where('controller', $this->request->controller())
-					->where('module', $this->request->module())
+					->where('module', $this->module)
 					->find();
-				if ($menu && '' === $this->_title) {
-					$this->_title = $menu['title'];
-				}
-				if ($menu['group']) {
-					$this->assign('menu_group_title', $menu['group']);
-				}
-				if ($menu['pid']) {
-					$p_menu = MenuModel::where('status', 1)
-						->where('id', $menu['pid'])
-						->find();
-					$this->assign('p_menu_title', $p_menu['title']);
-				} else {
-					$this->assign('p_menu_title', $menu['title']);
+				if ($menu)
+				{
+
+					if ('' === $this->_title) {
+						$this->_title = $menu['title'];
+					}
+					if ($menu['group']) {
+						$this->assign('menu_group_title', $menu['group']);
+					}
+					if ($menu['pid']) {
+						$p_menu = MenuModel::where('status', 1)
+							->where('id', $menu['pid'])
+							->find();
+						if ($p_menu) {
+							$this->assign('p_menu_title', $p_menu['title']);
+						}else{
+							$this->assign('p_menu_title', $menu['title']);
+						}
+					} else {
+						$this->assign('p_menu_title', $menu['title']);
+					}
 				}
 				// 显示页面
 				if (false !== $this->_title) {
@@ -1438,7 +1446,7 @@
 				//                $this->assign('filter', $this->request->get('auto_builder'));
 				//                $this->assign('auto_builder', 1);
 				//            } else {
-				$this->assign('filter', $this->request->module() . '-' . $this->request->controller() . '-' . $this->request->action());
+				$this->assign('filter', $this->module . '-' . $this->request->controller() . '-' . $this->request->action());
 				//            }
 				if (count($this->_keyList)) {
 					$this->assign('keyList', $this->_keyList);

@@ -14,8 +14,9 @@
     use think\Container;
     use think\facade\Lang;
     use think\facade\Config;
+	use think\facade\View;
 
-    abstract class Builder
+	abstract class Builder
     {
         /**
          * 应用实例
@@ -40,6 +41,12 @@
         protected $dialog_height_default = 700;
 
         protected $toggle = 'dialog';
+        protected $module = '';
+		/**
+		 * 视图文件路径
+		 * @var string
+		 */
+		protected $view_data = [];
         /**
          * 构造方法
          * @access public
@@ -50,6 +57,7 @@
         {
             $this->app = app();
             $this->request = $this->app['request'];
+            $this->module =  app('http')->getName();
             // 控制器初始化
             $this->initialize();
             // 增加配置
@@ -83,19 +91,16 @@
          * @access  protected
          * @param  string $template 模板文件名
          * @param  array  $vars     模板输出变量
-         * @param  array  $config   模板参数
          * @return string
-         * @throws \Exception
          * @author  : 微尘 <yicmf@qq.com>
-         * @datetime: 2019/3/14 18:22
          */
-        protected function _fetch($template = '', $vars = [], $config = [])
+        protected function _fetch($template = '', $vars = [])
         {
             // 获取模版的名称
             $this->assign('key_path', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . '_key.html');
             $this->assign('search_path', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . '_search.html');
-            $template_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . $template . '.html';
-            return $this->view->fetch($template_file, $vars, $config);
+			$template = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . $template . '.html';
+			return View::fetch($template, array_merge($this->view_data, $vars));
         }
 
 
@@ -107,9 +112,9 @@
          * @param  array  $config  模板参数
          * @return mixed
          */
-        protected function display($content = '', $vars = [], $config = [])
+        protected function display($content = '', $vars = [])
         {
-            return $this->view->display($content, $vars, $config);
+            return \think\facade\View::display($content, $vars);
         }
 
         /**
@@ -120,11 +125,14 @@
          * @return $this
          */
         protected function assign($name, $value = '')
-        {
-            $this->view->assign($name, $value);
-
-            return $this;
-        }
+		{
+			if (is_array($name)) {
+				$this->view_data = array_merge($this->view_data, $name);
+			} else {
+				$this->view_data[$name] = $value;
+			}
+			return $this;
+		}
 
         /**
          * 视图过滤
