@@ -77,7 +77,7 @@
 		private $_toolbar = ['filter', 'print'];// ['filter', 'exports', 'print'];
 		protected $_filter = [
 			//['column','data','condition','editCondition','excel']
-			'items' => ['column','data'],
+			'items' => ['data'],
 			'bottom' => false,
 			'clearFilter' => true
 		];
@@ -111,9 +111,9 @@
 				$this->_callback_field = trim($this->request->param('field'));
 			}
 			// 复选框
-			$this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
+			$this->_namespace =  $this->module . '_' . str_replace('.', '_', $this->request->controller())
 				. '_' . $this->request->action() . '_'
-				. md5(json_encode($this->request->except(['v', 'user'])));
+				. md5(json_encode($this->request->except(['v','user'])));
 			//                .implode('_',$this->request->except('v'));
 		}
 
@@ -887,7 +887,7 @@
 		 * @author  : 微尘 <yicmf@qq.com>
 		 * @datetime: 2019/5/8 13:15
 		 */
-		public function searchSelect($field, $title, $options = [], $placeholder = '', $default = '', $attr = [])
+		public function searchSelect($field, $title, $options = [], $placeholder= '', $default = '', $attr = [])
 		{
 			$this->_search[] = [
 				'title' => $title,
@@ -1386,7 +1386,7 @@ EOF;
 				$temp = $field;
 			}
 			$templet_name = uniqid();
-			$common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
+			$common = config('template.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
 			if (is_array($temp)) {
 				$with_field = $temp[0];
 				$this->_templets[] = <<<EOF
@@ -1425,7 +1425,7 @@ EOF;
 			}
 			$this->_with[$with_field] = ['id', 'avatar', 'nickname'];
 			$templet_name = uniqid();
-			$common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
+			$common = config('template.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
 			$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar.url:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
@@ -1904,15 +1904,15 @@ EOF;
 								foreach ($this->_keyList as $index => $item) {
 									if (in_array($item['field'], $columns)) {
 										$column = $whereModel->field($item['field'])->distinct(true)->limit(10)->column($item['field']);
-//										if (count($item['map']) > 0 && $column) {
-//											$temp = [];
-//											foreach ($column as $i => $co) {
-//												if (isset($item['map'][$co])) {
-//													$temp[] = $item['map'][$co];
-//												}
-//											}
-//											$column = $temp;
-//										}
+										if (count($item['map']) > 0 && $column) {
+											$temp = [];
+											foreach ($column as $i => $co) {
+												if (isset($item['map'][$co])) {
+													$temp[] = $item['map'][$co];
+												}
+											}
+											$column = $temp;
+										}
 										$result[$item['field']] = $column;
 									}
 								}
@@ -2073,7 +2073,7 @@ EOF;
 						];
 						!empty($this->_left_leader) && array_unshift($this->_keyList, $this->_left_leader);
 					}
-					$get = $this->request->except(explode(',', 'v,m,status'), 'get');
+					$get = $this->request->except(explode(',','v,m,status'), 'get');
 					if (!empty($get)) {
 						$action = $this->request->action() . '?' . http_build_query($get);
 					} else {
@@ -2085,30 +2085,23 @@ EOF;
 						->where('controller', $this->request->controller())
 						->where('module', $this->module)
 						->find();
-					if ($menu) {
-						$this->_title = $menu['title'];
-					}
 					if ($menu && !$this->_title) {
-						if ($menu['group']) {
-							$this->assign('menu_group_title', $menu['group']);
-						}
-						if ($menu['pid']) {
-							$p_menu = MenuModel::where('status', 1)
-								->where('id', $menu['pid'])
-								->find();
-							if ($p_menu) {
-								$this->assign('p_menu_title', $p_menu['title']);
-							}else{
-								$this->assign('p_menu_title', $menu['title']);
-							}
-						} else {
-							$this->assign('p_menu_title', $menu['title']);
-						}
+						$this->_title = $menu['title'];
 					}
 					if (isset($this->_excel['filename']) && !$this->_excel['filename']) {
 						$this->_excel['filename'] = $this->_title . '_' . time_format(time(), 'Y_m_d');
 					}
-
+					if ($menu['group']) {
+						$this->assign('menu_group_title', $menu['group']);
+					}
+					if ($menu['pid']) {
+						$p_menu = MenuModel::where('status', 1)
+							->where('id', $menu['pid'])
+							->find();
+						$this->assign('p_menu_title', $p_menu['title']);
+					} else {
+						$this->assign('p_menu_title', $menu['title']);
+					}
 					$this->assign('menu_title', $this->_title);
 					// 显示页面
 					$this->assign('templets', $this->_templets);
@@ -2213,13 +2206,9 @@ EOF;
 					}
 				}
 			}
-			$urlFields = $this->request->except(explode(',', 'v,page,limit,user,m,field,video,store'));
+			$urlFields = $this->request->except(explode(',','v,page,limit,user,m,field,video,store'));
 			if (is_array($urlFields)) {
 				foreach ($urlFields as $field => $field_value) {
-					if (!in_array($field, $db_fields))
-					{
-						continue;
-					}
 					$out = false;
 					foreach ($this->_search as $search) {
 						if ($search['field'] == $field) {
@@ -2235,17 +2224,15 @@ EOF;
 			}
 			//
 			$filterSos = json_decode(htmlspecialchars_decode($this->request->param('filterSos/s')), true);
-
-			//筛选数据支持
 			if (is_array($filterSos)) {
 				foreach ($filterSos as $index => $filterSo) {
 					if ('in' == $filterSo['mode']) {
 						$where[] = $this->_getMode($filterSo);
 					} elseif ('group' == $filterSo['mode']) {
 						throw new Exception('暂不支持');
-//						foreach ($filterSo['children'] as $child) {
-//							$where[] = $this->_getMode($child);
-//						}
+						foreach ($filterSo['children'] as $child) {
+							$where[] = $this->_getMode($child);
+						}
 					} else {
 					}
 				}
@@ -2256,8 +2243,7 @@ EOF;
 		private function _getMode($filter)
 		{
 			if ('in' == $filter['mode']) {
-				$data = [$filter['field'], 'in',  $filter['values']];
-//				$data = [$filter['field'], 'in', $this->_getFieldValue($filter['field'], $filter['values'])];
+				$data = [$filter['field'], 'in', $this->_getFieldValue($filter['field'], $filter['values'])];
 			} elseif ('condition' == $filter['mode']) {
 				if ('eq' == $filter['type']) {
 					$data = [$filter['field'], '=', $this->_getFieldValue($filter['field'], $filter['value'])];
