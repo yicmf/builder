@@ -6,7 +6,7 @@
 
 <div class="layui-card layadmin-header">
 	<div class="layui-breadcrumb" lay-filter="breadcrumb">
-		<a lay-href="">{$p_menu_title|default=''}</a>
+		<a lay-href="">{$p_menu_title}</a>
 		{present name='menu_group_title' }
 		<a><cite>{$menu_group_title}</cite></a>
 		{/present}
@@ -241,10 +241,9 @@
 				complete:function(){
 					//请求完成的处理
 				},
-				error: function (XMLHttpRequest) {
+				error:function(err){
 					//请求出错处理
-					var re = JSON.parse(XMLHttpRequest.responseText);
-					layer.msg(re.message);
+					layer.msg(JSON.stringify(err));
 				}
 			});
 			//提交修改

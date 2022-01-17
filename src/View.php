@@ -10,6 +10,7 @@
 
     use app\admin\model\Menu as MenuModel;
 	use Overtrue\Pinyin\Pinyin;
+	use think\helper\Str;
 	use think\Loader;
 
     class View extends Builder
@@ -179,22 +180,31 @@
             $menu = MenuModel::where('status', 1)
                 ->where('action', $this->request->action())
                 ->where('controller', $this->request->controller())
-                ->where('module', $this->request->module())
+                ->where('module', $this->module)
                 ->find();
-            if ($menu && !$this->_title) {
-                $this->_title = $menu['title'];
-            }
-            if ($menu['group']) {
-                $this->assign('menu_group_title', $menu['group']);
-            }
-            if ($menu['pid']) {
-                $p_menu = MenuModel::where('status', 1)
-                    ->where('id', $menu['pid'])
-                    ->find();
-                $this->assign('p_menu_title', $p_menu['title']);
-            } else {
-                $this->assign('p_menu_title', $menu['title']);
-            }
+
+			if ($menu)
+			{
+
+				if ('' === $this->_title) {
+					$this->_title = $menu['title'];
+				}
+				if ($menu['group']) {
+					$this->assign('menu_group_title', $menu['group']);
+				}
+				if ($menu['pid']) {
+					$p_menu = MenuModel::where('status', 1)
+						->where('id', $menu['pid'])
+						->find();
+					if ($p_menu) {
+						$this->assign('p_menu_title', $p_menu['title']);
+					}else{
+						$this->assign('p_menu_title', $menu['title']);
+					}
+				} else {
+					$this->assign('p_menu_title', $menu['title']);
+				}
+			} 
             $this->assign('menu_title', $this->_title);
             // 显示页面
             $this->assign('group', $this->_group);
@@ -207,7 +217,7 @@
             if (count($this->_explaints) > 0) {
                 $this->assign('explaints', $this->_explaints);
             }
-            return parent::_fetch('view', $vars, $replace, $config);
+            return parent::_fetch('view', $vars, $replace);
         }
 
         /**
@@ -241,7 +251,8 @@
             if ($key['type'] instanceof \Closure) {
                 return $key['type']($data, $key);
             } else {
-                $method = 'convert' . Loader::parseName($key['type'], 1) . 'Value';
+
+                $method = 'convert' .Str::studly($key['type'], 1) . 'Value';
                 if (false !== strpos($key['name'], '{$')) {
                     $display = $key['name'];
                     $view = $this->app['view'];

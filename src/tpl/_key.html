@@ -216,7 +216,7 @@
     $arr = explode(',',$field['field']);
     {/php}
     <div class="layui-input-inline">
-        <select name="safe_check_type" id="{$field.options.obj_id}" lay-verify="required">
+        <select name="safe_check_type" id="safe_check_type" lay-verify="required">
             <option value=""></option>
             {volist name='arr' id='vo'}
             <option value="{$vo}">{$field['data'][$vo]}</option>
@@ -225,7 +225,7 @@
     </div>
 
     <div class="layui-input-inline">
-        <button type="button" class="layui-btn send_safe_check {$field.options.obj_id}">发送验证码</button>
+        <button type="button" class="layui-btn send_safe_check">发送验证码</button>
     </div>
 
     {notempty name='field.tips'}
@@ -239,26 +239,24 @@
 
         function set_safe_time() {
             if (send_safe_check_time == 0) {
-                $('.{$field.options.obj_id}').html('发送验证码');
+                $('.send_safe_check').html('发送验证码');
                 send_safe_check_time = {$field.options.wait_time};
             } else {
-                $('.{$field.options.obj_id}').html('请等待' + send_safe_check_time + '秒');
+                $('.send_safe_check').html('请等待' + send_safe_check_time + '秒');
                 send_safe_check_time--;
                 setTimeout("set_safe_time()", 1000)
             }
         }
 
-        $('.{$field.options.obj_id}').click(function () {
-            if (send_safe_check_time == {$field.options.wait_time} && $('#{$field.options.obj_id}').val()) {
+        $('.send_safe_check').click(function () {
+            if (send_safe_check_time == {$field.options.wait_time} && $('#safe_check_type').val()) {
                 var loading = layer.load()
                 $.ajax({
-                    url: "{:url('\\app\\ucenter\\controller\\Foreign@code')}", //请求的url地址
+                    url: "{:url('ucenter/admin.Foreign/safe')}", //请求的url地址
                     dataType: "json", //返回格式为json
                     type: "POST", //请求方式
                     data: {
-                        safe_check_type: $('#{$field.options.obj_id}').val(),
-                        mobile: $("#{$field.options.obj_id}").find("option:selected").text(),
-                        email: $("#{$field.options.obj_id}").find("option:selected").text(),
+                        safe_check_type: $('#safe_check_type').val(),
                         type: 'safe_code'
                     }, //请求方式
                     success: function (req) {
@@ -275,10 +273,10 @@
                         //请求完成的处理
                         layer.close(loading);
                     },
-                    error: function (XMLHttpRequest) {
+                    error: function (err) {
                         //请求出错处理
-                        var re = JSON.parse(XMLHttpRequest.responseText);
-                        layer.msg(re.message);
+                        layer.close(loading);
+                        layer.msg(JSON.stringify(err));
                     }
                 });
             } else {
@@ -1447,7 +1445,7 @@ $checked = $field['value']==$key ? 'checked' : '';
                 , accept: 'images' //普通文件
                 , exts: 'png|jpg|jpeg'
                 , size: 1024 * 5 //限制文件大小，单位 KB
-                , url: "{:url('file/Image/upload',['module'=> app('http')->getName()])}"
+                , url: "{:url('file/Image/upload',['module'=>$request->module()])}"
                 , data: {
                     type: 'idcard',
                     side: 'front',
@@ -1512,12 +1510,14 @@ $checked = $field['value']==$key ? 'checked' : '';
                         $("#back_id").val(res.data.id);
                     }
                 }
-                ,
-                error: function (XMLHttpRequest) {
-                //请求出错处理
-                var re = JSON.parse(XMLHttpRequest.responseText);
-                layer.msg(re.message);
-            }
+                , error: function () {
+                    //演示失败状态，并实现重传
+                  /*  var demoText = $('#test-upload-demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        auth_back.upload();
+                    });*/
+                }
             });
 
 

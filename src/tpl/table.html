@@ -7,7 +7,7 @@
 
 <div class="layui-card layadmin-header">
     <div class="layui-breadcrumb" lay-filter="breadcrumb">
-        <a lay-href="">{$p_menu_title|default=''}</a>
+        <a lay-href="">{$p_menu_title}</a>
         {present name='menu_group_title' }
         <a><cite>{$menu_group_title}</cite></a>
         {/present}
@@ -148,10 +148,9 @@
             elem: '#{$namespace}-table'
             ,id: '{$namespace}-table'
             ,url:'{$searchPostUrl|raw}'
-              //  ,cellMinWidth:120
+                ,cellMinWidth:120
                 ,skin: 'line,row'
                , size: 'lg'
-               // ,overflow: 'auto'
                 , loading: true
             ,parseData: function(res){ //res 即为原始返回的数据
                 return {
@@ -169,14 +168,13 @@
             ,title: '用户数据表'
             ,cols: [{$keyList|raw|json_encode}]
             ,page: true
-           /* ,overflow: {
+            ,overflow: {
             type: 'tips'
             // ,hoverTime: 500 // 悬停时间，单位ms, 悬停 hoverTime 后才会显示，默认为 0
             // ,color: 'black' // 字体颜色
             // ,bgColor: 'white' // 背景色
-        }*/
+        }
             ,filter:  {$filter|raw|json_encode}
-
             ,excel:  {$excel|raw|json_encode}
             ,text: {
                 none: '暂无相关数据' //默认：无数据。注：该属性为 layui 2.2.5 开始新增
@@ -283,9 +281,7 @@
                 },
                 error:function(err){
                     //请求出错处理
-                    var responseText = JSON.parse( err.responseText);
-                    console.log(err)
-                    layer.msg(responseText.message);
+                    layer.msg(JSON.stringify(err));
                 }
             });
         }
