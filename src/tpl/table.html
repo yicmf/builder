@@ -261,7 +261,7 @@
                 data:data, //请求方式
                 success:function(req){
                     //请求成功时处理
-                    if ( 0 == req.code)
+                    if ( 0 == req.code || 200 == req.code)
                     {
                         if (req.reload)
                         {
