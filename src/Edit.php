@@ -69,7 +69,7 @@
 			// 命名空间
 			$this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
 				. '_' . $this->request->action() . '_'
-				. md5(json_encode($this->request->except(explode(',','v,user'))));
+				. md5(json_encode($this->request->except(explode(',', 'v,user'))));
 			//                .implode('_',$this->request->except('v'));
 		}
 
@@ -264,7 +264,7 @@
 		 */
 		public function keySafeCheck($field, $title, $tips = null, $wait_time = 60)
 		{
-			$this->key($field, $title, $tips, 'safe_check', ['wait_time' => $wait_time,'obj_id'=>uniqid()]);
+			$this->key($field, $title, $tips, 'safe_check', ['wait_time' => $wait_time, 'obj_id' => uniqid()]);
 			return $this->keyTextInline('check_code', '验证码', '请输入收到的验证码', '', 'required');
 		}
 
@@ -406,9 +406,27 @@
 		 * @param null $verify
 		 * @return $this
 		 */
-		public function keyBelongTo($field, $url, $title, $tips = null, $default = null, $size = null, $verify = null)
+		public function keyBelongTo($field, $url, $title, $show_field = 'name', $tips = null, $default = null, $size = null, $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'belongTo', ['url' => $url, 'field' => $field, 'limit' => 0], $default, $verify, $size);
+			if (strpos($field, '|')) {
+				// 获取field
+				$temp = explode('|', $field);
+				$v_field = $temp[1];
+				$field = $temp[0];
+			}
+
+			if (strpos($field, '.')) {
+				$temp = explode('.', $field);
+				$show_field = $temp[1];
+				if (!isset($show_field)) {
+					$v_field = $temp[0];
+				} else {
+					$v_field = $temp[0] . '_id';
+				}
+			} else {
+				throw new Exception('关联格式错误');
+			}
+			return $this->key($v_field, $title, $tips, 'belongTo', ['url' => $url, 'show_field' => $show_field, 'field' => $field, 'limit' => 0], $default, $verify, $size);
 		}
 
 		/**
@@ -753,13 +771,12 @@
 		 * @param string $tips
 		 * @param int $default
 		 * @return $this
-		 * @throws Exception
 		 * @author 微尘 <yicmf@qq.com>
 		 * @datetime: 2020/5/30 6:51
 		 */
 		public function keyRate($field, $title, $tips = '', $default = 3)
 		{
-			return $this->key($field, $title, $tips, 'rate', $default);
+			return $this->key($field, $title, $tips, 'rate', null, $default);
 		}
 
 		//        /**
@@ -842,8 +859,8 @@
 					]
 				];
 			$default_config = [
-				'manager' =>  url('file/Editor/manager', ['module' => $this->module]),
-				'upload' =>  url('file/Editor/upload', ['module' => $this->module])
+				'manager' => url('file/Editor/manager', ['module' => $this->module]),
+				'upload' => url('file/Editor/upload', ['module' => $this->module])
 			];
 			$config = array_merge($default_config, $config);
 			if (isset($config['items'])) {
@@ -974,7 +991,7 @@
 		}
 
 		/**
-		 * 单图片上传
+		 * 单图片上传，不关联模型
 		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
 		 * @param string $title
 		 * @param null $remark
@@ -994,18 +1011,58 @@
 				, $default, $verify);
 		}
 
+
 		/**
-		 * 多图片上传
+		 * 单图片上传，关联模型
 		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
 		 * @param string $title
-		 * @param null $tips
+		 * @param null $remark
 		 * @param int $limit
 		 * @param null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
 		 * @datetime: 2019/5/8 11:58
 		 */
+		public function keyImageModel($field, $title, $tips = null, $button = '上传单个图片', $default = null, $verify = null)
+		{
+			$max_size = 0;
+			$exts = '';
+			$mimes = '';
+			return $this->key($field, $title, $tips, 'image',
+				['button' => $button, 'limit' => 1, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
+				, $default, $verify);
+		}
+
+		/**
+		 * 多图片上传,不关联模型
+		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
+		 * @param string $title
+		 * @param null $tips
+		 * @param int $limit
+		 * @param null $verify
+		 * @return $this
+		 */
 		public function keyImageMultiple($field, $title, $tips = null, $default = null, $limit = 5, $verify = null)
+		{
+
+			$max_size = 0;
+			$exts = '';
+			$mimes = '';
+			return $this->key($field, $title, $tips, 'ImageMultiple',
+				['limit' => $limit, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
+				, $default, $verify);
+		}
+
+		/**
+		 * 多图片上传，关联模型
+		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
+		 * @param string $title
+		 * @param null $tips
+		 * @param int $limit
+		 * @param null $verify
+		 * @return $this
+		 */
+		public function keyImageMultipleModel($field, $title, $tips = null, $default = null, $limit = 5, $verify = null)
 		{
 
 			$max_size = 0;
@@ -1025,7 +1082,6 @@
 		 * @param null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/5/8 11:58
 		 */
 		public function keyImageShowMultiple($field, $title, $tips = null, $default = null, $limit = 5, $verify = null)
 		{
@@ -1037,7 +1093,7 @@
 				['limit' => $limit, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
 				, $default, $verify);
 		}
- 
+
 		/**
 		 * 实名认证
 		 * @param string $field
@@ -1060,13 +1116,29 @@
 		 * @param null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/5/8 11:58
 		 */
-		public function keyAttachment($field, $title, $tips = null, $size = 50, $verify = null)
+		public function keyAttachment($field, $title, $tips = null, $default = 0, $verify = null)
 		{
 			$extensions = '*';
 			$remark = '';
-			return $this->key($field, $title, $tips, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions, 'size' => $size], 30, $verify);
+			return $this->key($field, $title, $tips, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions], 0, $verify);
+		}
+
+		/**
+		 * 上传多个附件
+		 * @param      $field
+		 * @param      $title
+		 * @param null $tips
+		 * @param int $size
+		 * @param null $verify
+		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
+		public function keyAttachmentMultiple($field, $title, $tips = null, $limit = 5, $verify = null)
+		{
+			$extensions = '*';
+			$remark = '';
+			return $this->key($field, $title, $tips, 'attachmentMultiple', ['remark' => $remark, 'limit' => $limit, 'extensions' => $extensions], 0, $verify);
 		}
 
 		/**
@@ -1077,12 +1149,11 @@
 		 * @param null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/5/8 11:58
 		 */
-		public function keyCity($field, $title, $tips = null, $verify = null)
+		public function keyCity($field, $title, $tips = null, $default = 110101)
 		{
 			// 修正在编辑信息时无法正常显示已经保存的地区信息
-			return $this->key($field, $title, $tips, 'city', null, 30, $verify);
+			return $this->key($field, $title, $tips, 'city', null, $default, null);
 		}
 
 		/**
@@ -1113,7 +1184,7 @@
 		protected function key($field, $title, $tips, $type, $options = null, $default = '', $verify = null, $size = null, $disabled = null, $placeholder = '')
 		{
 			if (is_array($verify)) {
-				$verify = implode('|',$verify);
+				$verify = implode('|', $verify);
 			}
 			if (strpos($verify, ',')) {
 				$verify = str_replace(',', '|', $verify);
@@ -1172,9 +1243,9 @@
 		{
 
 			if (is_null($url)) {
-				$url =  url();
+				$url = url();
 			} else {
-				$url =  url($url);
+				$url = url($url);
 			}
 			if (strpos($url, '/Admin')) {
 				$url = str_replace('/Admin', '/admin', $url);
@@ -1414,8 +1485,7 @@
 					->where('controller', $this->request->controller())
 					->where('module', $this->module)
 					->find();
-				if ($menu)
-				{
+				if ($menu) {
 
 					if ('' === $this->_title) {
 						$this->_title = $menu['title'];
@@ -1429,7 +1499,7 @@
 							->find();
 						if ($p_menu) {
 							$this->assign('p_menu_title', $p_menu['title']);
-						}else{
+						} else {
 							$this->assign('p_menu_title', $menu['title']);
 						}
 					} else {
@@ -1442,12 +1512,12 @@
 				}
 
 				$this->assign('templets', $this->_templets);
-				//            if ($this->request->has('auto_builder', 'get')) {
-				//                $this->assign('filter', $this->request->get('auto_builder'));
-				//                $this->assign('auto_builder', 1);
-				//            } else {
-				$this->assign('filter', $this->module . '-' . $this->request->controller() . '-' . $this->request->action());
-				//            }
+				if ($this->request->has('_namespace_filter', 'get')) {
+					$this->assign('filter', $this->request->get('_namespace_filter'));
+					$this->assign('auto_builder', 1);
+				} else {
+					$this->assign('filter', $this->module . '-' . $this->request->controller() . '-' . $this->request->action());
+				}
 				if (count($this->_keyList)) {
 					$this->assign('keyList', $this->_keyList);
 				}
@@ -1461,6 +1531,7 @@
 //				            dump($this->_triggers);
 				$this->assign('reload', $this->_reload);
 				$this->assign('mask', $this->_mask);
+				$this->assign('dialog_index', $this->request->get('_dialog_index',0));
 				$this->assign('name_space', $this->_namespace);
 				return parent::_fetch('edit', $vars, $config);
 			}

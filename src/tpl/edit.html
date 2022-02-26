@@ -6,7 +6,7 @@
 
 <div class="layui-card layadmin-header">
 	<div class="layui-breadcrumb" lay-filter="breadcrumb">
-		<a lay-href="">{$p_menu_title}</a>
+		<a lay-href="">{$p_menu_title|default=''}</a>
 		{present name='menu_group_title' }
 		<a><cite>{$menu_group_title}</cite></a>
 		{/present}
@@ -89,14 +89,14 @@
 
 								{volist name='form_buttons' id='vo'}
 
-								<button  type="{$vo.type}"
+						<button  type="{$vo.type}"
 										 {eq name="vo.type" value="close"}
 										 onclick="closeTab(this)"
 								{/eq}
 										 class="layui-btn"
 										 {notempty name="vo.url"  } data-url="{$vo.url?:''}" {/notempty}
 										 {notempty name="vo.click"  } onclick="{$vo.click}" {/notempty}
-										 {eq name="vo.type" value="submit"} lay-submit="" lay-filter="{$filter}"{/eq}  >{$vo.title}</button>
+										 {eq name="vo.type" value="submit"} lay-submit lay-filter="{$filter}"{/eq}  >{$vo.title}</button>
 
 								{/volist}
 
@@ -134,6 +134,7 @@
 
 		form.render();
 
+		var dialog_index = "{$dialog_index}";
 		window.closeTab = function (obj) {
 			var arr = obj.form.action.split('#');
 			element.tabDelete('layadmin-layout-tabs',arr[1]);
@@ -202,9 +203,6 @@
 			}
 		});
 
-		//网站设置
-		{notpresent name='auto_builder'}
-
 		form.on('submit({$filter})', function(obj){
 			//	layer.msg(JSON.stringify(obj.field));
 			//	layer.msg(JSON.stringify(obj.field));
@@ -223,16 +221,29 @@
 					{
 						if (req.closeCurrent)
 						{
-							setTimeout(function() {
-								var arr = obj.form.action.split('#');
-								console.log(arr);
-								element.tabDelete('layadmin-layout-tabs',arr[1]);
-							},req.wait*1000);
-						}else if (req.reload)
-						{
-							layui.index.render();
+							if(parseFloat(dialog_index)>0)
+							{
+								layer.close(dialog_index); //执行关闭
+							}else{
+								setTimeout(function() {
+									var arr = obj.form.action.split('#');
+									console.log(arr);
+									element.tabDelete('layadmin-layout-tabs',arr[1]);
+								},req.wait*1000);
+							}
 						}
-						layer.msg(req.message);
+						if (req.reload)
+						{
+							if(parseFloat(dialog_index)>0)
+							{
+								layui.table.reload('{$filter}-table'); //重载表格
+							}else{
+								layui.index.render();
+							}
+						}
+						layer.msg(req.message,{
+							time:req.wait*1000
+						});
 
 					}else{
 						layer.msg(req.message);
@@ -249,7 +260,6 @@
 			//提交修改
 			return false;
 		});
-		{/notpresent}
 
 
 		//邮件服务

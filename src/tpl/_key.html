@@ -370,60 +370,63 @@
     {/case}
     {case value="belongTo"}<!-- 属于选择 -->
 
+    {php}
+   // unset($field['data']);
+  // dump($field);exit();
+    {/php}
     <div class="layui-input-inline">
-        <input type="hidden" name="{$field['field']}" value="{$field['value']}" id="key_{$field['field']}">
-        <input type="text" name="{$field.field}_{$field['options']['field']}" readonly value="{$field['value']}"
-               id="{$field.field}_{$field['options']['field']}"
-               lay-verify="{$field['verify']|raw}" size="{$field['size']}"
-               data-width='{$field[' size']}' >&nbsp;<p class="fa fa-search" onclick='find_dialog_{$field[' field
-        ']}(this)'>
-        </p>
-        <a href="javascript:;" title="清空选择" onclick="clearFind(this)">清空选择</a>
+        <input type="hidden" name="{$field['field']}" value="{$field['value']}" id="find_dialog_id_{$field['jquery_id']}">
+
+        <input type="text" class="layui-input" value="{$field['value']}" size="{$field['size']}"  lay-verify="{$field['verify']|raw}" id="find_dialog_{$field['jquery_id']}" readonly>
+</div>
+
+        <div class="layui-form-mid layui-word-aux"  style="display: none" >清空选择</div>
         <script type="text/javascript">
-            function clearFind(obj) {
-                $(obj).prev().prev().val('');
-                $(obj).prev().prev().prev().val('');
-            }
 
-            function find_dialog_ {
-                $field['field']
-            }
+            layui.use(["laytpl",'admin','forum','table','soulTable',"element"], function(){
+                var $ = layui.$
+                    ,admin = layui.admin
+                    ,view = layui.view
+                    ,form = layui.form
+                    ,element = layui.element
+                    ,soulTable = layui.soulTable
+                    ,table = layui.table;
+                //默认滑块
 
-            (obj)
-            {
-                $(obj).dialog(
-                    {
-                        id: "build_{$field['jquery_id']}",
-                        data: {
-                            field: "{$field['options']['field']}",
-                            value: "{$field['value']}",
-                            callback: "find_set_{$field['field']}",
-                            limit: "{$field['options']['limit']}"
-                        },
-                        //   onClose:'tests',
-                        url: "{$field['options']['url']}",
-                        title: "选择{$field['title']}",
-                        mask: 'true', width: 1200, height: 700
+                $("#find_dialog_{$field['jquery_id']}").click(function(obj){
+                    var data = obj.data;
+                    console.log(data);
+                    admin.popup({
+                        title: '编辑回帖'
+                        ,area: ['900px', '600px']
+                        ,id: 'LAY-popup-forum-edit'
+                        ,resize: false
+                        ,success: function(layero, index){
+                            view(this.id).render('{$field.options.url}?selected_id='+$("#find_dialog_id_{$field['jquery_id']}").val(), data).done(function(){
+                                form.render(null, 'layuiadmin-app-forum-reply');
+
+                                //监听提交
+                                form.on('submit(layuiadmin-app-forumreply-submit)', function(data){
+                                    var field = data.field; //获取提交的字段
+                                    var value = JSON.parse(field.data);
+                                    console.log(value)
+                                    $("#find_dialog_{$field['jquery_id']}").val(value["{$field.options.show_field}"])
+                                    $("#find_dialog_id_{$field['jquery_id']}").val(value['id'])
+                                    //提交 Ajax 成功后，关闭当前弹层并重载表格
+                                    //$.ajax({});
+                                   // layui.table.reload('LAY-app-forumreply-list'); //重载表格
+                                    layer.close(index); //执行关闭
+                                });
+                            });
+                        }
                     });
-            }
+                });
 
-            /*   function tests(ev) {
-                   console.log(this);
-               }*/
-            function find_set_ {
-                $field['field']
-            }
+            });
 
-            (id, field)
-            {
-                // 赋值
-                $("#key_{$field['field']}").val(id);
-                $("#{$field.field}_{$field['options']['field']}").val(field);
-                $(this).dialog('close', "build_{$field['jquery_id']}");
-            }
+
         </script>
 
-    </div>
     {/case}
 
     {case value="belongsToMany"}<!-- 多对多选择 -->
@@ -1061,9 +1064,29 @@ $field['value_a'] = implode(' - ',$field['value']);
 {case value="city"}
 <script src="/static/admin/lib/extend/city-picker/city-picker.data.js"></script>
 <script src="/static/admin/lib/extend/city-picker/city-picker.js"></script>
-<link href="/static/admin/lib/extend/city-picker/city-picker.css" rel="stylesheet"/>
+<link href="/static/admin/lib/extend/city-picker/city-picker.css?v=1" rel="stylesheet"/>
+
+{php}
+
+$show = '';
+$value = \think\facade\Db::name('district')->where('id',$field['value'])->find();
+if($value){
+
+$show = $value['name'];
+
+if($value['upid']){
+$value = \think\facade\Db::name('district')->where('id',$value['upid'])->find();
+$show = $value['name'].'/'.$show;
+if($value['upid']){
+$value = \think\facade\Db::name('district')->where('id',$value['upid'])->find();
+$show = $value['name'].'/'.$show;
+
+}
+}
+}
+{/php}
 <div class="layui-inline" style="width: 260px">
-    <input type="text" autocomplete="on" class="layui-input" id="city-picker" name="city-picker" readonly="readonly" data-toggle="city-picker" placeholder="请选择">
+    <input type="text" autocomplete="on" class="layui-input" id="city-picker" readonly="readonly" data-toggle="city-picker" placeholder="请选择">
 </div>
 
 <script>
@@ -1071,12 +1094,12 @@ $field['value_a'] = implode(' - ',$field['value']);
     layui.use([], function () {
         var $ = layui.$, cityPicker = layui.citypicker;
         var currentPicker = new cityPicker("#city-picker", {
-            provincename: "provinceId",
-            cityname: "cityId",
-            districtname: "districtId",
-            level: 'districtId',// 级别
+            provincename: "province_id",
+            cityname: "city_id",
+            districtname: "district_id",
+            level: "{$field['field']}",// 级别
         });
-        currentPicker.setValue("河南省/信阳市/新县");
+        currentPicker.setValue("{$show}");
     });
 
 </script>
@@ -1681,51 +1704,124 @@ $images = [];
     {/php}
     <div class="row">
         <div class="col-md-3">
-            <button type="button" class="layui-btn" id="button-upload-normal-file-{$field.field}"><i class="layui-icon layui-icon-upload"></i>   上传文件</button>
-
+            <button type="button" class="layui-btn" id="button-upload-normal-file-{$field.field}"><i class="layui-icon layui-icon-upload"></i>上传文件</button>
         </div>
         <div class="col-md-9" id="show-upload-normal-file-{$field.field}">
             {notempty name='attachment' }
-
             文件大小：{$attachment['size_info']|default=''}
             <input type="hidden" id='singel_file_{$field.field}' name="{$field.field}" value="{$field['value']}">
             {/notempty}
-
+            <div class="mask"></div>
+            <div class="loading">
+                <div class="layui-progress layui-progress-big" lay-showpercent="true" lay-filter="uploadProgress">
+                    <div class="layui-progress-bar layui-bg-red" lay-percent="0%"></div>
+                </div>
+            </div>
+            <style type="text/css">
+                .mask{position:fixed;width:100%;height:100%;top:0;left:0;background:#000;opacity:0.8;filter:alpha(Opacity=80);-moz-opacity:0.8;z-index:999;display:none;}
+                .loading{position:fixed;width:300px;left:50%;margin-left:-150px;top:200px;height:18px;border-radius:10px;background:#fff;z-index:9999;overflow:hidden;display:none;}
+            </style>
         </div>
         <script type="text/javascript">
-            layui.use(['admin', 'upload'], function () {
+            layui.use(['admin', 'upload',"element"], function () {
                 var $ = layui.jquery
+                    ,element = layui.element
                     , upload = layui.upload;
 
-                //普通图片上传
-                var uploadInst = upload.render({
+                var totalPage = 0;
+                var page = 1;
+                var status = 0;
+                var save_path = '';
+                //普通附件上传
+                var uploadAttachment = upload.render({
                     elem: '#button-upload-normal-file-{$field.field}'
                      ,accept: 'file' //普通文件
                     //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
                     //   ,size: 60 //限制文件大小，单位 KB
+                       , auto: false
                     , url: "{:url('file/Attachment/upload')}"
-                    , before: function (obj) {
-                        //预读本地文件示例，不支持ie8
-                    }
+                    // , before: function (obj) {
+                    //     //预读本地文件示例，不支持ie8
+                    // }
+                    ,
+                        choose: function (obj) {
+                            element.progress('uploadProgress', '0%');
+                            $('.mask').show();
+                            $('.loading').show();
+                            var data = this.data;
+                            var files = obj.pushFile();
+                            var LENGTH = 2*1024 * 1024; //每片文件大小
+                            page = 1;
+                            status = 1;
+                            for (var key in files) {
+                                var file = files[key];
+                                var totalSize = file.size;
+                                totalPage = Math.ceil(totalSize / LENGTH);
+                                if(totalPage == 1)
+                                {
+                                    uploadAttachment.upload();
+                                }else {
+                                    var fileName = file.name;
+                                    var fileExt = fileName.substr(fileName.lastIndexOf('.') + 1);
+                                    fileName = fileName.substr(0, fileName.lastIndexOf('.'));
+                                    var progressTimer = setInterval(function () {
+                                        console.log(status)
+                                        if (parseInt(totalPage) == parseInt(page) && (parseInt(status) == 2 || parseInt(status) == -1)) {
+                                            clearInterval(progressTimer);
+                                        } else {
+                                            if (status == 1) {
+                                                status = 0;
+                                                data.fileName = fileName;
+                                                data.page = page;
+                                                data.totalPage = totalPage;
+                                                data.fileExt = fileExt;
+                                                data.chunks = 1;
+                                                data.save_path = save_path;
+                                                obj.upload(key, file.slice((page - 1) * LENGTH, page * LENGTH));
+                                            }
+                                        }
+                                    }, 100);
+                            }
+                            }
+                        }
                     , done: function (res) {
-                        //如果上传失败
-                        if (res.code > 0) {
-                            return layer.msg(res.message);
-                        } else {
+                        if (res.code == 60001) { //分片上传
+                            element.progress('uploadProgress', Math.ceil(page * 100 / totalPage) + '%');
+                            page = page + 1;
+                            status = 1;
+                            save_path = res.message;
+                            console.log(page);
+                        } else if (res.code == 0) { //上传完成
+                            status = 2;
+                            element.progress('uploadProgress', '100%');
                             //上传成功
                             $("#show-upload-normal-file-{$field.field}").html('' +
                                 '  文件大小：'+res.data.size +'\n' +
                                 '            <input type="hidden" id=\'singel_file_{$field.field}\' name="{$field.field}" value="'+res.data.id+'">' +
                                 '');
                             $("[name='{$field.field}']").val(res.data.id);
+
+                            layer.msg('上传成功', {time: 1000, anim: 0}, function () {
+                                $('.mask').hide();
+                                $('.loading').hide();
+                            });
+                        } else { //上传错误
+                            status = -1;
+                            element.progress('uploadProgress', '0%');
+                            layer.msg("上传失败，请重试", {time: 3000, anim: 0}, function () {
+                                $('.mask').hide();
+                                $('.loading').hide();
+                            });
                         }
+
                     }
                     , error: function () {
+                        status = -1;
                         //演示失败状态，并实现重传
                         var demoText = $('#test-upload-demoText');
                         demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
                         demoText.find('.demo-reload').on('click', function () {
-                            uploadInst.upload();
+                            uploadAttachment.upload();
                         });
                     }
                 });
@@ -1736,7 +1832,183 @@ $images = [];
     </div>
 
 
-</div>{/case}
+</div>
+
+{/case}
+{case value="attachmentMultiple"}
+
+<div class="layui-input-block">
+    {php}
+    $attachments = $field['value'];
+
+    {/php}
+    <div class="row">
+        <div class="col-md-3">
+            <button type="button" class="layui-btn" id="button-upload-normal-file-{$field.field}"><i class="layui-icon layui-icon-upload"></i>上传文件</button>
+        </div>
+        <div class="col-md-9" id="show-upload-normal-file-{$field.field}">
+
+            <input type="hidden" name="{$field.field}" id="file_value_{$field.field}" value=""/>
+            <div class="layui-upload-list" style="max-width: 1000px;">
+                <table class="layui-table">
+                    <colgroup>
+                        <col>
+                        <col width="150">
+                        <col width="260">
+                        <col width="150">
+                    </colgroup>
+                    <thead>
+                    <tr><th>文件名</th>
+                        <th>大小</th>
+                        <th>上传进度</th>
+                        <th>操作</th>
+                    </tr></thead>
+                    <tbody id="AttachmentList{$field.field}">
+
+                    {volist name='attachments' id='vo'}
+                    <tr id="upload-1645237012012-1" data-id="{$vo.id}">
+                        <td>{$vo.name}</td>
+                        <td>{$vo.size}</td>
+                        <td>
+                            <div class="layui-progress" lay-filter="progress-demo-1645237012012-1">
+                            <div class="layui-progress-bar" lay-percent="100%" style="width: 100%;"></div></div>
+                        </td>
+                        <td>
+                        <button type="button" class="layui-btn layui-btn-xs layui-btn-danger attachment-d" >删除</button>
+                        </td>
+                    </tr>
+                    {/volist}
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="mask"></div>
+            <div class="loading">
+                <div class="layui-progress layui-progress-big" lay-showpercent="true" lay-filter="uploadProgress">
+                    <div class="layui-progress-bar layui-bg-red" lay-percent="0%"></div>
+                </div>
+            </div>
+            <style type="text/css">
+                .mask{position:fixed;width:100%;height:100%;top:0;left:0;background:#000;opacity:0.8;filter:alpha(Opacity=80);-moz-opacity:0.8;z-index:999;display:none;}
+                .loading{position:fixed;width:300px;left:50%;margin-left:-150px;top:200px;height:18px;border-radius:10px;background:#fff;z-index:9999;overflow:hidden;display:none;}
+            </style>
+        </div>
+        <script type="text/javascript">
+            layui.use(['admin', 'upload',"element"], function () {
+                var $ = layui.jquery
+                    ,element = layui.element
+                    , upload = layui.upload;
+
+                var totalPage = 0;
+                var page = 1;
+                var status = 0;
+                var save_path = '';
+                window.getUploadAttachmentValue = function (field) {
+                    // console.log(field)
+                    var temp = new Array();
+                    var items = $('#AttachmentList'+field).children('tr').each(function(index){
+                        $(this).data('id') &&temp.push($(this).data('id'))
+                    });
+                    $("#file_value_"+field).val(temp.join(','));
+                  //  console.log(field)
+                    console.log(temp.join(','))
+                }
+                $('#AttachmentList{$field.field}').children('tr').each(function(index){
+
+                    //删除
+                    $(this).find('.attachment-d').on('click', function(obj){
+                        $(this).parent().parent().remove();
+                        getUploadAttachmentValue('{$field.field}');
+                    });
+                });
+
+                getUploadAttachmentValue('{$field.field}');
+
+                //普通附件上传
+                var uploadListIns = upload.render({
+                    elem: '#button-upload-normal-file-{$field.field}'
+                    ,accept: 'file' //普通文件
+                    , url: "{:url('file/Attachment/upload')}"
+                    ,elemList: $("#AttachmentList{$field.field}") //列表元素对象
+                    ,multiple: true
+                    ,number: 3
+                    ,auto: true
+                    ,choose: function(obj){
+                        var that = this;
+                        var files = this.files = obj.pushFile(); //将每次选择的文件追加到文件队列
+                        //读取本地文件
+                        obj.preview(function(index, file, result){
+                            var tr = $(['<tr id="upload-'+ index +'" data-id="0">'
+                                ,'<td>'+ file.name +'</td>'
+                                ,'<td>'+ (file.size/1014).toFixed(1) +'kb</td>'
+                                ,'<td><div class="layui-progress" lay-filter="progress-demo-'+ index +'"><div class="layui-progress-bar" lay-percent=""></div></div></td>'
+                                ,'<td>'
+                                ,'<button class="layui-btn layui-btn-xs demo-reload layui-hide">重传</button>'
+                                ,'<button class="layui-btn layui-btn-xs layui-btn-danger demo-delete">删除</button>'
+                                ,'</td>'
+                                ,'</tr>'].join(''));
+
+                            //单个重传
+                            tr.find('.demo-reload').on('click', function(){
+                                obj.upload(index, file);
+                            });
+
+                            //删除
+                            tr.find('.demo-delete').on('click', function(){
+                                delete files[index]; //删除对应的文件
+                                tr.remove();
+                                uploadListIns.config.elem.next()[0].value = ''; //清空 input file 值，以免删除后出现同名文件不可选
+                            });
+
+                            that.elemList.append(tr);
+                            element.render('progress'); //渲染新加的进度条组件
+                        });
+                    }
+                    ,done: function(res, index, upload){ //成功的回调
+                        var that = this;
+                        if(res.code == 0){ //上传成功
+                            var tr = that.elemList.find('tr#upload-'+ index)
+                            ,tds = tr.children();
+                            tds.eq(3).find('.demo-reload').remove(); //清空操作
+                            delete this.files[index]; //删除文件队列已经上传成功的文件
+                            tr.data('id',res.data.id);
+                            getUploadAttachmentValue('{$field.field}');
+                        }else{
+                            this.error(index, upload);
+                        }
+                    }
+                    ,allDone: function(obj){ //多文件上传完毕后的状态回调
+                        console.log(obj)
+                        var that = this;
+                            var tr = that.elemList;
+                        console.log(tr.children('tr'));
+                        tr.children('tr').each(function(i,n){
+                            var obj = $(n)
+                            console.log(obj);
+                        });
+                    }
+                    ,error: function(index, upload){ //错误回调
+                        var that = this;
+                        var tr = that.elemList.find('tr#upload-'+ index)
+                            ,tds = tr.children();
+                        tds.eq(3).find('.demo-reload').removeClass('layui-hide'); //显示重传
+                    }
+                    ,progress: function(n, elem, e, index){ //注意：index 参数为 layui 2.6.6 新增
+                        element.progress('progress-demo-'+ index, n + '%'); //执行进度条。n 即为返回的进度百分比
+                    }
+                });
+
+
+            });
+        </script>
+
+    </div>
+
+
+</div>
+
+{/case}
 {case value='showImg'}
 
 <div class="layui-input-inline">

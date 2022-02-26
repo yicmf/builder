@@ -1,32 +1,17 @@
 
 
-<title>{$menu_title}</title>
+
 <script type="text/html" template>
     <link rel="stylesheet" href="{{ layui.setter.base }}style/template.css?v={{ layui.admin.v }}-1" media="all">
 </script>
 
-<div class="layui-card layadmin-header">
-    <div class="layui-breadcrumb" lay-filter="breadcrumb">
-        <a lay-href="">{$p_menu_title|default=''}</a>
-        {present name='menu_group_title' }
-        <a><cite>{$menu_group_title}</cite></a>
-        {/present}
-        <a><cite>{$menu_title}</cite></a>
-    </div>
-</div>
+
+
 
 <div class="layui-fluid">
             <div class="layui-card">
                 <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="app-forum-list">
-                    <div class="layui-collapse ns-tips" style="display: none">
-                        <div class="layui-colla-item">
-                            <h2 class="layui-colla-title">操作提示<i class="layui-icon layui-colla-icon"></i></h2>
-                            <ul class="layui-colla-content layui-show">
-                                <li>1、店铺到期30日内可以申请续签</li>
-                                <li>2、请认准官方收款账户，支付凭据上传之后请联系官方客服人员</li>
-                            </ul>
-                        </div>
-                    </div>
+
                     {notempty name='suggest'}
                     <blockquote class="layui-elem-quote">{$suggest}</blockquote>
                     {/notempty}
@@ -56,6 +41,16 @@
                 </div>
             </div>
 </div>
+<form class="layui-form" lay-filter="layuiadmin-app-forum-reply" style="padding: 20px 30px 0 0;">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <input type="hidden" name="data" id="poppo_data">
+        <div class="layui-input-inline">
+            <input type="button" lay-submit lay-filter="layuiadmin-app-forumreply-submit" value="确认" class="layui-btn">
+        </div>
+    </div>
+</form>
 
 <script type="text/html" id="{$namespace}-table-search">
     <div class="layui-btn-container">
@@ -83,7 +78,7 @@
     {php} }else{  {/php}
     {{# var arr = {$action.status|json_encode};  if( true == arr.includes(d.status)){ }}
     {php}  }  {/php}
-    {eq name='action.event' value='tab'}
+    {eq name='action.event' value='edit'}
         <a class="layui-btn layui-btn-xs {$action.attr.class}"
            lay-href="{$action.url}">
             {present name='action.attr.icon'}
@@ -217,7 +212,12 @@
 
             }
         });
-
+        table.on('radio({$namespace}-table)', function(obj){ //test 是 table 标签对应的 lay-filter 属性
+            console.log(obj); //当前行的一些常用操作集合
+            console.log(obj.checked); //当前是否选中状态
+            console.log(obj.data); //选中行的相关数据
+            $("#poppo_data").val(JSON.stringify(obj.data))
+        });
         //监听排序事件
         // TODO:携带带搜索条件
         table.on('sort({$namespace}-table)', function(obj){ //注：sort 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
@@ -418,31 +418,109 @@
                     layer.close(index);
                 });
             } else if(obj.event === 'edit'){
+
                 element.tabAdd('layadmin-layout-tabs', {
                     title: '新选项'+ (Math.random()*1000|0) //用于演示
                     ,content: '内容'+ (Math.random()*1000|0)
                     ,id: new Date().getTime() //实际使用一般是规定好的id，这里以时间戳模拟下
                 })
                 return;
-            }else if(obj.event === 'dialog'){
-
                 var url = $(this).data('url');
-                url = url.replace('{namespace_filter}','{$namespace}');
+                url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
                 for(var key in obj.data){
                     url = url.replace('{$'+key+'}',obj.data[key]);
                 }
+
                 admin.popup({
                     title: $(this).data('title')
                     ,area: [$(this).data('width')+'px', $(this).data('height')+'px']
-                    ,id: 'LAY-popup-{$namespace}-add'
+                    ,id: 'LAY-popup-workorder-add'
                     ,success: function(layero, index){
-
-                        url = url+'&_dialog_index='+index;
                         view(this.id).render(url).done(function(){
-                            form.render(null, 'layuiadmin-form-{$namespace}');
-                            console.log(index);
+                            form.render(null, 'layuiadmin-form-workorder');
                             //监听提交
+                            form.on('submit({$namespace})', function(data){
+                                var field = data.field; //获取提交的字段
+                                //提交 Ajax 成功后，关闭当前弹层并重载表格
+                                $.ajax({
+                                    url:url, //请求的url地址
+                                    dataType:"json", //返回格式为json
+                                    async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                                    type:"POST", //请求方式
+                                    data:field,
+                                    success:function(req){
+                                        //请求成功时处理
+                                        if ( 0 == req.code)
+                                        {
+                                            layer.msg(req.message);
+                                            layui.table.reload('{$namespace}-table'); //重载表格
+                                            layer.close(index); //执行关闭
+                                        }else{
+                                            layer.msg(req.message);
+                                        }
+                                    },
+                                    complete:function(){
+                                        //请求完成的处理
+                                    },
+                                    error:function(err){
+                                        //请求出错处理
+                                        layer.msg(JSON.stringify(err));
+                                    }
+                                });
 
+                                //$.ajax({});
+                            });
+                        });
+                    }
+                });
+
+            }else if(obj.event === 'dialog'){
+
+                var url = $(this).data('url');
+                url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
+                for(var key in obj.data){
+                    url = url.replace('{$'+key+'}',obj.data[key]);
+                }
+
+                admin.popup({
+                    title: $(this).data('title')
+                    ,area: [$(this).data('width')+'px', $(this).data('height')+'px']
+                    ,id: 'LAY-popup-workorder-add'
+                    ,success: function(layero, index){
+                        view(this.id).render(url).done(function(){
+                            form.render(null, 'layuiadmin-form-workorder');
+                            //监听提交
+                            form.on('submit({$namespace})', function(data){
+                                var field = data.field; //获取提交的字段
+                                //提交 Ajax 成功后，关闭当前弹层并重载表格
+                                $.ajax({
+                                    url:url, //请求的url地址
+                                    dataType:"json", //返回格式为json
+                                    async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                                    type:"POST", //请求方式
+                                    data:field,
+                                    success:function(req){
+                                        //请求成功时处理
+                                        if ( 0 == req.code)
+                                        {
+                                            layer.msg(req.message);
+                                            layui.table.reload('{$namespace}-table'); //重载表格
+                                            layer.close(index); //执行关闭
+                                        }else{
+                                            layer.msg(req.message);
+                                        }
+                                    },
+                                    complete:function(){
+                                        //请求完成的处理
+                                    },
+                                    error:function(err){
+                                        //请求出错处理
+                                        layer.msg(JSON.stringify(err));
+                                    }
+                                });
+
+                                //$.ajax({});
+                            });
                         });
                     }
                 });

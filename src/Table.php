@@ -77,7 +77,7 @@
 		private $_toolbar = ['filter', 'print'];// ['filter', 'exports', 'print'];
 		protected $_filter = [
 			//['column','data','condition','editCondition','excel']
-			'items' => ['column','data'],
+			'items' => ['column', 'data'],
 			'bottom' => false,
 			'clearFilter' => true
 		];
@@ -85,7 +85,7 @@
 		 * 操作表宽度
 		 * @var int
 		 */
-		protected $_key_action_width;
+		protected $_action_width;
 		protected $_excel = [];
 
 		/**
@@ -1034,6 +1034,7 @@ EOF;
 				'map' => $map,
 				//                'even' => true,
 			];
+			$reKey = [];
 			!empty($width) && $key['width'] = $width;
 			$this->_keyList[] = $key;
 			return $this;
@@ -1305,7 +1306,7 @@ EOF;
 <span title="{{d.{$field}}}">{{time}}</span>  
 </script>
 EOF;
-			return $this->key($field, $title, $sort, strlen($format) * 9 + 20, 'normal', $style, '#' . $templet_name);
+			return $this->key($field, $title, $sort, strlen($format) * 8 + 10, 'normal', $style, '#' . $templet_name);
 			//            $opt['format'] = $format;
 		}
 
@@ -1373,7 +1374,58 @@ EOF;
 		//        {
 		//            return $this->key($field, $title,  $sort, $width,'normal');
 		//        }
-		public function keyImage($field, $title, $sort = false, $style = '')
+
+		/**
+		 * 关联直读图片链接
+		 * @param $field
+		 * @param $title
+		 * @param $style
+		 * @return $this
+		 */
+		public function keyImage($field, $title, $style = '')
+		{
+			$templet_name = uniqid();
+			$common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
+			$this->_templets[] = <<<EOF
+<script type="text/html" id="$templet_name">
+<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title="点击查看大图"
+ layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
+</script>
+EOF;
+			return $this->key($field, $title, false, 50 + 35, $style, 'normal', '#' . $templet_name);
+		}
+
+		/**
+		 * 关联直读图片链接
+		 * @param $field
+		 * @param $title
+		 * @param $style
+		 * @return $this
+		 */
+		public function keyImages($field, $title, $style = '')
+		{
+			$templet_name = uniqid();
+			$common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
+			$this->_templets[] = <<<EOF
+<script type="text/html" id="$templet_name">
+<div class="layer-photos" id="layer-photos-$field-{{d.id}}"  style="display: inline-block">
+  {{#  layui.each(d.{$field}, function(index, item){ }}
+<img style="width: 50px;cursor:pointer" title="点击查看大图" layer-src="{{item}}" src="{{item}}">
+ {{#  }); }}
+</div>
+</script>
+EOF;
+			return $this->key($field, $title, false, '300', $style, 'normal', '#' . $templet_name);
+		}
+
+		/**
+		 * 关联模型单个图片
+		 * @param $field
+		 * @param $title
+		 * @param $style
+		 * @return $this
+		 */
+		public function keyImageModel($field, $title, $style = '')
 		{
 			if (strpos($field, '|')) {
 				$temp = explode('|', $field);
@@ -1391,14 +1443,14 @@ EOF;
 				$with_field = $temp[0];
 				$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
-<div class="layer-photos" id="layer-photos-{{d.id}}-$with_field-{{d.$with_field?d.$with_field.id:d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title="点击查看大图"
+<div class="layer-photos"  style="display: inline-block" id="layer-photos-$with_field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看大图"
  layer-src="{{ d.{$temp[0]}?d.{$temp[0]}.url:'{$common}' }}" src="{{ d.{$temp[0]}?d.{$temp[0]}.url:'{$common}' }}"></div>
 </script>
 EOF;
 			} else {
 				$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
-<div class="layer-photos" id="layer-photos-{{d.id}}-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title="点击查看大图"
+<div class="layer-photos"  style="display: inline-block" id="layer-photos-{{d.id}}-$field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看大图"
  layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
 </script>
 EOF;
@@ -1409,7 +1461,30 @@ EOF;
 			// <img style="display: inline-block; width: 25px; height: 25px;" src= {{ d.{$temp}?d.{$field}:'{$common}/images/default_image.gif' }}>
 			//</script>
 			//EOF;
-			return $this->key($field, $title, $sort, 50 + 35, $style, 'normal', '#' . $templet_name);
+			return $this->key($field, $title, false, 50 + 35, $style, 'normal', '#' . $templet_name);
+		}
+
+		/**
+		 * 关联模型多个图片
+		 * @param $field
+		 * @param $title
+		 * @param $style
+		 * @return $this
+		 */
+		public function keyImagesModel($field, $title, $style = '')
+		{
+			$templet_name = uniqid();
+			$this->_templets[] = <<<EOF
+<script type="text/html" id="$templet_name">
+<div class="layer-photos"  style="display: inline-block" id="layer-photos-$field-{{d.id}}">
+ {{#  layui.each(d.{$field}, function(index, item){ }}
+<img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看2大图"
+ layer-src="{{ item.url }}" src="{{ item.url }}">
+   {{#  }); }}
+   </div>
+</script>
+EOF;
+			return $this->key($field, $title, false, 300, $style, 'normal', '#' . $templet_name);
 		}
 
 		public function keyUser($field, $title, $sort = false, $width = '', $style = '')
@@ -1510,6 +1585,29 @@ EOF;
 		 * @param $url Closure|string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
 		 * @return Table
 		 */
+		public function keyTab($field, $title, $url, $width = '')
+		{
+			if (false !== strpos($url, '{$')) {
+				// 补充
+				$url = str_replace('{$', '{{d.', $url);
+				$url = str_replace('}', '}}', $url);
+			}
+			// 修整添加多个空字段时显示不正常的
+			$templet = uniqid();
+			$this->_templets[] = <<<EOF
+ <script type="text/html" id="$templet">
+          <a style="cursor:pointer " lay-href="$url" ><i class="layui-icon layui-icon-layouts"></i> {{d.$field}}</a>
+        </script>
+EOF;
+			return $this->key($field, $title, false, $width, 'tab', '', '#' . $templet);
+		}
+
+		/**
+		 * @param $field
+		 * @param $title
+		 * @param $url Closure|string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
+		 * @return Table
+		 */
 		public function keyProgress($field, $title, $sort = false, $width = '')
 		{
 			// 修整添加多个空字段时显示不正常的
@@ -1545,7 +1643,7 @@ EOF;
 			return $this->keyMap('status', '状态', $map, $sort, '', $style);
 		}
 
-		public function keyDoAction($url, $title = '操作', $attr = [], $status = [], $event = 'edit')
+		public function keyDoAction($url, $title = '操作', $status = [], $event = 'edit', $message = '', $class = '', $icon = '')
 		{
 			if (false === strpos($url, '/')) {
 				if (false !== strpos($this->request->controller(), 'Admin.')) {
@@ -1561,6 +1659,41 @@ EOF;
 				$url = str_replace('{$', '{{d.', $url);
 				$url = str_replace('}', '}}', $url);
 			}
+			$attr = [];
+			$attr['icon'] = $icon;
+			$attr['class'] = $class;
+			$attr['message'] = $message ? $message : ('确定' . $title . '么？');
+			if (is_array($event)) {
+				$attr = array_merge($attr, $event);
+				$event = 'dialog';
+			} elseif ($event == 'min') {
+				$attr['width'] = 700;
+				$attr['height'] = 360;
+				$event = 'dialog';
+			} elseif ($event == 'mid') {
+				$attr['width'] = 900;
+				$attr['height'] = 500;
+				$event = 'dialog';
+			} elseif ($event == 'max') {
+				$attr['width'] = 600;
+				$attr['height'] = 300;
+				$event = 'dialog';
+			}
+			if ($event == 'dialog') {
+				if (false === strpos($url, '?')) {
+					// 补充
+					$url =$url . '?_namespace_filter={namespace_filter}';
+				} else {
+					$url = $url . '&_namespace_filter={namespace_filter}';
+				}
+			}
+
+//			data-width="{$action.attr.width|default=''}"
+//           data-height="{$action.attr.height|default=''}"
+//           data-message="{$action.attr.message|default=''}"
+//			{$action.attr.icon}
+//			{$action.attr.class
+
 			//            $pinyin = new Pinyin();
 			$this->_do_action[] = [
 				'url' => $url,
@@ -1574,54 +1707,6 @@ EOF;
 			return $this;
 		}
 
-		/**
-		 * 新页面功能<a href="doc/chart/highcharts.html" toggle="navtab" data-id="doc-highcharts" data-title="Highcharts图表说明">使用说明</a>.
-		 * @param unknown $url
-		 * @param string $text
-		 * @param unknown $arr
-		 * @return Table
-		 */
-		public function keyDoActionMask($url, $title = '编辑', $status = [], $attrs = [])
-		{
-			$attr['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-mask-' . $this->request->time());
-			$attr['class'] = 'layui-bg-green';
-			$attr['toggle'] = 'dialog';
-			$attr['data-maxable'] = 'true';
-			$attr['data-resizable'] = false;
-			$attr['data-drawable'] = 'false';
-			$attr['data-maxable'] = 'false';
-			$attr['data-mask'] = 'true';
-			$attr['icon'] = !empty($attr['icon']) ? $attr['icon'] : 'pencil-square-o';
-			$attr['width'] = isset($attrs['width']) ? $attrs['width'] : $this->dialog_width_default;
-			$attr['height'] = isset($attrs['height']) ? $attrs['height'] : $this->dialog_height_default;
-			return $this->keyDoAction($url, $title, array_merge($attr, $attrs), $status);
-		}
-
-		public function keyDoActionFull($url, $title = '全屏', $status = [], $attr = [])
-		{
-			$attr['class'] = 'layui-bg-green';
-			$attr['toggle'] = $this->toggle;
-			$attr['max'] = 'true';
-			$attr['icon'] = !empty($attr['icon']) ? $attr['icon'] : 'pencil-square-o';
-			$attr['message'] = '';
-			return $this->keyDoAction($url, $title, $attr, $status);
-		}
-
-		public function keyDoActionUpdate($url = 'update?id={$id}', $title = '编辑', $status = [], $attrs = [])
-		{
-			$attr['class'] = 'layui-bg-green';
-			$attr['toggle'] = $this->toggle;
-			$attr['width'] = isset($attrs['width']) ? $attrs['width'] : $this->dialog_width_default;
-			$attr['height'] = isset($attrs['height']) ? $attrs['height'] : $this->dialog_height_default;
-			$attr['icon'] = 'edit';
-			$attr['message'] = '';
-			$status = empty($status) ? [
-				0,
-				1,
-				2,
-			] : $status;
-			return $this->keyDoAction($url, $title, array_merge($attr, $attrs), $status);
-		}
 
 		/**
 		 * 不可操作
@@ -1632,7 +1717,7 @@ EOF;
 		 * @author  : 微尘 <yicmf@qq.com>
 		 * @datetime: 2019/4/12 16:16
 		 */
-		public function keyDoActionDisable($title = '不可操作', $status = [], $attr = [])
+		public function actionDisable($title = '不可操作', $status = [], $attr = [])
 		{
 			$attr['message'] = $title;
 			$attr['class'] = 'layui-bg-orange';
@@ -1644,33 +1729,10 @@ EOF;
 			return $this->keyDoAction('', $title, $attr, $status, 'no');
 		}
 
-		/**
-		 * 较大的操作框
-		 * @param        $url
-		 * @param string $text
-		 * @param array $status
-		 * @param array $attr
-		 * @return Table
-		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 16:16
-		 */
-		public function keyDoActionBig($url, $title = '编辑', $status = [], $attr = [])
-		{
-			$attr['class'] = 'layui-bg-green';
-			$attr['toggle'] = 'dialog';
-			$attr['width'] = !empty($attr['width']) ? $attr['width'] : '1200';
-			$attr['height'] = !empty($attr['height']) ? $attr['height'] : '730';
-			$attr['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-edit-' . $this->request->time());
-			$attr['icon'] = 'pencil-square-o';
-			return $this->keyDoAction($url, $title, $attr, $status);
-		}
 
-		public function keyDoActionView($url = 'view?id={$id}', $title = '详情', $status = [], $attrs = [])
+		public function actionView($url = 'view?id={$id}', $title = '详情', $status = [], $attrs = [])
 		{
 			$attr['class'] = 'layui-bg-green';
-			$attr['toggle'] = 'dialog';
-			$attr['width'] = isset($attrs['width']) ? $attrs['width'] : $this->dialog_width_default;
-			$attr['height'] = isset($attrs['height']) ? $attrs['height'] : $this->dialog_height_default;
 			$attr['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-view-' . $this->request->time());
 			$attr['data-mask'] = 'false';
 			$attr['icon'] = 'search';
@@ -1682,7 +1744,7 @@ EOF;
 			return $this->keyDoAction($url, $title, array_merge($attr, $attrs), $status);
 		}
 
-		public function keyDoActionManager($url = 'manager?id={$id}', $title = '授权', $status = [], $attr = [])
+		public function actionManager($url = 'manager?id={$id}', $title = '授权', $status = [], $attr = [])
 		{
 			$attr['class'] = 'layui-bg-green';
 			$attr['toggle'] = $this->toggle;
@@ -1698,47 +1760,45 @@ EOF;
 		}
 
 
-		public function keyDoActionLink($url, $title, $status = [], $attr = [])
+		public function actionLink($url, $title, $status = [])
 		{
-			$attr['class'] = 'layui-bg-green';
-			$attr['toggle'] = $this->toggle;
-			$attr['icon'] = 'link';
-			$attr['width'] = $this->dialog_width_default;
-			$attr['height'] = $this->dialog_height_default;
-			$status = empty($status) ? [
-				-1,
-				0,
-				1,
-				2,
-			] : $status;
-			return $this->keyDoAction($url, $title, $attr, $status);
+			return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-bg-green', 'link');
 		}
 
-		public function keyDoActionDelete($url = 'delete?id={$id}', $title = '删除', $status = [], $attr = [])
+		public function actionAjax($url = 'delete?id={$id}', $title = '删除', $status = [], $message = '', $icon = 'delete', $class = 'layui-btn-danger')
 		{
-			$attr['class'] = 'layui-btn-danger';
-			$attr['toggle'] = 'doajax';
-			$attr['message'] = '确定删除么？';
-			$attr['icon'] = 'delete';
-			$status = empty($status) ? [
-				-1,
-				0,
-				1,
-				2,
-			] : $status;
-			return $this->keyDoAction($url, $title, $attr, $status, 'ajax');
+			return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, $class, $icon);
 		}
 
-		public function keyDoActionClear($url = 'clear?id={$id}', $title = '彻底删除', $status = [], $attr = [])
+		public function actionDelete($url = 'delete?id={$id}', $title = '删除', $status = [], $message = '')
 		{
-			$attr['class'] = 'btn-red';
-			$attr['toggle'] = 'doajax';
-			$attr['message'] = '确定彻底删除么？';
-			$attr['icon'] = 'trash-o';
-			$status = empty($status) ? [
-				-2,
-			] : $status;
-			return $this->keyDoAction($url, $title, $attr, $status, 'ajax');
+			return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'delete');
+		}
+
+		/**
+		 *  更新操作
+		 * @param $url
+		 * @param $title
+		 * @param $status
+		 * @param $dialog false 使用tab , min max mid 分别大中小弹窗，或者数组自定义
+		 * @return $this
+		 */
+		public function actionUpdate($url = 'update?id={$id}', $title = '编辑', $status = [], $dialog = false)
+		{
+			return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, $dialog == false ? 'tab' : $dialog, '', 'layui-bg-green', 'edit');
+		}
+
+		/**
+		 * 彻底删除
+		 * @param $url
+		 * @param $title
+		 * @param $status
+		 * @param $message
+		 * @return $this
+		 */
+		public function actionRemove($url = 'clear?id={$id}', $title = '彻底删除', $status = [], $message = '')
+		{
+			return $this->keyDoAction($url, $title, empty($status) ? [-2] : $status, 'ajax', $message, 'btn-red', 'trash-o');
 		}
 
 		/**
@@ -1749,30 +1809,15 @@ EOF;
 		 * @param array $attr
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 16:16
 		 */
-		public function keyDoActionForbid($url = 'forbid?id={$id}', $title = '禁用', $status = [], $attr = [])
+		public function actionForbid($url = 'forbid?id={$id}', $title = '禁用', $status = [], $message = '')
 		{
-			$attr['class'] = 'layui-btn-danger';
-			$attr['toggle'] = 'doajax';
-			$attr['message'] = '确定' . $title . '么？';
-			$attr['icon'] = 'close-fill';
-			$status = empty($status) ? [
-				1,
-				2,
-			] : $status;
-			return $this->keyDoAction($url, $title, $attr, $status, 'ajax');
+			return $this->keyDoAction($url, $title, empty($status) ? [1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'close-fill');
 		}
 
-		public function keyDoActionToCheck($url = 'check?id={$id}', $title = '通过审核', $status = [], $attr = [])
+		public function actionToCheck($url = 'check?id={$id}', $title = '通过审核', $status = [], $message = '')
 		{
-			$attr['class'] = 'layui-bg-green';
-			$attr['icon'] = 'ok';
-			$attr['message'] = '确定' . $title . '么？';
-			$status = empty($status) ? [
-				0,
-			] : $status;
-			return $this->keyDoAction($url, $title, $attr, $status, 'ajax');
+			return $this->keyDoAction($url, $title, empty($status) ? [0] : $status, 'ajax', $message, 'layui-bg-green', 'ok');
 		}
 
 		/**
@@ -1783,20 +1828,10 @@ EOF;
 		 * @param array $attr
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 18:19
 		 */
-		public function keyDoActionRestore($url = 'restore?id={$id}', $title = '还原', $status = [], $attr = [])
+		public function actionRestore($url = 'restore?id={$id}', $title = '还原', $status = [], $message = '')
 		{
-			$attr['class'] = 'btn-red';
-			$attr['toggle'] = 'doajax';
-			$attr['event'] = 'ajax';
-			$attr['message'] = '确定' . $title . '么？';
-			$attr['icon'] = 'ok-circle';
-			$status = empty($status) ? [
-				-1,
-				-2,
-			] : $status;
-			return $this->keyDoAction($url, $title, $attr, $status, 'ajax');
+			return $this->keyDoAction($url, $title, empty($status) ? [-1, -2] : $status, 'ajax', $message, 'btn-red', 'ok-circle');
 		}
 
 		/**
@@ -1865,11 +1900,10 @@ EOF;
 		 * @param $width
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
-		 * @datetime: 2020/7/16 16:58
 		 */
-		public function keyActionWidth($width)
+		public function actionWidth($width)
 		{
-			$this->_key_action_width = $width;
+			$this->_action_width = $width;
 			return $this;
 		}
 
@@ -1879,7 +1913,6 @@ EOF;
 		 * @param array $config
 		 * @return string
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 17:54
 		 */
 		public function fetch($name = 'table', $vars = [])
 		{
@@ -2038,7 +2071,7 @@ EOF;
 						}
 					}
 					if (count($this->_do_action)) {
-						if (is_null($this->_key_action_width)) {
+						if (is_null($this->_action_width)) {
 							$status = [];
 							$object = [];
 							foreach ($this->_do_action as $item) {
@@ -2062,28 +2095,31 @@ EOF;
 									$max = $v;
 								}
 							}
-							$this->_key_action_width = (($max + count($object) - 1) * 70 + 100);
+							$this->_action_width = (($max + count($object) - 1) * 70 + 100);
 						}
 						$this->_keyList[] = [
 							'fixed' => 'right',
 							'title' => '操作',
 							'align' => 'center',
 							'toolbar' => '#' . $this->_namespace . '-table-action',
-							'width' => $this->_key_action_width
+							'width' => $this->_action_width
 						];
-						!empty($this->_left_leader) && array_unshift($this->_keyList, $this->_left_leader);
 					}
+					!empty($this->_left_leader) && array_unshift($this->_keyList, $this->_left_leader);
 					$get = $this->request->except(explode(',', 'v,m,status'), 'get');
 					if (!empty($get)) {
-						$action = $this->request->action() . '?' . http_build_query($get);
+						$menu_param = http_build_query($get);
+
 					} else {
-						$action = $this->request->action();
+						$menu_param = '';
 					}
 					// 查询当前菜单
 					$menu = MenuModel::where('status', 1)
-						->where('action', $action)
+						->where('param', 'in', [$menu_param, ''])
+						->where('action', $this->request->action())
 						->where('controller', $this->request->controller())
 						->where('module', $this->module)
+						->order('param DESC')
 						->find();
 					if ($menu) {
 						$this->_title = $menu['title'];
@@ -2098,7 +2134,7 @@ EOF;
 								->find();
 							if ($p_menu) {
 								$this->assign('p_menu_title', $p_menu['title']);
-							}else{
+							} else {
 								$this->assign('p_menu_title', $menu['title']);
 							}
 						} else {
@@ -2216,8 +2252,7 @@ EOF;
 			$urlFields = $this->request->except(explode(',', 'v,page,limit,user,m,field,video,store'));
 			if (is_array($urlFields)) {
 				foreach ($urlFields as $field => $field_value) {
-					if (!in_array($field, $db_fields))
-					{
+					if (!in_array($field, $db_fields)) {
 						continue;
 					}
 					$out = false;
@@ -2256,7 +2291,7 @@ EOF;
 		private function _getMode($filter)
 		{
 			if ('in' == $filter['mode']) {
-				$data = [$filter['field'], 'in',  $filter['values']];
+				$data = [$filter['field'], 'in', $filter['values']];
 //				$data = [$filter['field'], 'in', $this->_getFieldValue($filter['field'], $filter['values'])];
 			} elseif ('condition' == $filter['mode']) {
 				if ('eq' == $filter['type']) {
@@ -2315,17 +2350,12 @@ EOF;
 					}
 				} else {
 					if (false !== strpos($key['field'], '{$')) {
-						$display = $key['field'];
-					} else {
-						$display = '{$data.' . $key['field'] . '|default="-"}';
-					}
-					$view = $this->app['view'];
-					$value = $view->display($display, ['data' => $data]);
-					if (false === strpos($key['field'], '{$') && strpos($key['field'], '.')) {
+						$value = $this->app['view']->display($key['field'], ['data' => $data]);
+					} elseif (false === strpos($key['field'], '{$') && strpos($key['field'], '.')) {
 						$field = explode('.', $key['field']);
-						$conver_data[$field[0]][$field[1]] = ('status' == $key['field']) ? (int)$value : $value;
+						$conver_data[$field[0]][$field[1]] = $data[$field[0]] ? $data[$field[0]][$field[1]] : '';
 					} else {
-						$conver_data[$key['field']] = ('status' == $key['field']) ? (int)$value : $value;
+						$conver_data[$key['field']] = $data[$key['field']];
 					}
 				}
 			}
