@@ -58,6 +58,7 @@
             $this->app = app();
             $this->request = $this->app['request'];
             $this->module =  app('http')->getName();
+			$this->assign('module', $this->module);
             // 控制器初始化
             $this->initialize();
             // 增加配置
