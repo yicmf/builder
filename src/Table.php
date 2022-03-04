@@ -1461,7 +1461,7 @@ EOF;
 			// <img style="display: inline-block; width: 25px; height: 25px;" src= {{ d.{$temp}?d.{$field}:'{$common}/images/default_image.gif' }}>
 			//</script>
 			//EOF;
-			return $this->key($field, $title, false, 50 + 35, $style, 'normal', '#' . $templet_name);
+			return $this->key($field, $title, false, 50 + mb_strlen($title,'utf-8')*14, $style, 'normal', '#' . $templet_name);
 		}
 
 		/**
