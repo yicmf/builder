@@ -1019,21 +1019,34 @@ EOF;
 			} else {
 				$fixed = '';
 			}
-			$key = [
-				'field' => $field,
-				'type' => $type,
-				'title' => $title,
-				'sort' => $sort,
-				'hide' => $hide,
-				'filter' => $filter,
-				//                'tips' => $tips,
-				'edit' => $edit,
-				'style' => $style,
-				'fixed' => $fixed,
-				'templet' => $templet,
-				'map' => $map,
-				//                'even' => true,
-			];
+			if ($type == 'children') {
+				$key = [
+//					'type' => $type,
+//					'field' => $field,
+					'title' => $title,
+					'collapse' => 1,
+					'childWidth' => 'full',
+					'style' => $style,
+					'templet' => $templet,
+				];
+			} else {
+
+				$key = [
+					'field' => $field,
+					'type' => $type,
+					'title' => $title,
+					'sort' => $sort,
+					'hide' => $hide,
+					'filter' => $filter,
+					//                'tips' => $tips,
+					'edit' => $edit,
+					'style' => $style,
+					'fixed' => $fixed,
+					'templet' => $templet,
+					'map' => $map,
+					//                'even' => true,
+				];
+			}
 			$reKey = [];
 			!empty($width) && $key['width'] = $width;
 			$this->_keyList[] = $key;
@@ -1461,7 +1474,7 @@ EOF;
 			// <img style="display: inline-block; width: 25px; height: 25px;" src= {{ d.{$temp}?d.{$field}:'{$common}/images/default_image.gif' }}>
 			//</script>
 			//EOF;
-			return $this->key($field, $title, false, 50 + mb_strlen($title,'utf-8')*14, $style, 'normal', '#' . $templet_name);
+			return $this->key($field, $title, false, 50 + mb_strlen($title, 'utf-8') * 14, $style, 'normal', '#' . $templet_name);
 		}
 
 		/**
@@ -1533,12 +1546,42 @@ EOF;
 		 * @param array $opt
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/2/20 12:53
 		 */
 		public function keyClosure($title, $closure, $width = '', $style = '')
 		{
 			$pinyin = new Pinyin();
 			return $this->key($pinyin->permalink($title, '_'), text($title), false, $width, $closure, $style);
+		}
+
+		/**
+		 * 闭包函数
+		 * @param string $title
+		 * @param        $closure
+		 * @param null $width
+		 * @param array $opt
+		 * @return Table
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
+		public function keyTemplateChild($title, $templet, $width = '', $style = '')
+		{
+			$templet_name = uniqid();
+			$this->_templets[] = <<<EOF
+<script type="text/html" id="$templet_name">
+   $templet
+</script>
+EOF;
+			$this->_field[] = 'skus';
+			$this->_keyList[] = [
+				'field' => 'skus',
+				'title' => $title,
+				'type' => 'child',
+				'width' => 80,
+				'collapse' => 1,
+				'children' => '#' . $templet_name,
+				'childWidth' => 'full',
+			];
+			return $this;
+//			return $this->key('status', $title, false, $width, 'children', $style, '#' . $templet_name);
 		}
 
 		/**
@@ -1682,7 +1725,7 @@ EOF;
 			if ($event == 'dialog') {
 				if (false === strpos($url, '?')) {
 					// 补充
-					$url =$url . '?_namespace_filter={namespace_filter}';
+					$url = $url . '?_namespace_filter={namespace_filter}';
 				} else {
 					$url = $url . '&_namespace_filter={namespace_filter}';
 				}
@@ -1719,44 +1762,19 @@ EOF;
 		 */
 		public function actionDisable($title = '不可操作', $status = [], $attr = [])
 		{
-			$attr['message'] = $title;
-			$attr['class'] = 'layui-bg-orange';
-			$attr['custom_icon'] = 'jinyong';
-			$status = empty($status) ? [
-				1,
-				2,
-			] : $status;
-			return $this->keyDoAction('', $title, $attr, $status, 'no');
+			return $this->keyDoAction('', $title, empty($status) ? [0, 1, 2] : $status, 'no', '', 'layui-btn-orange', 'stop');
 		}
 
 
 		public function actionView($url = 'view?id={$id}', $title = '详情', $status = [], $attrs = [])
 		{
-			$attr['class'] = 'layui-bg-green';
-			$attr['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-view-' . $this->request->time());
-			$attr['data-mask'] = 'false';
-			$attr['icon'] = 'search';
-			$status = empty($status) ? [
-				0,
-				1,
-				2,
-			] : $status;
-			return $this->keyDoAction($url, $title, array_merge($attr, $attrs), $status);
+			return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-btn-green', 'search');
+
 		}
 
 		public function actionManager($url = 'manager?id={$id}', $title = '授权', $status = [], $attr = [])
 		{
-			$attr['class'] = 'layui-bg-green';
-			$attr['toggle'] = $this->toggle;
-			$attr['width'] = $this->dialog_width_default;
-			$attr['height'] = $this->dialog_height_default;
-			$attr['icon'] = 'auz';
-			$status = empty($status) ? [
-				0,
-				1,
-				2,
-			] : $status;
-			return $this->keyDoAction($url, $title, $attr, $status);
+			return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-btn-green', 'auz');
 		}
 
 
@@ -2065,9 +2083,13 @@ EOF;
 //					}
 					return json($result);
 				} else {
+
 					foreach ($this->_keyList as $index => $item) {
-						if ($item['type'] == 'hidden') {
+						if (isset($item['type']) && $item['type'] == 'hidden') {
 							unset($this->_keyList[$index]);
+						} elseif (isset($item['type']) && $item['type'] == 'child') //'type'=>'child',
+						{
+							unset($this->_keyList[$index]['field']);
 						}
 					}
 					if (count($this->_do_action)) {
@@ -2339,23 +2361,27 @@ EOF;
 			$conver_data = [];
 			isset($data['status']) && $conver_data['status'] = $data['status'];
 			isset($data['id']) && $conver_data['id'] = $data['id'];
+
 			foreach ($this->_keyList as $key) {
-				if ($key['type'] instanceof \Closure) {
-					// 闭包
-					$conver_data[$key['field']] = $key['type']($data, $excel);
-				} elseif (false !== strpos($key['field'], ',')) {
-					$fields = explode(',', $key['field']);
-					foreach ($fields as $field) {
-						$conver_data[$field] = $data[$field];
-					}
-				} else {
-					if (false !== strpos($key['field'], '{$')) {
-						$value = $this->app['view']->display($key['field'], ['data' => $data]);
-					} elseif (false === strpos($key['field'], '{$') && strpos($key['field'], '.')) {
-						$field = explode('.', $key['field']);
-						$conver_data[$field[0]][$field[1]] = $data[$field[0]] ? $data[$field[0]][$field[1]] : '';
+				if (isset($key['field'])) {
+
+					if (isset($key['type']) && $key['type'] instanceof \Closure) {
+						// 闭包
+						$conver_data[$key['field']] = $key['type']($data, $excel);
+					} elseif (false !== strpos($key['field'], ',')) {
+						$fields = explode(',', $key['field']);
+						foreach ($fields as $field) {
+							$conver_data[$field] = $data[$field];
+						}
 					} else {
-						$conver_data[$key['field']] = $data[$key['field']];
+						if (false !== strpos($key['field'], '{$')) {
+							$value = $this->app['view']->display($key['field'], ['data' => $data]);
+						} elseif (false === strpos($key['field'], '{$') && strpos($key['field'], '.')) {
+							$field = explode('.', $key['field']);
+							$conver_data[$field[0]][$field[1]] = $data[$field[0]] ? $data[$field[0]][$field[1]] : '';
+						} else {
+							$conver_data[$key['field']] = $data[$key['field']];
+						}
 					}
 				}
 			}

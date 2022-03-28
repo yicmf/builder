@@ -57,7 +57,7 @@
                     , predefine: true
                     , alpha: true
                     , done: function (color) {
-                        $('#test-colorpicker-all-input').val(color); //向隐藏域赋值
+                        $('#yicmf_builder_color_{$field.field}').val(color); //向隐藏域赋值
                         //   layer.tips('给指定隐藏域设置了颜色值：'+ color, this.elem);
 
                         color || this.change(color); //清空时执行 change
@@ -79,7 +79,7 @@
     {/case}
     {case value="label"}
     <div class="layui-input-block">
-        <span style="line-height: 38px;    float: left;display: block;">{$field.value}</span>
+        <span style=" float: left;display: block;">{$field.value}</span>
 
         {notempty name='field.tips'}
         <div class="layui-form-mid layui-word-aux">（{$field.tips}）</div>
@@ -838,17 +838,12 @@
 
 
 {case value="ueditor"}
-
-
 <div class="layui-input-inline">
-    <script id="{$field.id_name}" name="{$field.field}" type="text/plain" style="width:1024px;height:500px;">
-        {$field.value|raw}
-    </script>
+    　<textarea  id="{$field.id_name}" style="padding: 0;" name="{$field.field}" class="layui-textarea" >{$field.value|raw}</textarea>
     {notempty name='field.tips'}
     <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
     {/notempty}
 </div>
-
 
 <script type="text/javascript">
 
@@ -1231,12 +1226,12 @@ $checked = $field['value']==$key ? 'checked' : '';
 
     <button type="button" class="layui-btn" id="button-upload-MultipleImage-{$field.field}">上传图片</button>
     <div class="layui-upload-list">
-        <input type="hidden" name="{$field.field}" id="file_value_{$field.field}" value="$field['value']"/>
         <img class="layui-upload-img" style="display: none" id="test-upload-normal-img" src="/static/common/images/default_image_240.gif">
             <div class="layui-upload-list" id="upload-MultipleImage-list-{$field.field}">
 
                 {volist name='images' id='vo'}
 <div class="thumbnail"  data-id="{$vo.id}">
+    <input type="hidden" name="{$field.field}[]" id="file_value_{$field.field}" value="{$vo['id']}"/>
     <i class="icon iconfont icon-tuodong remove-picture"></i>
     <i class="layui-icon layui-icon-close-fill remove-picture" onclick="removeUploadImg(this,'{$field.field}')"></i>
     <img class="layui-upload-img"  src="{$vo['url']}" >
@@ -1265,15 +1260,15 @@ $checked = $field['value']==$key ? 'checked' : '';
                     //获取拖动后的排序
                     var arr = sortable.toArray();
                     // console.log(arr);
-                    getUploadValue('{$field.field}');
+                   // getUploadValue('{$field.field}');
                 },
             };
             window.removeUploadImg = function (obj,field) {
                 // console.log(obj);
                 $(obj).parent().remove();
-                getUploadValue(field);
+               // getUploadValue(field);
             }
-            window.getUploadValue = function (field) {
+          /*  window.getUploadValue = function (field) {
                 // console.log(field)
                 var temp = new Array();
                var items = $('#upload-MultipleImage-list-'+field).children().each(function(index){
@@ -1282,7 +1277,7 @@ $checked = $field['value']==$key ? 'checked' : '';
                $("#file_value_"+field).val(temp.join(','));
                 console.log(field)
                 console.log(temp.join(','))
-            }
+            }*/
             //初始化
             var sortable = Sortable.create(el, ops);
             //普通图片上传
@@ -1300,6 +1295,7 @@ $checked = $field['value']==$key ? 'checked' : '';
                     obj.preview(function (index, file, result) {
                       //  console.log(result);
                         var html = '<div class="thumbnail"   data-index="index-'+index+'" > \n' +
+                           ' <input type="hidden" name="{$field.field}[]" id="file_value_{$field.field}-'+index+'" value=""/>'+
                             '    <i class="icon iconfont icon-tuodong remove-picture"></i>\n' +
                             '    <i class="layui-icon layui-icon-close-fill remove-picture" onclick="removeUploadImg(this,\'{$field.field}\')"></i>\n' +
                             '    <img class="layui-upload-img"  src="' + result + '" " alt="' + file.name + '">\n' +
@@ -1348,6 +1344,8 @@ $checked = $field['value']==$key ? 'checked' : '';
                     } else {
                         //上传成功
                         $("[data-index=\'index-"+index+"\']").attr('data-id',res.data.id);
+                        $("#file_value_{$field.field}-"+index).val(res.data.id);
+
                     }
                 }
                 ,allDone: function(obj){ //当文件全部被提交后，才触发

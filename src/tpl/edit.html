@@ -254,7 +254,15 @@
 				},
 				error:function(err){
 					//请求出错处理
-					layer.msg(JSON.stringify(err));
+					if (err.status !== 200)
+					{
+
+						layer.msg(err.responseJSON.message);
+				}else{
+						layer.msg('调试');
+						console.log(err);
+					}
+					// layer.msg(JSON.stringify(err));
 				}
 			});
 			//提交修改
