@@ -1491,7 +1491,7 @@ EOF;
 <script type="text/html" id="$templet_name">
 <div class="layer-photos"  style="display: inline-block" id="layer-photos-$field-{{d.id}}">
  {{#  layui.each(d.{$field}, function(index, item){ }}
-<img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看2大图"
+<img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看大图"
  layer-src="{{ item.url }}" src="{{ item.url }}">
    {{#  }); }}
    </div>
@@ -1512,11 +1512,14 @@ EOF;
 				$with_field = implode('_', $temp);
 			}
 			$this->_with[$with_field] = ['id', 'avatar', 'nickname'];
+			$url = url('ucenter/admin.User/update').'?id={{d.'.$with_field.'.id}}';
 			$templet_name = uniqid();
 			$common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
 			$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
- <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar.url:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
+  <a style="cursor:pointer " lay-href="$url" >
+  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar.url:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
+  </a>
 </script>
 EOF;
 			return $this->key($field, $title, $sort, 150, 'normal', $style, '#' . $templet_name);
