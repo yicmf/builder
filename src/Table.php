@@ -760,6 +760,29 @@
 			return $this;
 		}
 
+		/**
+		 * 搜索text文本信息.
+		 * @param string $title
+		 * @param string $field
+		 * @param string $type
+		 * @param string $desc
+		 * @param array $attr
+		 * @return $this
+		 */
+		public function searchUser($title, $placeholder = '支持邮箱、手机、账号、ID', $default = '',$field='user_id', $attr = [])
+		{
+			$this->_search[] = [
+				'title' => $title,
+				'field' => $field,
+				'type' => 'text',
+				'condition' => 'search_user',
+				'value' => $default,
+				'placeholder' => $placeholder,
+				'attr' => $attr,
+			];
+			return $this;
+		}
+
 
 		/**
 		 * 日期选择器.
@@ -1491,7 +1514,7 @@ EOF;
 <script type="text/html" id="$templet_name">
 <div class="layer-photos"  style="display: inline-block" id="layer-photos-$field-{{d.id}}">
  {{#  layui.each(d.{$field}, function(index, item){ }}
-<img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看大图"
+<img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看2大图"
  layer-src="{{ item.url }}" src="{{ item.url }}">
    {{#  }); }}
    </div>
@@ -1512,9 +1535,9 @@ EOF;
 				$with_field = implode('_', $temp);
 			}
 			$this->_with[$with_field] = ['id', 'avatar', 'nickname'];
-			$url = url('ucenter/admin.User/update').'?id={{d.'.$with_field.'.id}}';
 			$templet_name = uniqid();
 			$common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
+			$url = url('ucenter/admin.User/update').'?id={{d.'.$with_field.'.id}}';
 			$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
   <a style="cursor:pointer " lay-href="$url" >
@@ -2270,9 +2293,20 @@ EOF;
 									$where[] = [$search['field'], 'between time', $temp];
 								}
 							}
+						}elseif ('search_user' == $search['condition'])
+						{
+
+							$ids = Db::name('user')
+								->where('status','>',-2)
+								->where('id|account|email|nickname','like', '%' . $fields[$search['field']] . '%')
+								->column('id');
+							$where[] = [$search['field'],'in',$ids];
 						}
 					}
 				}
+
+
+
 			}
 			$urlFields = $this->request->except(explode(',', 'v,page,limit,user,m,field,video,store'));
 			if (is_array($urlFields)) {
