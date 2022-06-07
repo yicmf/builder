@@ -8,6 +8,7 @@
 	// +----------------------------------------------------------------------
 	namespace yicmf\builder;
 
+	use app\ucenter\event\AuthGroup as AuthGroupEvent;
 	use Overtrue\Pinyin\Pinyin;
 	use think\exception\HttpException;
 	use think\Model;
@@ -103,6 +104,7 @@
 		protected $_avg = [];
 		protected $_max = [];
 		protected $_min = [];
+		protected $_user;
 
 		protected function initialize()
 		{
@@ -114,7 +116,19 @@
 			$this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
 				. '_' . $this->request->action() . '_'
 				. md5(json_encode($this->request->except(['v', 'user'])));
+			$this->_user = $this->request->user;
 			//                .implode('_',$this->request->except('v'));
+		}
+
+		/**
+		 * 配置当前用户，设置为false则不需要权限控制
+		 * @param $user
+		 * @return $this
+		 */
+		public function user($user)
+		{
+			$this->_user = $user;
+			return $this;
 		}
 
 		/**
@@ -412,12 +426,14 @@
 		 * @param $attr
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:33
 		 */
 		public function button($title, $attr)
 		{
 			if (isset($attr['url']) && strpos($attr['url'], '/Admin')) {
 				$attr['url'] = str_replace('/Admin', '/admin', $attr['url']);
+			}
+			if (false === $this->authCheck($attr['url'])) {
+				return $this;
 			}
 			$this->_buttonList[] = [
 				'title' => $title,
@@ -528,6 +544,7 @@
 			} else {
 				$attr['url'] = $attr['url'] . '&auto_builder={$auto_builder}';
 			}
+
 			$attr['class'] = isset($attr['class']) ? $attr['class'] : 'btn-default';
 			if (!isset($attr['icon'])) {
 				$attr['icon'] = 'refresh';
@@ -600,6 +617,29 @@
 			$attr['message'] = '确定要' . $title . '么？';
 			$attr['icon'] = 'trash-o';
 			return $this->buttonAjax($url, $title, 'doajax', $attr);
+		}
+
+		/**
+		 * 权限检查
+		 * @param string $url
+		 * @return bool
+		 */
+		public function authCheck($url)
+		{
+			if ($this->_user) {
+				$url = explode('?', $url)[0];
+				if (strpos($url,'.html' ))
+				{
+					$url = str_replace('.html','',$url);
+				}
+				if (0 ===strpos($url,'/' ))
+				{
+					$url = substr($url,1);
+				}
+				return AuthGroupEvent::checkRule($url, $this->_user);
+			} else {
+				return true;
+			}
 		}
 
 		/**
@@ -769,7 +809,7 @@
 		 * @param array $attr
 		 * @return $this
 		 */
-		public function searchUser($title, $placeholder = '支持邮箱、手机、账号、ID', $default = '',$field='user_id', $attr = [])
+		public function searchUser($title, $placeholder = '支持邮箱、手机、账号、ID', $default = '', $field = 'user_id', $attr = [])
 		{
 			$this->_search[] = [
 				'title' => $title,
@@ -1477,21 +1517,28 @@ EOF;
 			$common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
 			if (is_array($temp)) {
 				$with_field = $temp[0];
-				$this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-<div class="layer-photos"  style="display: inline-block" id="layer-photos-$with_field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看大图"
- layer-src="{{ d.{$temp[0]}?d.{$temp[0]}.url:'{$common}' }}" src="{{ d.{$temp[0]}?d.{$temp[0]}.url:'{$common}' }}"></div>
-</script>
-EOF;
 			} else {
-				$this->_templets[] = <<<EOF
+				$with_field = $temp;
+			}
+//			$this->_templets[] = <<<EOF
+//<script type="text/html" id="$templet_name">
+//<div class="layer-photos"  style="display: inline-block" id="layer-photos-$with_field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看大图"
+// layer-src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}" src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}"></div>
+//</script>
+//EOF;
+			$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
-<div class="layer-photos"  style="display: inline-block" id="layer-photos-{{d.id}}-$field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看大图"
- layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
+<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title="点击查看大图"
+ layer-src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}" src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}"></div>
 </script>
 EOF;
-			}
 
+//			$this->_templets[] = <<<EOF
+//<script type="text/html" id="$templet_name">
+//<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title="点击查看大图"
+// layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
+//</script>
+//EOF;
 			//            $this->_templets[] = <<<EOF
 			//<script type="text/html" id="$templet_name">
 			// <img style="display: inline-block; width: 25px; height: 25px;" src= {{ d.{$temp}?d.{$field}:'{$common}/images/default_image.gif' }}>
@@ -1537,7 +1584,7 @@ EOF;
 			$this->_with[$with_field] = ['id', 'avatar', 'nickname'];
 			$templet_name = uniqid();
 			$common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
-			$url = url('ucenter/admin.User/update').'?id={{d.'.$with_field.'.id}}';
+			$url = url('ucenter/admin.User/update') . '?id={{d.' . $with_field . '.id}}';
 			$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
   <a style="cursor:pointer " lay-href="$url" >
@@ -1728,10 +1775,14 @@ EOF;
 				$url = str_replace('{$', '{{d.', $url);
 				$url = str_replace('}', '}}', $url);
 			}
+			// 权限检查
+			if (false === $this->authCheck($url)) {
+				return $this;
+			}
 			$attr = [];
 			$attr['icon'] = $icon;
 			$attr['class'] = $class;
-			$attr['message'] = $message ? $message : ('确定' . $title . '么？');
+			$attr['message'] = $message ?: ('确定' . $title . '么？');
 			if (is_array($event)) {
 				$attr = array_merge($attr, $event);
 				$event = 'dialog';
@@ -2293,18 +2344,16 @@ EOF;
 									$where[] = [$search['field'], 'between time', $temp];
 								}
 							}
-						}elseif ('search_user' == $search['condition'])
-						{
+						} elseif ('search_user' == $search['condition']) {
 
 							$ids = Db::name('user')
-								->where('status','>',-2)
-								->where('id|account|email|nickname','like', '%' . $fields[$search['field']] . '%')
+								->where('status', '>', -2)
+								->where('id|account|email|nickname', 'like', '%' . $fields[$search['field']] . '%')
 								->column('id');
-							$where[] = [$search['field'],'in',$ids];
+							$where[] = [$search['field'], 'in', $ids];
 						}
 					}
 				}
-
 
 
 			}
