@@ -282,7 +282,20 @@
                 },
                 error:function(err){
                     //请求出错处理
-                    layer.msg(JSON.stringify(err));
+                    console.log(err)
+                    if (err.responseJSON.message)
+                    {
+                        layer.alert(err.responseJSON.message, {
+                            icon: 5,
+                            skin: 'layer-ext-demo' //见：扩展说明
+                        })
+
+                    }else{
+                        layer.alert('未知错误', {
+                            icon: 5,
+                            skin: 'layer-ext-demo' //见：扩展说明
+                        })
+                    }
                 }
             });
         }
