@@ -69,7 +69,7 @@
 			// 命名空间
 			$this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
 				. '_' . $this->request->action() . '_'
-				. md5(json_encode($this->request->except(explode(',', 'v,user'))));
+				. md5(json_encode($this->request->except(explode(',', 'v,user'))).uniqid());
 			//                .implode('_',$this->request->except('v'));
 		}
 
@@ -1678,12 +1678,14 @@
 			} else {
 				$pk = $this->_default_pk;
 			}
+//
+//			foreach ($this->_keyList as $key => $e) {
+//
+//				if (!isset($this->_data[$e['field']])) {
+//					$this->_data[$e['field']] = $e['default'];
+//				}
+//			}
 			$flag = false;
-			foreach ($this->_keyList as $key => $e) {
-				if (!isset($this->_data[$e['field']])) {
-					$this->_data[$e['field']] = $e['default'];
-				}
-			}
 			foreach ($this->_keyList as $key => $e) {
 				$pk == $e['field'] && $flag = true;
 				$e['data'] = $this->_data;
@@ -1727,8 +1729,12 @@
 				} else {
 					$e['value'] = isset($this->_data[$e['field']]) ? $this->_data[$e['field']] : (isset($e['value']) ? $e['value'] : '');
 				}
+				if (!isset($this->_data[$e['field']])) {
+					$e['value'] = $e['default'];
+				}
 				$this->_keyList[$key] = $e;
 			}
+
 			if (!$flag && isset($this->_data[$pk])) {
 				//自动增加隐藏表单用于编辑;
 				$edit['field'] = $pk;
