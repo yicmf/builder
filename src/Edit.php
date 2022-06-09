@@ -1678,14 +1678,12 @@
 			} else {
 				$pk = $this->_default_pk;
 			}
-//
+			$flag = false;
 //			foreach ($this->_keyList as $key => $e) {
-//
 //				if (!isset($this->_data[$e['field']])) {
 //					$this->_data[$e['field']] = $e['default'];
 //				}
 //			}
-			$flag = false;
 			foreach ($this->_keyList as $key => $e) {
 				$pk == $e['field'] && $flag = true;
 				$e['data'] = $this->_data;
@@ -1734,7 +1732,6 @@
 				}
 				$this->_keyList[$key] = $e;
 			}
-
 			if (!$flag && isset($this->_data[$pk])) {
 				//自动增加隐藏表单用于编辑;
 				$edit['field'] = $pk;
