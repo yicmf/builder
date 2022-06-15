@@ -245,6 +245,27 @@
 							time:req.wait*1000
 						});
 
+					}else if( 307 == req.code)
+					{
+						// 重定向
+						// var othis = $(this)
+						// ,href = othis.attr('lay-href')
+						// ,target = othis.attr('target')
+						// ,router = layui.router();
+
+						// admin.tabsPage.elem = othis;
+						// if ('_self' == target)
+						// {
+						admin.events.closeThisTabs();
+						//setTimeout(() => {
+						//  console.log($('#LAY_app_tabsheader').children('li').length);
+						// console.log($(TABS_HEADER).eq($('#LAY_app_tabsheader').children('li').length - 1));
+						// $('#LAY_app_tabsheader').children('li').eq($('#LAY_app_tabsheader').children('li').length - 2).find('.layui-tab-close').trigger('click'); }, 1000);
+						// }
+						//admin.prevRouter[router.path[0]] = router.href; //记录上一次各菜单的路由信息
+						//执行跳转
+						location.hash = admin.correctRouter(req.redirect);
+
 					}else{
 						layer.msg(req.message);
 					}
