@@ -93,17 +93,11 @@
 		 * @var string
 		 */
 		protected $_model;
-		protected $_cssl;
-		protected $_jsl;
 		protected $_with = [];
 		protected $_where;
 		protected $_order;
 		protected $_field = ['id', 'status'];
 		protected $_count = [];
-		protected $_sum = [];
-		protected $_avg = [];
-		protected $_max = [];
-		protected $_min = [];
 		protected $_user;
 
 		protected function initialize()
@@ -116,7 +110,7 @@
 			$this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
 				. '_' . $this->request->action() . '_'
 				. md5(json_encode($this->request->except(['v', 'user'])));
-			$this->_user = $this->request->user;
+			$this->_user = false;
 			//                .implode('_',$this->request->except('v'));
 		}
 
@@ -2298,7 +2292,7 @@ EOF;
 			$field = array_unique($field);
 			$model = $this->_model;
 			if (!is_null($model)) {
-				$db_fields = $model::getTableFields();
+				$db_fields = $model->getTableFields();
 				foreach ($field as $index => $item) {
 					if (!strpos($item, ' ') && !in_array($item, $db_fields)) {
 						unset($field[$index]);
@@ -2325,7 +2319,7 @@ EOF;
 			$fields = $this->request->param('field/a');
 			$model = $this->_model;
 			if (!is_null($model)) {
-				$db_fields = $model::getTableFields();
+				$db_fields = $model->getTableFields();
 			} else {
 				$db_fields = $this->_field;
 			}
