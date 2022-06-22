@@ -93,11 +93,17 @@
 		 * @var string
 		 */
 		protected $_model;
+		protected $_cssl;
+		protected $_jsl;
 		protected $_with = [];
 		protected $_where;
 		protected $_order;
 		protected $_field = ['id', 'status'];
 		protected $_count = [];
+		protected $_sum = [];
+		protected $_avg = [];
+		protected $_max = [];
+		protected $_min = [];
 		protected $_user;
 
 		protected function initialize()
@@ -2018,8 +2024,14 @@ EOF;
 							// 闭包
 							$result = [];
 						} elseif (empty($this->_data)) {
-							$whereModel = $model::where($searchWhere)
-								->where($this->_where);
+							if (is_string($model))
+							{
+								$whereModel = $model::where($searchWhere)
+									->where($this->_where);
+							}else{
+								$whereModel = $model->where($searchWhere)
+									->where($this->_where);
+							}
 							if (count($this->_count)) {
 								$result = [];
 							} else {
@@ -2108,9 +2120,17 @@ EOF;
 						// 闭包
 						$result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
 					} elseif (!is_null($model)) {
-						$whereModel = $model::where($searchWhere)
+						if (is_string($model))
+						{
+							$whereModel = $model::where($searchWhere)
 //							->field(implode($this->_field, ','))
-							->where($this->_where);
+								->where($this->_where);
+						}else{
+							$whereModel = $model->where($searchWhere)
+//							->field(implode($this->_field, ','))
+								->where($this->_where);
+						}
+
 						$result['code'] = 0;
 						$result['count'] = $whereModel->count();
 						if (count($this->_count)) {
@@ -2292,7 +2312,12 @@ EOF;
 			$field = array_unique($field);
 			$model = $this->_model;
 			if (!is_null($model)) {
-				$db_fields = $model->getTableFields();
+				if (is_string($model))
+				{
+					$db_fields = $model::getTableFields();
+				}else{
+					$db_fields = $model->getTableFields();
+				}
 				foreach ($field as $index => $item) {
 					if (!strpos($item, ' ') && !in_array($item, $db_fields)) {
 						unset($field[$index]);
@@ -2319,7 +2344,12 @@ EOF;
 			$fields = $this->request->param('field/a');
 			$model = $this->_model;
 			if (!is_null($model)) {
-				$db_fields = $model->getTableFields();
+				if (is_string($model))
+				{
+					$db_fields = $model::getTableFields();
+				}else{
+					$db_fields = $model->getTableFields();
+				}
 			} else {
 				$db_fields = $this->_field;
 			}
