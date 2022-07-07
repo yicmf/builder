@@ -1792,7 +1792,7 @@ EOF;
 				$event = 'dialog';
 			} elseif ($event == 'mid') {
 				$attr['width'] = 900;
-				$attr['height'] = 500;
+				$attr['height'] = 660;
 				$event = 'dialog';
 			} elseif ($event == 'max') {
 				$attr['width'] = 600;
