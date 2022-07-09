@@ -1727,7 +1727,7 @@
 				} else {
 					$e['value'] = isset($this->_data[$e['field']]) ? $this->_data[$e['field']] : (isset($e['value']) ? $e['value'] : '');
 				}
-				if (!isset($this->_data[$e['field']])) {
+				if (is_string($e['field']) && !isset($this->_data[$e['field']])) {
 					$e['value'] = $e['default'];
 				}
 				$this->_keyList[$key] = $e;
