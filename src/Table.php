@@ -1570,7 +1570,7 @@ EOF;
 			return $this->key($field, $title, false, 300, $style, 'normal', '#' . $templet_name);
 		}
 
-		public function keyUser($field, $title, $sort = false, $width = '', $style = '')
+		public function keyUser($field, $title, $url = 'ucenter/admin.User/update', $width = '', $style = '')
 		{
 			if (strpos($field, '|')) {
 				$temp = explode('|', $field);
@@ -1584,7 +1584,7 @@ EOF;
 			$this->_with[$with_field] = ['id', 'avatar', 'nickname'];
 			$templet_name = uniqid();
 			$common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
-			$url = url('ucenter/admin.User/update') . '?id={{d.' . $with_field . '.id}}';
+			$url = url($url) . '?id={{d.' . $with_field . '.id}}';
 			$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
   <a style="cursor:pointer " lay-href="$url" >
@@ -1592,7 +1592,7 @@ EOF;
   </a>
 </script>
 EOF;
-			return $this->key($field, $title, $sort, 150, 'normal', $style, '#' . $templet_name);
+			return $this->key($field, $title, false, 150, 'normal', $style, '#' . $templet_name);
 		}
 
 		public function keyIp($field = 'ip', $title = 'IP地址', $sort = false, $type = '')
