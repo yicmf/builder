@@ -78,13 +78,13 @@
 
     {/case}
     {case value="label"}
-    <div class="layui-input-block">
+    <div class="layui-input-block" style="padding: 9px 0px;line-height: 20px;">
         <span style=" float: left;display: block;">{$field.value}</span>
-
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">（{$field.tips}）</div>
+        <div class="layui-form-mid layui-word-aux" style="padding: 0px 0!important;">（{$field.tips}）</div>
         {/notempty}
     </div>
+
 
     {/case}
     {case value="closure"}
