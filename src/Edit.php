@@ -1531,10 +1531,16 @@
 //				            dump($this->_triggers);
 				$this->assign('reload', $this->_reload);
 				$this->assign('mask', $this->_mask);
-				$this->assign('dialog_index', $this->request->get('_dialog_index',0));
+				$dialog_index = $this->request->get('_dialog_index',0);
+				$this->assign('dialog_index', $dialog_index);
 				$this->assign('name_space', $this->_namespace);
-				return parent::_fetch('edit', $vars, $config);
-			}
+				if ($dialog_index == 0)
+				{
+					return parent::_fetch('edit', $vars, $config);
+				}else{
+					return parent::_fetch('dialog', $vars, $config);
+				}
+				}
 
 		}
 

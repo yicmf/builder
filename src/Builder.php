@@ -98,6 +98,8 @@
 			// 获取模版的名称
 			$this->assign('key_path', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . '_key.html');
 			$this->assign('search_path', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . '_search.html');
+			$this->assign('edit_path', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . '_edit.html');
+			$this->assign('dialog_path', dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . '_dialog.html');
 			$template = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'tpl' . DIRECTORY_SEPARATOR . $template . '.html';
 			return View::fetch($template, array_merge($this->view_data, $vars));
 		}
