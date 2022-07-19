@@ -1587,9 +1587,15 @@ EOF;
 			$url = url($url) . '?id={{d.' . $with_field . '.id}}';
 			$this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
-  <a style="cursor:pointer " lay-href="$url" >
+  {{#  if(d.{$with_field}){ }}
+    <a style="cursor:pointer " lay-href="$url" >
   <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar.url:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
   </a>
+  {{#  }else{ }}    
+       <div style="cursor:pointer ">
+-
+  </div>
+  {{#  } }} 
 </script>
 EOF;
 			return $this->key($field, $title, false, 150, 'normal', $style, '#' . $templet_name);
