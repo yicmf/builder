@@ -1415,15 +1415,13 @@ $checked = $field['value']==$key ? 'checked' : '';
             margin: 0 5px 0 0;
         }
     </style>
-    {php} $auth = isset($field['data']['auth'])?$field['data']['auth']:'';
 
-    {/php}
     <div class="layui-row" style="    display: flex;">
         <div class="layui-col-xs2">
             <div class="layui-upload-list front">
                 <img class="layui-upload-img-card button-upload-auth-image-front"
-                     src="{$field['data']['auth']['front']['url']|default='__COMMON__/images/idcard/f.png'}">
-                <input type="hidden" id="front_id" name="auth[front_id]" value="{$field['data']['auth']['front_id']|default=''}"/>
+                     src="{$field['data']['front']['url']|default='__COMMON__/images/idcard/f.png'}">
+                <input type="hidden" id="front_id" name="front_id" value="{$field['data']['front_id']|default=''}"/>
                 <p id="test-upload-demoText"></p>
             </div>
             <button type="button" class="layui-btn button-upload-auth-image-front">身份证正面</button>
@@ -1431,9 +1429,9 @@ $checked = $field['value']==$key ? 'checked' : '';
         <div class="layui-col-xs2">
             <div class="layui-upload-list front">
                 <img class="layui-upload-img-card button-upload-auth-image-back"
-                     src="{$field['data']['auth']['back']['url']|default='__COMMON__/images/idcard/b.png'}">
-                <input type="hidden" id="back_id" name="auth[back_id]"
-                       value="{$field['data']['auth']['back_id']|default=''}"/>
+                     src="{$field['data']['back']['url']|default='__COMMON__/images/idcard/b.png'}">
+                <input type="hidden" id="back_id" name="back_id"
+                       value="{$field['data']['back_id']|default=''}"/>
                 <p id="test-upload-demoText"></p>
             </div>
             <button type="button" class="layui-btn button-upload-auth-image-back">身份证背面</button>
@@ -1441,9 +1439,9 @@ $checked = $field['value']==$key ? 'checked' : '';
         <div class="layui-col-xs2 {php} if( !$field['options']['need_hand'] ||!isset($field['data']['auth'])){ echo 'layui-hide';}{/php} " id="show_hand">
             <div class="layui-upload-list front">
                 <img class="layui-upload-img-card button-upload-auth-image-hand"
-                     src="{$field['data']['auth']['hand']['url']|default='__COMMON__/images/idcard/h.jpg'}">
-                <input type="hidden" id="hand_id" name="auth[hand_id]"
-                       value="{$field['data']['auth']['hand_id']|default=''}"/>
+                     src="{$field['data']['hand']['url']|default='__COMMON__/images/idcard/h.jpg'}">
+                <input type="hidden" id="hand_id" name="hand_id"
+                       value="{$field['data']['hand_id']|default=''}"/>
                 <p id="test-upload-demoText"></p>
             </div>
             <button type="button" class="layui-btn button-upload-auth-image-hand">手持身份证</button>
@@ -1484,8 +1482,11 @@ $checked = $field['value']==$key ? 'checked' : '';
                     //上传成功
                     $("#front_id").val(res.data.id);
                     $("[name='{$field.field}']").val(res.data.id);
-                    $("[name='auth[idcard_name]").val(res.data.info.name);
-                    $("[name='auth[idcard_no]").val(res.data.info.idcard_no);
+                    if (res.data.info)
+                    {
+                        $("[name='idcard_name").val(res.data.info.name);
+                        $("[name='idcard_no").val(res.data.info.idcard_no);
+                    }
 
                     if ("1" == "{$field.options.need_hand}")
                     {

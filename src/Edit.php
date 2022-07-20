@@ -1096,15 +1096,14 @@
 
 		/**
 		 * 实名认证
-		 * @param string $field
 		 * @param string $title
 		 * @param string|null $tips
 		 * @return $this
 		 */
-		public function keyAuth($field, $title = '实名认证', $tips = null, $need_hand = 1)
+		public function keyAuth($title = '实名认证', $tips = null, $need_hand = 1)
 		{
 			$options['need_hand'] = $need_hand ? $need_hand : 0;
-			return $this->key($field, $title, $tips, 'auth', $options);
+			return $this->key('_auth', $title, $tips, 'auth', $options);
 		}
 
 		/**
