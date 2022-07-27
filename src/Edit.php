@@ -332,12 +332,8 @@
 		 * @param array|null $verify
 		 * @return $this
 		 */
-		public function keyBool($field, $title, $tips = null, $default = 0, $verify = null, $disabled = null)
+		public function keyBool($field, $title, $tips = null, $default = 0,$options = ['否','是'], $verify = null, $disabled = null)
 		{
-			$options = [
-				1 => '是',
-				0 => '否',
-			];
 			return $this->keyRadio($field, $title, $options, $tips, $default, $verify, $disabled);
 		}
 
@@ -349,12 +345,8 @@
 		 * @param array|null $verify
 		 * @return $this
 		 */
-		public function keySwitch($field, $title, $tips = null, $default = 1, $verify = null, $disabled = null)
+		public function keySwitch($field, $title, $tips = null, $default = 1,$options = ['否','是'], $verify = null, $disabled = null)
 		{
-			$options = [
-				1 => '是',
-				0 => '否',
-			];
 			return $this->key($field, $title, $tips, 'switch', $options, $default, $verify, 30, $disabled);
 		}
 
