@@ -345,7 +345,7 @@
 		 * @param array|null $verify
 		 * @return $this
 		 */
-		public function keySwitch($field, $title, $tips = null, $default = 1,$options = ['否','是'], $verify = null, $disabled = null)
+		public function keySwitch($field, $title, $tips = null, $default = 1,$options = [1=>'是',0=>'否'], $verify = null, $disabled = null)
 		{
 			return $this->key($field, $title, $tips, 'switch', $options, $default, $verify, 30, $disabled);
 		}
