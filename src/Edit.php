@@ -1710,8 +1710,8 @@
 					$temp = explode('.', $e['field']);
 					$e['relation']['parent'] = $temp[0];
 					$e['relation']['child'] = $temp[1];
-					$e['field'] = $temp[0] . '[' . $temp[1] . ']';
 					$e['value'] = $view->display('{$data.'.$temp[0].'?$data.'.$e['field'].':\'\'}', ['data'=>$this->_data]);
+					$e['field'] = $temp[0] . '[' . $temp[1] . ']';
 //					$e['value'] = isset($this->_data[$temp[0]][$temp[1]]) ? $this->_data[$temp[0]][$temp[1]] : (isset($e['value']) ? $e['value'] : '');
 				} elseif (strpos($e['field'], '|')) { // 使用‘|’代表同级字段
 //                    if (isset($e['value'])) {
