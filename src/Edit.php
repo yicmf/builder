@@ -1448,7 +1448,6 @@
 		{
 			if ($this->request->has('ajax')) {
 				$field = $this->request->param('ajax');
-				$key;
 				foreach ($this->_keyList as $item) {
 					if ($item['field'] == $field) {
 						$key = $item;
@@ -1685,6 +1684,10 @@
 				$pk == $e['field'] && $flag = true;
 				$e['data'] = $this->_data;
 				$e['jquery_id'] = $this->_jquery_md5($e['field']);
+				// 先给默认值
+				if (is_string($e['field']) && !isset($this->_data[$e['field']])) {
+					$e['value'] = $e['default'];
+				}
 				if ($e['type'] instanceof \Closure) {
 					// 闭包
 					$e['value'] = $e['type']($this->_data, $e);
@@ -1703,11 +1706,13 @@
 						$n--;
 					}
 				} elseif (strpos($e['field'], '.')) { // 支持点语法
+					$view = $this->app['view'];
+					$e['value'] = $view->display('{$data.'.$e['field'].'}', ['data'=>$this->_data]);
 					$temp = explode('.', $e['field']);
 					$e['relation']['parent'] = $temp[0];
 					$e['relation']['child'] = $temp[1];
 					$e['field'] = $temp[0] . '[' . $temp[1] . ']';
-					$e['value'] = isset($this->_data[$temp[0]][$temp[1]]) ? $this->_data[$temp[0]][$temp[1]] : (isset($e['value']) ? $e['value'] : '');
+//					$e['value'] = isset($this->_data[$temp[0]][$temp[1]]) ? $this->_data[$temp[0]][$temp[1]] : (isset($e['value']) ? $e['value'] : '');
 				} elseif (strpos($e['field'], '|')) { // 使用‘|’代表同级字段
 //                    if (isset($e['value'])) {
 //                        $e['value'] = explode('|', $e['field']);
@@ -1723,9 +1728,6 @@
 					}
 				} else {
 					$e['value'] = isset($this->_data[$e['field']]) ? $this->_data[$e['field']] : (isset($e['value']) ? $e['value'] : '');
-				}
-				if (is_string($e['field']) && !isset($this->_data[$e['field']])) {
-					$e['value'] = $e['default'];
 				}
 				$this->_keyList[$key] = $e;
 			}
