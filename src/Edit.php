@@ -441,7 +441,7 @@
 		 * 下拉列表多选.
 		 * @param string $field
 		 * @param string $title
-		 * @param array|Closure $options
+		 * @param array|\Closure $options
 		 * @param string|null $tips
 		 * @param bool $multiple 是否开启多项选择
 		 * @param array|null $verify
@@ -569,7 +569,7 @@
 		/**
 		 * 闭包函数
 		 * @param      $title
-		 * @param Closure $closure
+		 * @param \Closure $closure
 		 * @param null $tips
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>

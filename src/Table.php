@@ -1620,9 +1620,8 @@ EOF;
 		/**
 		 * 闭包函数
 		 * @param string $title
-		 * @param        $closure
+		 * @param        \$closure
 		 * @param null $width
-		 * @param array $opt
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -1666,7 +1665,7 @@ EOF;
 		/**
 		 * @param $field
 		 * @param $title
-		 * @param $url Closure|string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
+		 * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
 		 * @return Table
 		 */
 		public function keyLink($field, $title, $url, $target = '_self', $width = '', $style = '')
@@ -1684,7 +1683,7 @@ EOF;
 		/**
 		 * @param $field
 		 * @param $title
-		 * @param $url Closure|string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
+		 * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
 		 * @return Table
 		 */
 		public function keyDialog($field, $title, $url, $arr = [], $width = '')
@@ -1704,7 +1703,7 @@ EOF;
 		/**
 		 * @param $field
 		 * @param $title
-		 * @param $url Closure|string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
+		 * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
 		 * @return Table
 		 */
 		public function keyTab($field, $title, $url, $width = '')
@@ -1727,7 +1726,7 @@ EOF;
 		/**
 		 * @param $field
 		 * @param $title
-		 * @param $url Closure|string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
+		 * @param boolean $sort
 		 * @return Table
 		 */
 		public function keyProgress($field, $title, $sort = false, $width = '')
