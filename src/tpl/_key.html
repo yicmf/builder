@@ -1625,7 +1625,7 @@ $field['url'] = $default_image_url;
 {/php}
 
 <div class="layui-input-inline">
-    <button type="button" class="layui-btn" id="button-upload-normal-image-{$field.field}">上传图片</button>
+    <button type="button" class="layui-btn" id="button-upload-normal-image-{$field.jquery_id}">上传图片</button>
     <div class="layui-upload-list">
         <input type="hidden" name="{$field.field}" id="upload-normal-image-val-{$field.field}" value="{$field['value']}"/>
 
@@ -1635,7 +1635,7 @@ $field['url'] = $default_image_url;
             <p id="test-upload-demoText"></p>
         </div>
 
-
+        {php}// dump($field['jquery_id']); {/php}
     </div>
     <script>
         layui.use(['admin', 'upload'], function () {
@@ -1651,7 +1651,7 @@ $field['url'] = $default_image_url;
             }
             //普通图片上传
             var uploadInst = upload.render({
-                elem: '#button-upload-normal-image-{$field.field}'
+                elem: '#button-upload-normal-image-{$field.jquery_id}'
                 ,multiple: 1
                 ,accept: 'images' //图片
                 ,acceptMime: 'image/*'

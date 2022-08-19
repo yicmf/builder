@@ -69,7 +69,7 @@
 			// 命名空间
 			$this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
 				. '_' . $this->request->action() . '_'
-				. md5(json_encode($this->request->except(explode(',', 'v,user'))).uniqid());
+				. md5(json_encode($this->request->except(explode(',', 'v,user'))) . uniqid());
 			//                .implode('_',$this->request->except('v'));
 		}
 
@@ -332,7 +332,7 @@
 		 * @param array|null $verify
 		 * @return $this
 		 */
-		public function keyBool($field, $title, $tips = null, $default = 0,$options = ['否','是'], $verify = null, $disabled = null)
+		public function keyBool($field, $title, $tips = null, $default = 0, $options = ['否', '是'], $verify = null, $disabled = null)
 		{
 			return $this->keyRadio($field, $title, $options, $tips, $default, $verify, $disabled);
 		}
@@ -345,7 +345,7 @@
 		 * @param array|null $verify
 		 * @return $this
 		 */
-		public function keySwitch($field, $title, $tips = null, $default = 1,$options = [1=>'是',0=>'否'], $verify = null, $disabled = null)
+		public function keySwitch($field, $title, $tips = null, $default = 1, $options = [1 => '是', 0 => '否'], $verify = null, $disabled = null)
 		{
 			return $this->key($field, $title, $tips, 'switch', $options, $default, $verify, 30, $disabled);
 		}
@@ -1442,7 +1442,6 @@
 		 * @param array $config
 		 * @return string
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/14 18:23
 		 */
 		public function fetch($template = '', $vars = [], $config = [])
 		{
@@ -1518,27 +1517,24 @@
 				}
 				$this->assign('triggers', $this->_triggers);
 				$this->assign('uniqid', uniqid());
-//				            dump($this->_triggers);
 				$this->assign('reload', $this->_reload);
 				$this->assign('mask', $this->_mask);
-				$dialog_index = $this->request->get('_dialog_index',0);
+				$dialog_index = $this->request->get('_dialog_index', 0);
 				$this->assign('dialog_index', $dialog_index);
 				$this->assign('name_space', $this->_namespace);
-				if ($dialog_index == 0)
-				{
-					return parent::_fetch('edit', $vars, $config);
-				}else{
-					return parent::_fetch('dialog', $vars, $config);
+				if (!empty($template) || (empty($template) && $dialog_index != 0)) {
+					return parent::_fetch('dialog', $vars);
+				} else {
+					return parent::_fetch('edit', $vars);
 				}
-				}
+			}
 
 		}
 
 		/**
 		 * 规范触发数据格式.
 		 */
-		private
-		function _formatTrigger()
+		private function _formatTrigger()
 		{
 			//TODO:考虑在没有配置当前字段默认值的情况，目前设计为不显示
 			$triggers = $this->_triggers;
@@ -1710,7 +1706,7 @@
 					$temp = explode('.', $e['field']);
 					$e['relation']['parent'] = $temp[0];
 					$e['relation']['child'] = $temp[1];
-					$e['value'] = $view->display('{$data.'.$temp[0].'?$data.'.$e['field'].':\'\'}', ['data'=>$this->_data]);
+					$e['value'] = $view->display('{$data.' . $temp[0] . '?$data.' . $e['field'] . ':\'\'}', ['data' => $this->_data]);
 					$e['field'] = $temp[0] . '[' . $temp[1] . ']';
 //					$e['value'] = isset($this->_data[$temp[0]][$temp[1]]) ? $this->_data[$temp[0]][$temp[1]] : (isset($e['value']) ? $e['value'] : '');
 				} elseif (strpos($e['field'], '|')) { // 使用‘|’代表同级字段
