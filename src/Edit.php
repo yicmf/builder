@@ -75,8 +75,9 @@
 
 		/**
 		 * 设置请求表单头
-		 * @param string $title
-		 * @return Edit
+		 * @param $reload
+		 * @param $mask
+		 * @return $this
 		 */
 		public function form($reload = true, $mask = true)
 		{
@@ -87,6 +88,7 @@
 
 		/**
 		 * 获取命名空间
+		 * @return string
 		 */
 		public function getNamespace()
 		{
@@ -109,7 +111,6 @@
 		 * @param string|array $explain
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/13 7:53
 		 */
 		public function explain($explain)
 		{
@@ -159,7 +160,7 @@
 		 * @param string $name
 		 * @param string $html
 		 * @param string $title
-		 * @param string $tips
+		 * @param string|null $tips
 		 * @return $this
 		 */
 		public function keyHtml($name, $html, $title, $tips = null)
@@ -169,10 +170,9 @@
 
 
 		/**
-		 * 隐藏表单.
+		 * 隐藏表单
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 11:31
 		 */
 		public function keyHidden($name, $default = '')
 		{
@@ -187,7 +187,6 @@
 		 * @param string|null $tips
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 11:31
 		 */
 		public function keyReadOnly($name, $title, $tips = null)
 		{
@@ -195,13 +194,12 @@
 		}
 
 		/**
-		 * 只读文本.
+		 * 可以复制内容
 		 * @param string $name
 		 * @param string $title
 		 * @param string|null $tips
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 11:31
 		 */
 		public function keyCopy($name, $title, $tips = null)
 		{
@@ -213,11 +211,11 @@
 		 * @param string $name
 		 * @param string $title
 		 * @param string|null $tips
-		 * @param int $size
+		 * @param string|null $default
 		 * @param array|null $verify
 		 * @return $this
 		 */
-		public function keyText($name, $title, $tips = null, $default = '', $verify = null)
+		public function keyText($name, $title, $tips = null, $default = null, $verify = null)
 		{
 			return $this->key($name, $title, $tips, 'string', null, $default, $verify);
 		}
@@ -227,7 +225,7 @@
 		 * @param string $field
 		 * @param string $title
 		 * @param string|null $tips
-		 * @param int $size
+		 * @param string|null $default
 		 * @param array|null $verify
 		 * @return $this
 		 */
@@ -238,14 +236,13 @@
 
 		/**
 		 * 字符串
-		 * @param        $field
-		 * @param        $title
-		 * @param null $tips
-		 * @param string $default
-		 * @param null $verify
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string|null $default
+		 * @param string|null $verify
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
-		 * @datetime: 2020/5/29 21:36
 		 */
 		public function keyTextInline($field, $title, $tips = null, $default = '', $verify = null)
 		{
@@ -254,13 +251,12 @@
 
 		/**
 		 * 备安全验证
-		 * @param      $field
-		 * @param      $title
-		 * @param null $tips
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
 		 * @param int $wait_time
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
-		 * @datetime: 2020/5/29 21:36
 		 */
 		public function keySafeCheck($field, $title, $tips = null, $wait_time = 60)
 		{
@@ -270,15 +266,13 @@
 
 		/**
 		 * 数组输入框，内容以’,‘分隔
-		 * @param      $field
-		 * @param      $title
-		 * @param null $tips
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string|null $verify
 		 * @param int $size
-		 * @param null $verify
 		 * @return $this
-		 * @throws Exception
 		 * @author 微尘 <yicmf@qq.com>
-		 * @datetime: 2020/5/29 21:37
 		 */
 		public function keyArray($field, $title, $tips = null, $size = 30, $verify = null)
 		{
@@ -286,7 +280,7 @@
 		}
 
 		/**
-		 * 文本输入框常用显示title.
+		 * 文本输入框常用显示
 		 * @param string $field
 		 * @param string $title
 		 * @param string|null $tips
@@ -300,9 +294,12 @@
 		}
 
 		/**
-		 * 地图选择（需安装高德插件）.
-		 * @param $title
-		 * @param $tips
+		 * 地图选择（需安装高德插件）
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string|null $default
+		 * @param string|null $verify
 		 * @return $this
 		 */
 		public function keyAmap($field, $title, $tips = null, $default = null, $verify = null)
@@ -317,6 +314,7 @@
 		 * @param array $options
 		 * @param string|null $tips
 		 * @param array|null $verify
+		 * @param array|null $disabled
 		 * @return $this
 		 */
 		public function keyRadio($field, $title, $options, $tips = null, $default = 0, $verify = null, $disabled = null)
@@ -328,8 +326,11 @@
 		 * 是与否的单选.
 		 * @param string $field
 		 * @param string $title
+		 * @param array $options
+		 * @param int $default
 		 * @param string|null $tips
-		 * @param array|null $verify
+		 * @param string|null $disabled
+		 * @param string|null $verify
 		 * @return $this
 		 */
 		public function keyBool($field, $title, $tips = null, $default = 0, $options = ['否', '是'], $verify = null, $disabled = null)
@@ -338,11 +339,14 @@
 		}
 
 		/**
-		 * 是与否的单选.
+		 * 开关
 		 * @param string $field
 		 * @param string $title
+		 * @param array $options
+		 * @param int $default
 		 * @param string|null $tips
-		 * @param array|null $verify
+		 * @param string|null $disabled
+		 * @param string|null $verify
 		 * @return $this
 		 */
 		public function keySwitch($field, $title, $tips = null, $default = 1, $options = [1 => '是', 0 => '否'], $verify = null, $disabled = null)
@@ -354,11 +358,11 @@
 		 * 性别
 		 * @param string $field
 		 * @param string $title
+		 * @param int $default
 		 * @param string|null $tips
-		 * @param array|null $verify
 		 * @return $this
 		 */
-		public function keySex($field = 'sex', $title = '性别', $tips = null, $default = 0, $verify = null)
+		public function keySex($field = 'sex', $title = '性别', $tips = null, $default = 0)
 		{
 			$options = [
 				2 => '女',
@@ -371,17 +375,16 @@
 
 		/**
 		 * 新窗口选择多个
-		 * @param        $field
-		 * @param        $url
-		 * @param        $limit
-		 * @param        $title
-		 * @param null $tips
 		 * @param string $field
+		 * @param string $title
+		 * @param string $column
+		 * @param string|null $tips
+		 * @param string|null $default
 		 * @param int $size
-		 * @param null $verify
+		 * @param string|null $verify
 		 * @return $this
 		 */
-		public function keyBelongsToMany($field, $title, $column, $tips = null, $default = null, $size = null, $verify = null)
+		public function keyBelongsToMany($field, $title, $column, $tips = null, $default = null, $size = 30, $verify = null)
 		{
 			return $this->key($field, $title, $tips, 'belongsToMany', ['column' => $column, 'field' => $field, 'limit' => 0], $default, $verify, $size);
 		}
@@ -390,10 +393,10 @@
 		 * 新窗口选择一个
 		 * @param        $field
 		 * @param        $url
-		 * @param        $limit
 		 * @param        $title
+		 * @param string $show_field
 		 * @param null $tips
-		 * @param string $field
+		 * @param null $default
 		 * @param int $size
 		 * @param null $verify
 		 * @return $this
@@ -422,14 +425,13 @@
 		}
 
 		/**
-		 * 下拉列表.
+		 * 下拉选择
 		 * @param string $field
 		 * @param string $title
 		 * @param array $options
 		 * @param string|null $tips
-		 * @param bool $multiple 是否开启多项选择
+		 * @param string|null $default
 		 * @param array|null $verify
-		 * @param int $size
 		 * @return $this
 		 */
 		public function keySelect($field, $title, $options, $tips = null, $default = '', $verify = null)
@@ -438,13 +440,13 @@
 		}
 
 		/**
-		 * 下拉列表多选.
+		 * 下拉列表多选
 		 * @param string $field
 		 * @param string $title
 		 * @param array|\Closure $options
 		 * @param string|null $tips
-		 * @param bool $multiple 是否开启多项选择
 		 * @param array|null $verify
+		 * @param string|null $default
 		 * @param int $size
 		 * @return $this
 		 */
@@ -459,9 +461,8 @@
 		 * @param string $title
 		 * @param array $options
 		 * @param string|null $tips
-		 * @param bool $multiple 是否开启多项选择
+		 * @param string|null $default
 		 * @param array|null $verify
-		 * @param int $size
 		 * @return $this
 		 */
 		public function keySelectMultistage($field, $title, $options, $tips = null, $default = '', $verify = null)
@@ -470,11 +471,9 @@
 		}
 
 		/**
-		 * 用于状态的下拉选择.
-		 * @param string $field
-		 * @param string $title
+		 * 状态
+		 * @param string|null $default
 		 * @param string $tips
-		 * @param number $size
 		 * @param array|null $options
 		 * @param array|null $verify
 		 * @return $this
@@ -521,31 +520,18 @@
 //			return $this->key($field, $title, $tips, 'checkbox_link_check', $options, 30, $verify);
 //		}
 
-		/**
-		 * 用户组选择.
-		 * @param string $field
-		 * @param string $title
-		 * @param string $tips
-		 * @param number $size
-		 * @param array|null $verify
-		 * @return $this
-		 */
-		public function keyMultiUserGroup($field, $title, $tips = null, $module = 'admin', $verify = null)
-		{
-			return $this->keyCheckBox($field, $title, $this->readUserGroups($module), $tips, $verify);
-		}
 
 		/**
 		 * TextArea
 		 * @param      $field
 		 * @param      $title
 		 * @param null $tips
+		 * @param string $default
 		 * @param int $cols 列
 		 * @param int $rows 行
 		 * @param null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/23 15:11
 		 */
 		public function keyTextArea($field, $title, $tips = null, $default = '', $cols = 50, $rows = 2, $verify = null)
 		{
@@ -553,13 +539,12 @@
 		}
 
 		/**
-		 * 使用label显示内容
-		 * @param      $field
-		 * @param      $title
-		 * @param null $tips
+		 * 显示文本
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/23 15:12
 		 */
 		public function keyLabel($field, $title, $tips = null)
 		{
@@ -568,12 +553,11 @@
 
 		/**
 		 * 闭包函数
-		 * @param      $title
+		 * @param string $title
 		 * @param \Closure $closure
 		 * @param null $tips
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/6 13:18
 		 */
 		public function keyClosure($title, $closure, $tips = null)
 		{
@@ -586,6 +570,7 @@
 		 * @param string $field
 		 * @param string $title
 		 * @param string|null $tips
+		 * @param string|null $default
 		 * @return $this
 		 */
 		public function keyPassword($field, $title, $tips = null, $default = null)
@@ -601,6 +586,7 @@
 		 * @param string|null $tips
 		 * @param int $size
 		 * @param array|null $verify
+		 * @param string|null $default
 		 * @return $this
 		 */
 		public function keyUrl($field, $title, $tips = '需要以http或者https开头', $default = '', $size = 50, $verify = '')
@@ -613,6 +599,7 @@
 		 * @param string $field
 		 * @param string $title
 		 * @param string|null $tips
+		 * @param string|null $default
 		 * @return $this
 		 */
 		public function keyColor($field, $title, $tips = null, $default = '')
@@ -638,21 +625,25 @@
 		 * @param string $title
 		 * @param string|null $tips
 		 * @param array|null $verify
+		 * @param string|null $default
 		 * @return $this
 		 */
 		public function keyTags($field, $title, $tips = null, $default = '', $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'tags', null, null, $verify);
+			return $this->key($field, $title, $tips, 'tags', null, $default, $verify);
 		}
 
 		/**
 		 * 滑块
 		 * @param string $field 字段
 		 * @param string $title 标题
-		 * @param array|null $verify
+		 * @param $tips
+		 * @param string|null $default
+		 * @param array $option
+		 * @param string|null $verify
 		 * @return $this
 		 */
-		public function keySlider($field, $title, $tips = null, $default = '', $option = null, $verify = null)
+		public function keySlider($field, $title, $tips = null, $default = '', $option = [], $verify = null)
 		{
 			$option_default = [
 				'min' => 0,
@@ -670,10 +661,10 @@
 		 * @param      $title
 		 * @param null $tips
 		 * @param null $verify
+		 * @param string|null $default
 		 * @param int $size
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/23 14:57
 		 */
 		public function keyDecimal($field, $title, $tips = null, $default = '', $verify = null, $size = '')
 		{
@@ -692,11 +683,9 @@
 		 * @param string $field
 		 * @param string $title
 		 * @param string $tips
-		 * @param null $verify
-		 * @param int $size
+		 * @param string|null $default
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/23 14:57
 		 */
 		public function keySort($field = 'sort', $title = '排序', $tips = '数值越大越靠前，最大255', $default = 0)
 		{
@@ -707,9 +696,9 @@
 		 * 要求验证填写数字.
 		 * @param string $field
 		 * @param string $title
-		 * @param string $tips
-		 * @param number $size
-		 * @param array|null $verify
+		 * @param string|null $tips
+		 * @param string|null $verify
+		 * @param string|null $default
 		 * @return $this
 		 */
 		public function keyNumber($field, $title, $tips = null, $default = '', $verify = null)
@@ -722,8 +711,8 @@
 		 * @param string $field
 		 * @param string $title
 		 * @param string $tips
-		 * @param number $size
-		 * @param array|null $verify
+		 * @param string|null $default
+		 * @param string|null $verify
 		 * @return $this
 		 */
 		public function keyTimeCycle($field, $title, $tips = null, $default = '', $verify = null)
@@ -733,6 +722,11 @@
 
 		/**
 		 * 邮箱.
+		 * @param string $field
+		 * @param string $title
+		 * @param string $tips
+		 * @param string|null $default
+		 * @param string|null $verify
 		 * @return $this
 		 */
 		public function keyEmail($field, $title, $tips = null, $default = '', $verify = 'email')
@@ -749,7 +743,6 @@
 		 * @param string|null $default
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
-		 * @datetime: 2020/5/29 21:39
 		 */
 		public function keyMobile($field, $title, $tips = null, $default = '')
 		{
@@ -758,33 +751,18 @@
 
 		/**
 		 * 评分
-		 * @param        $field
-		 * @param        $title
-		 * @param string $tips
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
 		 * @param int $default
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
-		 * @datetime: 2020/5/30 6:51
 		 */
 		public function keyRate($field, $title, $tips = '', $default = 3)
 		{
 			return $this->key($field, $title, $tips, 'rate', null, $default);
 		}
 
-		//        /**
-		//         * 滑块
-		//         * @param string     $field
-		//         * @param string     $title
-		//         * @param string     $tips
-		//         * @param number     $size
-		//         * @param array|null $verify
-		//         * @return $this
-		//         */
-		//        public function keySlider($field, $title, $tips, $options)
-		//        {
-		//            return $this->key($field, $title, $tips, 'sourse', $options);
-		//        }
-		//
 		//        /**
 		//         * 选择来源、有待改进.
 		//         * @param string     $field
@@ -798,13 +776,14 @@
 		//        {
 		//            return $this->key($field, $title, $tips, 'sourse', $options);
 		//        }
+
 		/**
 		 * 富文本编辑器
 		 * http://fex.baidu.com/ueditor/#start-start
 		 * @param string $field
 		 * @param string $title
-		 * @param string $tips
-		 * @param string $config
+		 * @param string|null $tips
+		 * @param array $config
 		 * @param array $style
 		 * @return $this
 		 */
@@ -878,6 +857,12 @@
 
 		/**
 		 * 时间选择器
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string|null $value
+		 * @param string|null $min
+		 * @param string|null $max
 		 * @return $this
 		 */
 		public function keyTime($field, $title, $tips = null, $value = null, $min = '', $max = '')
@@ -887,6 +872,12 @@
 
 		/**
 		 * 时间选择器
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string|null $value
+		 * @param string|null $min
+		 * @param string|null $max
 		 * @return $this
 		 */
 		public function keyDateTime($field, $title, $tips = null, $value = null, $min = '', $max = '')
@@ -896,6 +887,15 @@
 
 		/**
 		 * 日期选择器.
+		 * @param $field
+		 * @param $title
+		 * @param $tips
+		 * @param $default
+		 * @param $min
+		 * @param $max
+		 * @param $type
+		 * @param $range
+		 * @param $done
 		 * @return $this
 		 */
 		public function keyDate($field, $title, $tips = null, $default = null, $min = '', $max = '', $type = 'date', $range = false, $done = '')
@@ -925,11 +925,31 @@
 			return $this->key($field, $title, $tips, 'date', $opiton, $default, null, 50);
 		}
 
+		/**
+		 * 时间区间
+		 * @param $field
+		 * @param $title
+		 * @param $tips
+		 * @param $default
+		 * @param $min
+		 * @param $max
+		 * @return $this
+		 */
 		public function keyDateTimeRange($field, $title, $tips = null, $default = null, $min = '', $max = '')
 		{
 			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'datetime', true);
 		}
 
+		/**
+		 * 日期区间
+		 * @param $field
+		 * @param $title
+		 * @param $tips
+		 * @param $default
+		 * @param $min
+		 * @param $max
+		 * @return $this
+		 */
 		public function keyDateRange($field, $title, $tips = null, $default = null, $min = '', $max = '')
 		{
 			//            $default = '2020-05-01 - 2020-06-30';
@@ -941,13 +961,23 @@
 			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'date', true);
 		}
 
+		/**
+		 * 时间区间
+		 * @param $field
+		 * @param $title
+		 * @param $tips
+		 * @param $default
+		 * @param $min
+		 * @param $max
+		 * @return $this
+		 */
 		public function keyTimeRange($field, $title, $tips = null, $default = null, $min = '', $max = '')
 		{
 			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'time', true);
 		}
 
 		/**
-		 * 仅展示一张图片.
+		 * 仅展示一张图片
 		 * @param string $field
 		 * @param string $title
 		 * @param string $tips
@@ -960,8 +990,11 @@
 
 		/**
 		 * 上传单个音频
-		 * @param 标题 $title
-		 * @param 描述 $tips
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $remark
+		 * @param int $size
+		 * @param string|null $verify
 		 * @return $this
 		 */
 		public function keyVoice($field, $title, $remark = null, $size = 50, $verify = null)
@@ -972,8 +1005,11 @@
 
 		/**
 		 * 上传单个视频
-		 * @param 标题 $title
-		 * @param 描述 $tips
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $remark
+		 * @param int $size
+		 * @param string|null $verify
 		 * @return $this
 		 */
 		public function keyVideo($field, $title, $remark = null, $size = 300, $verify = null)
@@ -986,12 +1022,12 @@
 		 * 单图片上传，不关联模型
 		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
 		 * @param string $title
-		 * @param null $remark
-		 * @param int $limit
-		 * @param null $verify
+		 * @param string $button
+		 * @param string|null $default
+		 * @param string|null $tips
+		 * @param string|null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/5/8 11:58
 		 */
 		public function keyImage($field, $title, $tips = null, $button = '上传单个图片', $default = null, $verify = null)
 		{
@@ -1006,14 +1042,14 @@
 
 		/**
 		 * 单图片上传，关联模型
-		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
+		 * @param string $field
 		 * @param string $title
-		 * @param null $remark
-		 * @param int $limit
-		 * @param null $verify
+		 * @param string $button
+		 * @param string|null $default
+		 * @param string|null $tips
+		 * @param string|null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/5/8 11:58
 		 */
 		public function keyImageModel($field, $title, $tips = null, $button = '上传单个图片', $default = null, $verify = null)
 		{
@@ -1027,11 +1063,12 @@
 
 		/**
 		 * 多图片上传,不关联模型
-		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
+		 * @param string $field
 		 * @param string $title
-		 * @param null $tips
+		 * @param string|null $default
+		 * @param string|null $tips
+		 * @param string|null $verify
 		 * @param int $limit
-		 * @param null $verify
 		 * @return $this
 		 */
 		public function keyImageMultiple($field, $title, $tips = null, $default = null, $limit = 5, $verify = null)
@@ -1049,9 +1086,10 @@
 		 * 多图片上传，关联模型
 		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
 		 * @param string $title
-		 * @param null $tips
+		 * @param string|null $default
+		 * @param string|null $tips
+		 * @param string|null $verify
 		 * @param int $limit
-		 * @param null $verify
 		 * @return $this
 		 */
 		public function keyImageMultipleModel($field, $title, $tips = null, $default = null, $limit = 5, $verify = null)
@@ -1070,41 +1108,39 @@
 		 * @param string $field 需要保存的字段，为URL地址，且必须是以_url结尾的字符串
 		 * @param string $title
 		 * @param null $tips
-		 * @param int $limit
-		 * @param null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
-		public function keyImageShowMultiple($field, $title, $tips = null, $default = null, $limit = 5, $verify = null)
+		public function keyImageShowMultiple($field, $title, $tips = null)
 		{
-
 			$max_size = 0;
 			$exts = '';
 			$mimes = '';
 			return $this->key($field, $title, $tips, 'ImageShowMultiple',
-				['limit' => $limit, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
-				, $default, $verify);
+				['limit' => 5, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
+				, null, null);
 		}
 
 		/**
 		 * 实名认证
 		 * @param string $title
 		 * @param string|null $tips
+		 * @param int $need_hand
 		 * @return $this
 		 */
 		public function keyAuth($title = '实名认证', $tips = null, $need_hand = 1)
 		{
-			$options['need_hand'] = $need_hand ? $need_hand : 0;
+			$options['need_hand'] = $need_hand ?: 0;
 			return $this->key('_auth', $title, $tips, 'auth', $options);
 		}
 
 		/**
 		 * 上传单个附件
-		 * @param      $field
-		 * @param      $title
-		 * @param null $tips
-		 * @param int $size
-		 * @param null $verify
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param int $default
+		 * @param string|null $verify
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -1112,16 +1148,16 @@
 		{
 			$extensions = '*';
 			$remark = '';
-			return $this->key($field, $title, $tips, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions], 0, $verify);
+			return $this->key($field, $title, $tips, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions], $default, $verify);
 		}
 
 		/**
 		 * 上传多个附件
 		 * @param      $field
 		 * @param      $title
-		 * @param null $tips
-		 * @param int $size
-		 * @param null $verify
+		 * @param string|null $tips
+		 * @param string|null $verify
+		 * @param int $limit
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -1136,8 +1172,8 @@
 		 * 添加城市选择（需安装城市联动插件）
 		 * @param      $field
 		 * @param      $title
-		 * @param null $tips
-		 * @param null $verify
+		 * @param string|null $tips
+		 * @param int $default
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -1161,16 +1197,17 @@
 
 		/**
 		 * 表单参数组合
-		 * @param        $field
-		 * @param        $title
-		 * @param        $tips
-		 * @param        $type
-		 * @param null $options
-		 * @param string $default
-		 * @param null $verify
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string $type
+		 * @param array $options
+		 * @param string|null $default
+		 * @param string|null $verify
+		 * @param string|null $placeholder
+		 * @param string|null $disabled
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 10:35
 		 */
 		protected function key($field, $title, $tips, $type, $options = null, $default = '', $verify = null, $size = null, $disabled = null, $placeholder = '')
 		{
@@ -1201,10 +1238,9 @@
 
 		/**
 		 * 批量配置key
-		 * @param $keyList
+		 * @param array $keyList
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 10:25
 		 */
 		public function keys($keyList)
 		{
@@ -1226,7 +1262,7 @@
 
 		/**
 		 * 提交按钮.
-		 * @param string $url 提交的url地址，默认当前页
+		 * @param string|null $url 提交的url地址，默认当前页
 		 * @param string $title
 		 * @return $this
 		 */
@@ -1252,7 +1288,7 @@
 
 		/**
 		 * 提交按钮.
-		 * @param string $url 提交的url地址，默认当前页
+		 * @param string|null $url 提交的url地址，默认当前页
 		 * @param string $title
 		 * @return $this
 		 */
@@ -1268,8 +1304,8 @@
 		}
 
 		/**
-		 * 提交按钮.
-		 * @param string $function 提交的url地址，默认当前页
+		 * 普通按钮.
+		 * @param string|null $click
 		 * @param string $title
 		 * @return $this
 		 */
@@ -1285,7 +1321,7 @@
 		}
 
 		/**
-		 * 关闭按钮.
+		 * 重置按钮
 		 * @param string $title
 		 * @return $this
 		 */
@@ -1324,14 +1360,13 @@
 		}
 
 		/**
-		 *  //TODO: 内置验证共用
+		 *  TODO: 内置验证共用
 		 * @access protected
 		 * @param string|array $validate 验证器名或者验证规则数组
 		 * @param array $message 提示信息
 		 * @param bool $batch 是否批量验证
 		 * @param mixed $callback 回调方法（闭包）
-		 * @return array|string|true
-		 * @throws ValidateException
+		 * @return mixed
 		 */
 		public function validate($validate, $message = [], $batch = false, $callback = null)
 		{
@@ -1371,54 +1406,6 @@
 
 
 		/**
-		 * input和下拉选择组合
-		 * @param string $field
-		 * @param string $title
-		 * @param string $tips
-		 * @param array $config
-		 * @param string $style
-		 * @return $this
-		 */
-		public function keyInputAndSelect($field, $title, $tips, $config, $style = 'width:400px;')
-		{
-			$field = is_array($field) ? $field : explode('|', $field);
-			$key = [
-				'field' => $field,
-				'title' => $title,
-				'tips' => $tips,
-				'type' => 'ias',
-				'config' => $config,
-				'style' => $style,
-			];
-			$this->_keyList[] = $key;
-			return $this;
-		}
-
-		/**
-		 * keyMultiInput 输入组组件.
-		 * @param string $field
-		 * @param string $title
-		 * @param string $tips
-		 * @param array $config
-		 * @param string $style
-		 * @return $this
-		 */
-		public function keyMultiInput($field, $title, $tips, $config, $style = 'width:400px;')
-		{
-			$field = is_array($field) ? $field : explode('|', $field);
-			$key = [
-				'field' => $field,
-				'title' => $title,
-				'tips' => $tips,
-				'type' => 'multiInput',
-				'config' => $config,
-				'style' => $style,
-			];
-			$this->_keyList[] = $key;
-			return $this;
-		}
-
-		/**
 		 * 插入配置分组.
 		 * @param string $field 组名
 		 * @param array|string $list 组内字段列表
@@ -1439,11 +1426,10 @@
 		 * 解析加载模版输出
 		 * @param string $template
 		 * @param array $vars
-		 * @param array $config
 		 * @return string
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
-		public function fetch($template = '', $vars = [], $config = [])
+		public function fetch($template = '', $vars = [])
 		{
 			if ($this->request->has('ajax')) {
 				$field = $this->request->param('ajax');
@@ -1646,6 +1632,11 @@
 		}
 
 
+		/**
+		 * 数据格式统一
+		 * @param $field
+		 * @return string
+		 */
 		private function _jquery_md5($field)
 		{
 			//            dump($field);
@@ -1736,10 +1727,4 @@
 			}
 		}
 
-		private function readUserGroups($module)
-		{
-			return Db::name('AuthGroup')->where('status', 1)->where('module', $module)
-				->order('id ASC')
-				->column('id,title');
-		}
 	}

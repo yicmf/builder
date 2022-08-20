@@ -51,8 +51,7 @@
 		/**
 		 * 构造方法
 		 * @access public
-		 * Builder constructor.
-		 * @param App|null $app
+		 * @author 微尘 <yicmf@qq.com>
 		 */
 		public function __construct()
 		{
@@ -81,9 +80,7 @@
 		}
 
 		// 初始化
-		protected function initialize()
-		{
-		}
+		protected function initialize(){}
 
 		/**
 		 * 加载模板输出
@@ -91,7 +88,7 @@
 		 * @param string $template 模板文件名
 		 * @param array $vars 模板输出变量
 		 * @return string
-		 * @author  : 微尘 <yicmf@qq.com>
+		 * @author 微尘 <yicmf@qq.com>
 		 */
 		protected function _fetch($template = '', $vars = [])
 		{
@@ -110,8 +107,8 @@
 		 * @access protected
 		 * @param string $content 模板内容
 		 * @param array $vars 模板输出变量
-		 * @param array $config 模板参数
 		 * @return mixed
+		 * @author 微尘 <yicmf@qq.com>
 		 */
 		protected function display($content = '', $vars = [])
 		{
@@ -124,6 +121,7 @@
 		 * @param mixed $name 要显示的模板变量
 		 * @param mixed $value 变量的值
 		 * @return $this
+		 * @author 微尘 <yicmf@qq.com>
 		 */
 		protected function assign($name, $value = '')
 		{
@@ -140,11 +138,11 @@
 		 * @access protected
 		 * @param Callable $filter 过滤方法或闭包
 		 * @return $this
+		 * @author 微尘 <yicmf@qq.com>
 		 */
 		protected function filter($filter)
 		{
 			$this->view->filter($filter);
-
 			return $this;
 		}
 
@@ -152,6 +150,7 @@
 		 * 数组转html.
 		 * @param array $attr
 		 * @param string $prefix
+		 * @author 微尘 <yicmf@qq.com>
 		 */
 		protected function _compileHtmlAttr($attr, $prefix = null)
 		{
@@ -162,9 +161,7 @@
 					$result[] = (is_null($prefix) ? '' : $prefix) . "$key=\"$value\"";
 				}
 			}
-			$result = implode(' ', $result);
-
-			return $result;
+			return implode(' ', $result);
 		}
 
 		protected function compileHtmlAttr($attr)
@@ -174,8 +171,6 @@
 				//            $value = htmlspecialchars($value);
 				$result[] = $key . ' = "' . $value . '"';
 			}
-			$result = implode(' ', $result);
-
-			return $result;
+			return implode(' ', $result);
 		}
 	}

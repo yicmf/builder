@@ -1,4 +1,5 @@
 <?php
+
 	// +----------------------------------------------------------------------
 	// | builder
 	// +----------------------------------------------------------------------
@@ -6,6 +7,7 @@
 	// +----------------------------------------------------------------------
 	// | Author: 微尘 <yicmf@qq.com>
 	// +----------------------------------------------------------------------
+
 	namespace yicmf\builder;
 
 	use app\ucenter\event\AuthGroup as AuthGroupEvent;
@@ -134,9 +136,9 @@
 		/**
 		 * 模型
 		 * @param string $model
+		 * @param boolean $pagination 分页
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function model($model, $pagination = true)
 		{
@@ -147,10 +149,9 @@
 
 		/**
 		 * 引入css
-		 * @param string $model
+		 * @param string $css
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function css($css)
 		{
@@ -160,10 +161,9 @@
 
 		/**
 		 * 引入js
-		 * @param string $model
+		 * @param string $js
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function js($js)
 		{
@@ -172,11 +172,10 @@
 		}
 
 		/**
-		 * 模型
+		 * 筛选条件
 		 * @param array $filter
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function filter($filter)
 		{
@@ -189,36 +188,40 @@
 		 * 导出表格
 		 * @param string $filename //支持后缀：xlsx/xls<br>
 		 * @param array $head
-		 * 'family' => 'Calibri', // 字体
-		 * 'size' => 12,// 字号
-		 * 'color' => '000000', // 字体颜色
-		 * 'bgColor' => 'FFFFFF', // 背景颜色
-		 * 'cellType' => 'String' // 单元格格式 `b` 布尔值, `n` 数字, `e` 错误, `s` 字符, `d` 日期
 		 * @param array $font
 		 * @param array $border
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
-		 * @datetime: 2020/5/24 8:20
 		 */
-		public function excel($filename = '', $head = [
-			'family' => 'Calibri',
-			'size' => 12,
-			'color' => '000000',
-			'bgColor' => 'FFFFFF',
-			'cellType' => 'String'
-		],                    $font = [
-			'family' => 'Calibri',
-			'size' => 12,
-			'color' => '000000',
-			'bgColor' => 'FFFFFF',
-			'cellType' => 'String'
-		],                    $border = [
-			'top' => '{ style: \'thin\', color: \'FF5722\' }',
-			'bottom' => '{ style: \'thin\', color: \'FF5722\' }',
-			'left' => '{ style: \'thin\', color: \'FF5722\' }',
-			'right' => '{ style: \'thin\', color: \'FF5722\' }'
-		])
+		public function excel($filename = '', $head = [], $font = [], $border = [])
 		{
+			/**
+			 * 'family' => 'Calibri', // 字体
+			 * 'size' => 12,// 字号
+			 * 'color' => '000000', // 字体颜色
+			 * 'bgColor' => 'FFFFFF', // 背景颜色
+			 * 'cellType' => 'String' // 单元格格式 `b` 布尔值, `n` 数字, `e` 错误, `s` 字符, `d` 日期
+			 */
+			$head = empty($head) ? [
+				'family' => 'Calibri',
+				'size' => 12,
+				'color' => '000000',
+				'bgColor' => 'FFFFFF',
+				'cellType' => 'String'
+			] : $head;
+			$font = empty($font) ? [
+				'family' => 'Calibri',
+				'size' => 12,
+				'color' => '000000',
+				'bgColor' => 'FFFFFF',
+				'cellType' => 'String'
+			] : $font;
+			$border = empty($border) ? [
+				'top' => '{ style: \'thin\', color: \'FF5722\' }',
+				'bottom' => '{ style: \'thin\', color: \'FF5722\' }',
+				'left' => '{ style: \'thin\', color: \'FF5722\' }',
+				'right' => '{ style: \'thin\', color: \'FF5722\' }'
+			] : $border;
 			$this->keyLeftLeader('checkbox');
 			$this->_toolbar[] = ['title' => '导出表格', 'layEvent' => 'LAYTABLE_EXCEL', 'icon' => 'layui-icon-export'];
 			$this->_excel = [
@@ -231,11 +234,10 @@
 		}
 
 		/**
-		 * 模型
+		 * 模型的where条件
 		 * @param $where
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function where($where)
 		{
@@ -244,11 +246,10 @@
 		}
 
 		/**
-		 * 模型
-		 * @param $model
+		 * 模型排序
+		 * @param $order
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function order($order)
 		{
@@ -257,11 +258,10 @@
 		}
 
 		/**
-		 * 模型
-		 * @param $model
+		 * 模型指定字段
+		 * @param string $field
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function field($field)
 		{
@@ -270,11 +270,10 @@
 		}
 
 		/**
-		 * 配置默认主键.
+		 * 配置默认主键
 		 * @param $pk
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function setDefaultPk($pk)
 		{
@@ -283,11 +282,10 @@
 		}
 
 		/**
-		 * 配置默认主键.
-		 * @param $pk
+		 * 页面自动刷新
+		 * @param int $time
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function setAutoRefresh($time = 5000)
 		{
@@ -297,9 +295,8 @@
 
 		/**
 		 * 配置默认status.
-		 * @param $status
+		 * @param string $status
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:35
 		 */
 		public function setDefaultStatus($status)
 		{
@@ -308,10 +305,9 @@
 
 		/**
 		 * 设置页面标题
-		 * @param $title
+		 * @param string $title
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:34
 		 */
 		public function title($title)
 		{
@@ -321,11 +317,10 @@
 
 		/**
 		 * 设置页面隐藏数据
-		 * @param $field
-		 * @param $value
+		 * @param string $field
+		 * @param string $value
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:34
 		 */
 		public function hidden($field, $value)
 		{
@@ -338,10 +333,9 @@
 
 		/**
 		 * suggest 页面标题边上的提示信息
-		 * @param $suggest
+		 * @param string $suggest
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:34
 		 */
 		public function suggest($suggest)
 		{
@@ -351,10 +345,10 @@
 
 		/**
 		 * 统计信息
-		 * @param $suggest
+		 * @param string $title
+		 * @param string $count
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:34
 		 */
 		public function statistics($title, $count)
 		{
@@ -367,10 +361,9 @@
 
 		/**
 		 * warning 页面标题边上的错误信息
-		 * @param $warning
+		 * @param string $warning
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:34
 		 */
 		public function warning($warning)
 		{
@@ -380,10 +373,9 @@
 
 		/**
 		 * 设置回收站根据ids彻底删除的URL
-		 * @param $url
+		 * @param string $url
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:34
 		 */
 		public function setClearUrl($url)
 		{
@@ -393,10 +385,9 @@
 
 		/**
 		 * 筛选下拉选择url
-		 * @param $url
+		 * @param string $url
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:33
 		 */
 		public function setSelectPostUrl($url)
 		{
@@ -410,7 +401,6 @@
 		 * @param array $param GET参数
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:33
 		 */
 		public function setSearchPostUrl($url, $param = [])
 		{
@@ -422,8 +412,8 @@
 
 		/**
 		 * 加入一个按钮
-		 * @param $title
-		 * @param $attr
+		 * @param string $title
+		 * @param array $attr
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -444,8 +434,10 @@
 
 		/**
 		 * 加入新增按钮.
-		 * @param        $url
+		 * @param string $url
 		 * @param string $title
+		 * @param string $width
+		 * @param string $height
 		 * @param array $attr
 		 * @return Table
 		 */
@@ -462,9 +454,10 @@
 		}
 
 		/**
-		 * 全屏操作
+		 * 打开全屏操作
 		 * @param        $url
 		 * @param string $title
+		 * @param string $icon
 		 * @param array $attr
 		 * @return Table
 		 */
@@ -484,7 +477,7 @@
 
 		/**
 		 * 自定义按钮.
-		 * @param        $url
+		 * @param string $url
 		 * @param string $title
 		 * @param array $attr
 		 * @return Table
@@ -503,8 +496,8 @@
 
 		/**
 		 * button的ajax操作.
-		 * @param 操作名称 $title
-		 * @param 参数数组 $attr
+		 * @param string $title
+		 * @param array $attr
 		 * @param string $toggle
 		 * @return Table
 		 */
@@ -530,8 +523,8 @@
 
 		/**
 		 * button的ajax操作.
-		 * @param 操作名称 $title
-		 * @param 参数数组 $attr
+		 * @param string $title
+		 * @param array $attr
 		 * @param string $toggle
 		 * @return Table
 		 */
@@ -557,7 +550,7 @@
 
 		/**
 		 * 批量选定禁用按钮，必须有选定情况.
-		 * @param unknown $url
+		 * @param string $url
 		 * @param string $title
 		 * @param array $attr
 		 * @return Table
@@ -573,7 +566,7 @@
 
 		/**
 		 * 批量选定启用按钮，必须有选定情况.
-		 * @param unknown $url
+		 * @param string $url
 		 * @param string $title
 		 * @param array $attr
 		 * @return Table
@@ -584,7 +577,7 @@
 			$attr['message'] = '确定要' . $title . '么？';
 			$attr['icon'] = 'check-circle-o';
 			$attr['type'] = 'button';
-			return $this->buttonAjax($title, $attr, 'doajaxchecked', $attr);
+			return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
 		}
 
 		/**
@@ -609,6 +602,7 @@
 		 * 无条件ajax请求
 		 * @param string $url
 		 * @param string $title
+		 * @param array $attr
 		 * @return Table
 		 */
 		public function buttonDeleteAll($url, $title = '删除所有', $attr = [])
@@ -628,13 +622,11 @@
 		{
 			if ($this->_user) {
 				$url = explode('?', $url)[0];
-				if (strpos($url,'.html' ))
-				{
-					$url = str_replace('.html','',$url);
+				if (strpos($url, '.html')) {
+					$url = str_replace('.html', '', $url);
 				}
-				if (0 ===strpos($url,'/' ))
-				{
-					$url = substr($url,1);
+				if (0 === strpos($url, '/')) {
+					$url = substr($url, 1);
 				}
 				return AuthGroupEvent::checkRule($url, $this->_user);
 			} else {
@@ -649,7 +641,6 @@
 		 * @param array $attr
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/14 12:52
 		 */
 		public function buttonRefresh($url, $title = '刷新', $attr = [])
 		{
@@ -676,7 +667,7 @@
 
 		/**
 		 * 彻底删除回收站.
-		 * @param null $url
+		 * @param null|string $url
 		 * @return Table
 		 */
 		public function buttonClear($url = null)
@@ -691,6 +682,12 @@
 			return $this->button('彻底删除', $attr);
 		}
 
+		/**
+		 * @param string $url
+		 * @param string $title
+		 * @param array $attr
+		 * @return $this
+		 */
 		public function buttonSort($url, $title = '排序', $attr = [])
 		{
 			$attr['url'] = $url;
@@ -699,12 +696,16 @@
 
 		/**
 		 * 复选框操作.
-		 * @param 选选名字 $title
-		 * @param 提示 $msg
-		 * @param 操作url $url
-		 * @return Table
+		 * @param string $title
+		 * @param $url
+		 * @param $msg
+		 * @param $toggle
+		 * @param $idname
+		 * @param $group
+		 * @param $class
+		 * @param $br
+		 * @return $this
 		 * @author  微尘 <yicmf@qq.com>
-		 * @version v1.0.1
 		 */
 		public function groupAction($title, $url, $msg, $toggle, $idname = null, $group = null, $class = null, $br = null)
 		{
@@ -721,45 +722,12 @@
 			return $this;
 		}
 
-		public function groupOutxls($url = '', $title = '导出<span style="color: green;">全部</span>', $msg = '确定要导出信息吗？')
-		{
-			$url = $url ? $url : $this->request->controller() . '/outxls';
-			$toggle = 'doexport';
-			return $this->groupAction($title, $url, $msg, $toggle);
-		}
-
-		public function groupOutxlsCheck($url = '', $title = '导出<span style="color: red;">选中</span>', $msg = '确定要导出选中项吗？')
-		{
-			$url = $url ? $url : $this->request->controller() . '/outxls_check';
-			$toggle = 'doexportchecked';
-			$idname = 'expids';
-			$group = 'ids';
-			return $this->groupAction($title, $url, $msg, $toggle, $idname, $group);
-		}
-
-		public function groupDel($url = '', $title = '删除选中', $msg = '确定要删除选中项吗？')
-		{
-			$url = $url ? $url : $this->request->controller() . '/del';
-			if ($this->request->param('bjui_nav_id')) {
-				$url .= '?bjui_nav_id=' . $this->request->param('bjui_nav_id');//,['nav_id'=>'id'.$menu['id']]
-			}
-			$toggle = 'doajaxchecked';
-			$idname = 'id';
-			$group = 'ids';
-			return $this->groupAction($title, $url, $msg, $toggle, $idname, $group);
-		}
-
-		public function groupBr($class = 'divider')
-		{
-			return $this->groupAction(null, null, null, null, null, null, $class, 1);
-		}
-
 		/**
 		 * 搜索text文本信息.
 		 * @param string $title
 		 * @param string $field
-		 * @param string $type
-		 * @param string $des
+		 * @param string $placeholder
+		 * @param string $default
 		 * @param array $attr
 		 * @return $this
 		 */
@@ -778,11 +746,11 @@
 		}
 
 		/**
-		 * 搜索text文本信息.
+		 * 模糊搜索text文本信息.
 		 * @param string $title
 		 * @param string $field
-		 * @param string $type
-		 * @param string $desc
+		 * @param string $placeholder
+		 * @param string $default
 		 * @param array $attr
 		 * @return $this
 		 */
@@ -801,11 +769,11 @@
 		}
 
 		/**
-		 * 搜索text文本信息.
+		 * 搜索用户
 		 * @param string $title
 		 * @param string $field
-		 * @param string $type
-		 * @param string $desc
+		 * @param string $default
+		 * @param string $placeholder
 		 * @param array $attr
 		 * @return $this
 		 */
@@ -825,7 +793,16 @@
 
 
 		/**
-		 * 日期选择器.
+		 * 日期选择器
+		 * @param string $field
+		 * @param string $title
+		 * @param $placeholder
+		 * @param $default
+		 * @param $width
+		 * @param $min
+		 * @param $max
+		 * @param $type
+		 * @param $range
 		 * @return $this
 		 */
 		public function searchDate($field, $title, $placeholder = null, $default = null, $width = 300, $min = '', $max = '', $type = 'date', $range = false)
@@ -879,8 +856,8 @@
 
 		/**
 		 * 日期时间选择器
-		 * @param $field
-		 * @param $title
+		 * @param string $field
+		 * @param string $title
 		 * @param null $placeholder
 		 * @param null $default
 		 * @param int $width
@@ -895,8 +872,8 @@
 
 		/**
 		 * 日期选择器
-		 * @param $field
-		 * @param $title
+		 * @param string $field
+		 * @param string $title
 		 * @param null $placeholder
 		 * @param null $default
 		 * @param int $width
@@ -911,16 +888,14 @@
 
 
 		/**
-		 * 选择搜索
+		 * 是否选择搜索
 		 * @param        $field
 		 * @param        $title
 		 * @param int $default
-		 * @param array $options
 		 * @param string $des
 		 * @param array $attr
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/5/8 13:15
 		 */
 		public function searchBool($field, $title, $des = '', $default = '', $attr = [])
 		{
@@ -942,13 +917,12 @@
 		 * 选择搜索
 		 * @param        $field
 		 * @param        $title
-		 * @param int $default
 		 * @param array $options
-		 * @param string $des
+		 * @param string $placeholder
+		 * @param string $default
 		 * @param array $attr
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/5/8 13:15
 		 */
 		public function searchSelect($field, $title, $options = [], $placeholder = '', $default = '', $attr = [])
 		{
@@ -970,9 +944,11 @@
 		 * 筛选搜索功能
 		 * @param string $title 标题
 		 * @param string $field 键名
-		 * @param string $type 类型，默认文本
-		 * @param string $des 描述
-		 * @param        $attr     标签文本
+		 * @param string $type
+		 * @param string|null $placeholder
+		 * @param string|null $default
+		 * @param array $attr
+		 * @param array|null $options
 		 * @return $this
 		 */
 		public function search($title = '搜索', $field = 'key', $type = 'text', $placeholder = '', $default = '', $attr = [], $options = null)
@@ -1006,14 +982,15 @@
 		 * 需要展示的键值
 		 * @param       $field
 		 * @param       $title
-		 * @param       $type
-		 * @param array $opt
 		 * @param bool $sort
-		 * @param null $width
-		 * @param array $param
+		 * @param string $width
+		 * @param string $type
+		 * @param string $style
+		 * @param string $templet
+		 * @param array $map
+		 * @param string $edit
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/2/20 12:42
 		 */
 		public function key($field, $title, $sort = false, $width = '', $type = 'normal', $style = '', $templet = '', $map = [], $edit = '')
 		{
@@ -1116,11 +1093,30 @@ EOF;
 			return $this;
 		}
 
+		/**
+		 * 是否
+		 * @param string $field
+		 * @param string $title
+		 * @param $sort
+		 * @param $width
+		 * @param $style
+		 * @return $this
+		 */
 		public function keyBool($field, $title, $sort = false, $width = '', $style = '')
 		{
 			return $this->keySwitch($field, $title, '是|否', $sort, $width, $style);
 		}
 
+		/**
+		 * 开关
+		 * @param string $field
+		 * @param string $title
+		 * @param $map
+		 * @param $sort
+		 * @param $width
+		 * @param $style
+		 * @return $this
+		 */
 		public function keySwitch($field, $title, $map = ['启用', '禁用'], $sort = 'desc', $width = '', $style = '')
 		{
 			if (is_array($map)) {
@@ -1143,8 +1139,9 @@ EOF;
 
 		/**
 		 * 第一序列显示
+		 * @param $type
+		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
-		 * @datetime: 2020/2/3 17:19
 		 */
 		public function keyLeftLeader($type)
 		{
@@ -1162,9 +1159,9 @@ EOF;
 		 * @param string $title 标题
 		 * @param bool $sort 排序方式，默认是不参与排序
 		 * @param null $width
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:31
 		 */
 		public function keyText($field, $title, $sort = false, $width = '', $style = '')
 		{
@@ -1173,14 +1170,14 @@ EOF;
 
 
 		/**
-		 * 显示纯文本
+		 * 显示作者
 		 * @param string $field 键名
 		 * @param string $title 标题
 		 * @param bool $sort 排序方式，默认是不参与排序
 		 * @param null $width
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:31
 		 */
 		public function keyAuthor($field, $title, $sort = false, $width = '', $style = '')
 		{
@@ -1193,7 +1190,6 @@ EOF;
 		 * @param string|array $field 键名
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:31
 		 */
 		public function keyHidden($field)
 		{
@@ -1205,7 +1201,6 @@ EOF;
 		 * @param string|array $field 键名
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:31
 		 */
 		public function append($field)
 		{
@@ -1217,10 +1212,10 @@ EOF;
 		 * @param string $field 键名
 		 * @param string $title 标题
 		 * @param bool $sort 排序方式，默认是不参与排序
-		 * @param null $width
+		 * @param string|null $width
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:32
 		 */
 		public function keyDecimal($field, $title, $sort = false, $width = '', $style = '')
 		{
@@ -1241,6 +1236,16 @@ EOF;
 
 		}
 
+		/**
+		 * 显示金额 美元
+		 * @param string $field 键名
+		 * @param string $title 标题
+		 * @param bool $sort 排序方式，默认是不参与排序
+		 * @param string|null $width
+		 * @param string|null $style
+		 * @return Table
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function keyDollar($field, $title, $sort = false, $width = '', $style = '')
 		{
 			$templet = uniqid();
@@ -1252,6 +1257,16 @@ EOF;
 			return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet);
 		}
 
+		/**
+		 * 显示钻石
+		 * @param string $field 键名
+		 * @param string $title 标题
+		 * @param bool $sort 排序方式，默认是不参与排序
+		 * @param string|null $width
+		 * @param string|null $style
+		 * @return Table
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function keyDiamond($field, $title, $sort = false, $width = '', $style = '')
 		{
 			$templet = uniqid();
@@ -1264,15 +1279,14 @@ EOF;
 		}
 
 		/**
-		 * 显示金额
+		 * 显示金额RMB
 		 * @param string $field 键名
 		 * @param string $title 标题
 		 * @param bool $sort 排序方式，默认是不参与排序
-		 * @param null $width
-		 * @param array $opt
+		 * @param string|null $width
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:32
 		 */
 		public function keyRmb($field, $title, $sort = false, $width = '', $style = '')
 		{
@@ -1285,6 +1299,16 @@ EOF;
 			return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet);
 		}
 
+		/**
+		 * 显示模板
+		 * @param string $field 键名
+		 * @param string $title 标题
+		 * @param bool $sort 排序方式，默认是不参与排序
+		 * @param string|null $width
+		 * @param string|null $style
+		 * @return Table
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function keyTemplate($field, $templet, $title, $sort = false, $width = '', $style = '')
 		{
 			$templet_name = uniqid();
@@ -1296,12 +1320,32 @@ EOF;
 			return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet_name);
 		}
 
+		/**
+		 * 显示统计数量
+		 * @param string $field 键名
+		 * @param string $title 标题
+		 * @param bool $sort 排序方式，默认是不参与排序
+		 * @param string|null $width
+		 * @param string|null $style
+		 * @return Table
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function keyCount($field, $title, $sort = true, $width = '', $style = '')
 		{
 			$this->_count[] = $field;
 			return $this->key($field . '_count', $title, $sort, $width, 'normal', $style);
 		}
 
+		/**
+		 * 显示字段
+		 * @param string $field 键名
+		 * @param string $title 标题
+		 * @param bool $sort 排序方式，默认是不参与排序
+		 * @param string|null $width
+		 * @param string|null $style
+		 * @return Table
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function keyField($field, $title, $sort = false, $width = '', $style = '', $templet = '')
 		{
 			return $this->key($field, $title, $sort, $width, 'normal', $style, $templet);
@@ -1313,41 +1357,34 @@ EOF;
 		 * @param string $title 标题
 		 * @param bool $sort 排序方式，默认是不参与排序
 		 * @param null $width
-		 * @param array $opt
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:32
 		 */
-		//        public function keyColor($field, $title, $sort = false, $width = '', $opt = [])
-		//        {
-		//            return $this->key($field, text($title), $sort, $width,'normal');
-		//        }
+		public function keyColor($field, $title, $sort = false, $width = '')
+		{
+			return $this->key($field, text($title), $sort, $width, 'normal');
+		}
+
 		/**
 		 * 创建时间
 		 * @param string $title
-		 * @param string $format
 		 * @param bool $sort
-		 * @param null $width
-		 * @param array $opt
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/2/22 10:52
 		 */
 		public function keyCreateTime($title = '创建时间', $sort = false, $style = '')
 		{
-			return $this->keyTime('create_time', text($title), 'yyyy-MM-dd HH:mm:ss', $sort, $sort, $style);
+			return $this->keyTime('create_time', text($title), 'yyyy-MM-dd HH:mm:ss', $sort, $style);
 		}
 
 		/**
 		 * 更新时间
 		 * @param string $title
-		 * @param string $format
 		 * @param bool $sort
-		 * @param null $width
-		 * @param array $opt
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/2/22 10:52
 		 */
 		public function keyUpdateTime($title = '更新时间', $sort = false, $style = '')
 		{
@@ -1356,15 +1393,11 @@ EOF;
 
 		/**
 		 * 时间
-		 * @param string $field 键名
-		 * @param string $title 标题
-		 * @param string $format
+		 * @param string $title
 		 * @param bool $sort
-		 * @param null $width
-		 * @param array $opt
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/3/28 13:31
 		 */
 		public function keyTime($field, $title, $format = 'yyyy-MM-dd HH:mm:ss', $sort = false, $style = '')
 		{
@@ -1392,27 +1425,36 @@ EOF;
 		 * @param       $title
 		 * @param bool $sort
 		 * @param null $width
-		 * @param array $opt
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/2/22 12:57
 		 */
-		//        public function keyEmail($field, $title, $sort = false, $width = '', $opt = [])
-		//        {
-		//            return $this->key($field, text($title), $sort, $width,'normal');
-		//        }
+		public function keyEmail($field, $title, $sort = false, $width = '')
+		{
+			return $this->key($field, text($title), $sort, $width, 'normal');
+		}
+
 		/**
 		 * 显示html
-		 * @param $field
-		 * @param $title
+		 * @param string $field
+		 * @param string $title
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/2/22 12:57
 		 */
-		//        public function keyHtml($field, $title)
-		//        {
-		//            return $this->key($field, $title, 'html','','normal');
-		//        }
+		public function keyHtml($field, $title)
+		{
+			return $this->key($field, $title, 'html', '', 'normal');
+		}
+
+		/**
+		 * @param string $field
+		 * @param string $title
+		 * @param $map
+		 * @param $sort
+		 * @param $width
+		 * @param $style
+		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function keyMap($field, $title, $map, $sort = false, $width = '', $style = '')
 		{
 			if (empty($width)) {
@@ -1435,27 +1477,26 @@ EOF;
 			return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet_name, $map);
 		}
 
-		public function keyId($field = 'id', $title = 'ID', $sort = false, $width = 80, $style = '')
+		/**
+		 * 显示ID
+		 * @param string $title
+		 * @param string $sort
+		 * @param int $width
+		 * @param string $style
+		 * @author  : 微尘 <yicmf@qq.com>
+		 * @return $this
+		 */
+		public function keyId($title = 'ID', $sort = false, $width = 80, $style = '')
 		{
-			return $this->keyText($field, $title, $sort, $width, $style);
+			return $this->keyText($this->_default_pk, $title, $sort, $width, $style);
 		}
 
-
-		public function keyMedia($field, $title, $sort = false, $width = '', $opt = [])
-		{
-			return $this->key($field, $title, $sort, $width, 'normal');
-		}
-
-		//        public function keyAvatar($field, $title, $sort = false, $width = '', $style = '')
-		//        {
-		//            return $this->key($field, $title,  $sort, $width,'normal');
-		//        }
 
 		/**
 		 * 关联直读图片链接
-		 * @param $field
-		 * @param $title
-		 * @param $style
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $style
 		 * @return $this
 		 */
 		public function keyImage($field, $title, $style = '')
@@ -1472,10 +1513,10 @@ EOF;
 		}
 
 		/**
-		 * 关联直读图片链接
-		 * @param $field
-		 * @param $title
-		 * @param $style
+		 * 关联直读多图片链接
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $style
 		 * @return $this
 		 */
 		public function keyImages($field, $title, $style = '')
@@ -1496,9 +1537,9 @@ EOF;
 
 		/**
 		 * 关联模型单个图片
-		 * @param $field
-		 * @param $title
-		 * @param $style
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $style
 		 * @return $this
 		 */
 		public function keyImageModel($field, $title, $style = '')
@@ -1549,9 +1590,9 @@ EOF;
 
 		/**
 		 * 关联模型多个图片
-		 * @param $field
-		 * @param $title
-		 * @param $style
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $style
 		 * @return $this
 		 */
 		public function keyImagesModel($field, $title, $style = '')
@@ -1570,7 +1611,16 @@ EOF;
 			return $this->key($field, $title, false, 300, $style, 'normal', '#' . $templet_name);
 		}
 
-		public function keyUser($field, $title, $url = 'ucenter/admin.User/update', $width = '', $style = '')
+		/**
+		 * 显示关联用户
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $url
+		 * @param int $width
+		 * @param string|null $style
+		 * @return $this
+		 */
+		public function keyUser($field, $title, $url = 'ucenter/admin.User/update', $width = 150, $style = '')
 		{
 			if (strpos($field, '|')) {
 				$temp = explode('|', $field);
@@ -1598,9 +1648,17 @@ EOF;
   {{#  } }} 
 </script>
 EOF;
-			return $this->key($field, $title, false, 150, 'normal', $style, '#' . $templet_name);
+			return $this->key($field, $title, false, $width, 'normal', $style, '#' . $templet_name);
 		}
 
+		/**
+		 * 显示IP
+		 * @param string $field
+		 * @param string $title
+		 * @param $sort
+		 * @param string|null $type
+		 * @return $this
+		 */
 		public function keyIp($field = 'ip', $title = 'IP地址', $sort = false, $type = '')
 		{
 			$templet_name = uniqid();
@@ -1612,16 +1670,24 @@ EOF;
 			return $this->key($field, $title, $sort, 160, 'normal', $type, '#' . $templet_name);
 		}
 
-		public function keyTitle($field = 'title', $title = '标题', $sort = false, $width = '')
+		/**
+		 * 快捷title
+		 * @param string $title
+		 * @param string $sort
+		 * @param int|null $width
+		 * @return $this
+		 */
+		public function keyTitle($title = '标题', $sort = false, $width = '')
 		{
-			return $this->keyText($field, $title, $sort, $width);
+			return $this->keyText('title', $title, $sort, $width);
 		}
 
 		/**
 		 * 闭包函数
 		 * @param string $title
-		 * @param        \$closure
-		 * @param null $width
+		 * @param \Closure $closure
+		 * @param int|null $width
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -1632,15 +1698,15 @@ EOF;
 		}
 
 		/**
-		 * 闭包函数
-		 * @param string $title
-		 * @param        $closure
-		 * @param null $width
-		 * @param array $opt
+		 * 模板显示
+		 * @param string $title 
+		 * @param string $templet
+		 * @param int|null $width
+		 * @param string|null $style
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
-		public function keyTemplateChild($title, $templet, $width = '', $style = '')
+		public function keyTemplateChild($title, $templet, $width = 80, $style = '')
 		{
 			$templet_name = uniqid();
 			$this->_templets[] = <<<EOF
@@ -1653,18 +1719,22 @@ EOF;
 				'field' => 'skus',
 				'title' => $title,
 				'type' => 'child',
-				'width' => 80,
+				'width' => $width,
+				'style' => $style,
 				'collapse' => 1,
 				'children' => '#' . $templet_name,
 				'childWidth' => 'full',
 			];
 			return $this;
-//			return $this->key('status', $title, false, $width, 'children', $style, '#' . $templet_name);
 		}
 
 		/**
-		 * @param $field
-		 * @param $title
+		 * 可操作链接
+		 * @param string $field
+		 * @param string $title
+		 * @param string $target
+		 * @param int|null $width
+		 * @param string|null $style
 		 * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
 		 * @return Table
 		 */
@@ -1681,9 +1751,12 @@ EOF;
 		}
 
 		/**
-		 * @param $field
-		 * @param $title
+		 * 对话框
+		 * @param string $field
+		 * @param string $title
 		 * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
+		 * @param array $arr
+		 * @param int|null $width
 		 * @return Table
 		 */
 		public function keyDialog($field, $title, $url, $arr = [], $width = '')
@@ -1701,9 +1774,11 @@ EOF;
 		}
 
 		/**
-		 * @param $field
-		 * @param $title
+		 * 新的tab窗口
+		 * @param string $field
+		 * @param string $title
 		 * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
+		 * @param int|null $width
 		 * @return Table
 		 */
 		public function keyTab($field, $title, $url, $width = '')
@@ -1724,9 +1799,11 @@ EOF;
 		}
 
 		/**
-		 * @param $field
-		 * @param $title
-		 * @param boolean $sort
+		 * 进度
+		 * @param string $field
+		 * @param string $title
+		 * @param string|boolean $sort
+		 * @param int|null $width
 		 * @return Table
 		 */
 		public function keyProgress($field, $title, $sort = false, $width = '')
@@ -1746,8 +1823,8 @@ EOF;
 
 		/**
 		 * 状态
-		 * @param null $map
-		 * @param false $sort
+		 * @param array|null $map
+		 * @param string|boolean $sort
 		 * @param string $style
 		 * @return $this
 		 */
@@ -1764,6 +1841,17 @@ EOF;
 			return $this->keyMap('status', '状态', $map, $sort, '', $style);
 		}
 
+		/**
+		 * 操作
+		 * @param $url
+		 * @param $title
+		 * @param $status
+		 * @param $event
+		 * @param $message
+		 * @param $class
+		 * @param $icon
+		 * @return $this
+		 */
 		public function keyDoAction($url, $title = '操作', $status = [], $event = 'edit', $message = '', $class = '', $icon = '')
 		{
 			if (false === strpos($url, '/')) {
@@ -1835,41 +1923,83 @@ EOF;
 
 		/**
 		 * 不可操作
-		 * @param string $text
+		 * @param string $title
 		 * @param array $status
-		 * @param array $attr
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 16:16
 		 */
-		public function actionDisable($title = '不可操作', $status = [], $attr = [])
+		public function actionDisable($title = '不可操作', $status = [])
 		{
 			return $this->keyDoAction('', $title, empty($status) ? [0, 1, 2] : $status, 'no', '', 'layui-btn-orange', 'stop');
 		}
 
 
-		public function actionView($url = 'view?id={$id}', $title = '详情', $status = [], $attrs = [])
+		/**
+		 * 浏览操作
+		 * @param string $url
+		 * @param string $title
+		 * @param array $status
+		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
+		public function actionView($url = 'view?id={$id}', $title = '详情', $status = [])
 		{
 			return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-btn-green', 'search');
 
 		}
 
-		public function actionManager($url = 'manager?id={$id}', $title = '授权', $status = [], $attr = [])
+		/**
+		 * 授权操作
+		 * @param string $url
+		 * @param string $title
+		 * @param array $status
+		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
+		public function actionManager($url = 'manager?id={$id}', $title = '授权', $status = [])
 		{
 			return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-btn-green', 'auz');
 		}
 
 
+		/**
+		 * 链接操作
+		 * @param string $url
+		 * @param string $title
+		 * @param array $status
+		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function actionLink($url, $title, $status = [])
 		{
 			return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-bg-green', 'link');
 		}
 
+		/**
+		 * ajax操作
+		 * @param string $url
+		 * @param string $title
+		 * @param array $status
+		 * @param string $message
+		 * @param string $icon
+		 * @param string $class
+		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function actionAjax($url = 'delete?id={$id}', $title = '删除', $status = [], $message = '', $icon = 'delete', $class = 'layui-btn-danger')
 		{
 			return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, $class, $icon);
 		}
 
+		/**
+		 * 删除操作
+		 * @param string $url
+		 * @param string $title
+		 * @param string $message
+		 * @param array $status
+		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function actionDelete($url = 'delete?id={$id}', $title = '删除', $status = [], $message = '')
 		{
 			return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'delete');
@@ -1877,11 +2007,12 @@ EOF;
 
 		/**
 		 *  更新操作
-		 * @param $url
-		 * @param $title
-		 * @param $status
-		 * @param $dialog false 使用tab , min max mid 分别大中小弹窗，或者数组自定义
+		 * @param string $url
+		 * @param string $title
+		 * @param array $status
+		 * @param string  $dialog false 使用tab , min max mid 分别大中小弹窗，或者数组自定义
 		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
 		 */
 		public function actionUpdate($url = 'update?id={$id}', $title = '编辑', $status = [], $dialog = false)
 		{
@@ -1890,11 +2021,12 @@ EOF;
 
 		/**
 		 * 彻底删除
-		 * @param $url
-		 * @param $title
-		 * @param $status
-		 * @param $message
+		 * @param string $url
+		 * @param string $title
+		 * @param array $status
+		 * @param string $message
 		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
 		 */
 		public function actionRemove($url = 'clear?id={$id}', $title = '彻底删除', $status = [], $message = '')
 		{
@@ -1903,10 +2035,10 @@ EOF;
 
 		/**
 		 * 禁用
-		 * @param        $url
-		 * @param string $text
+		 * @param string $url
+		 * @param string $title
 		 * @param array $status
-		 * @param array $attr
+		 * @param string $message
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -1914,7 +2046,15 @@ EOF;
 		{
 			return $this->keyDoAction($url, $title, empty($status) ? [1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'close-fill');
 		}
-
+		/**
+		 * 通过审核
+		 * @param string $url
+		 * @param string $title
+		 * @param array $status
+		 * @param string $message
+		 * @return Table
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
 		public function actionToCheck($url = 'check?id={$id}', $title = '通过审核', $status = [], $message = '')
 		{
 			return $this->keyDoAction($url, $title, empty($status) ? [0] : $status, 'ajax', $message, 'layui-bg-green', 'ok');
@@ -1923,9 +2063,9 @@ EOF;
 		/**
 		 * 还原
 		 * @param string $url
-		 * @param string $text
+		 * @param string $title
 		 * @param array $status
-		 * @param array $attr
+		 * @param string $message
 		 * @return Table
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -1952,7 +2092,6 @@ EOF;
 		 * @param $function
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 18:19
 		 */
 		public function rowStyle($function)
 		{
@@ -1972,7 +2111,6 @@ EOF;
 		 * @param $function
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 18:19
 		 */
 		public function rowClass($function)
 		{
@@ -1986,7 +2124,6 @@ EOF;
 		 * @param bool $pagination 是否启用分页
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
-		 * @datetime: 2019/4/12 17:56
 		 */
 		public function data($data, $pagination = true)
 		{
@@ -1997,7 +2134,7 @@ EOF;
 
 		/**
 		 * 当前列表操作宽度
-		 * @param $width
+		 * @param int $width
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
 		 */
@@ -2009,8 +2146,8 @@ EOF;
 
 		/**
 		 * 返回页面
+		 * @param string $name
 		 * @param array $vars
-		 * @param array $config
 		 * @return string
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -2029,11 +2166,10 @@ EOF;
 							// 闭包
 							$result = [];
 						} elseif (empty($this->_data)) {
-							if (is_string($model))
-							{
+							if (is_string($model)) {
 								$whereModel = $model::where($searchWhere)
 									->where($this->_where);
-							}else{
+							} else {
 								$whereModel = $model->where($searchWhere)
 									->where($this->_where);
 							}
@@ -2125,12 +2261,11 @@ EOF;
 						// 闭包
 						$result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
 					} elseif (!is_null($model)) {
-						if (is_string($model))
-						{
+						if (is_string($model)) {
 							$whereModel = $model::where($searchWhere)
 //							->field(implode($this->_field, ','))
 								->where($this->_where);
-						}else{
+						} else {
 							$whereModel = $model->where($searchWhere)
 //							->field(implode($this->_field, ','))
 								->where($this->_where);
@@ -2317,10 +2452,9 @@ EOF;
 			$field = array_unique($field);
 			$model = $this->_model;
 			if (!is_null($model)) {
-				if (is_string($model))
-				{
+				if (is_string($model)) {
 					$db_fields = $model::getTableFields();
-				}else{
+				} else {
 					$db_fields = $model->getTableFields();
 				}
 				foreach ($field as $index => $item) {
@@ -2349,10 +2483,9 @@ EOF;
 			$fields = $this->request->param('field/a');
 			$model = $this->_model;
 			if (!is_null($model)) {
-				if (is_string($model))
-				{
+				if (is_string($model)) {
 					$db_fields = $model::getTableFields();
-				}else{
+				} else {
 					$db_fields = $model->getTableFields();
 				}
 			} else {

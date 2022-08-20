@@ -2017,20 +2017,7 @@ $field['url'] = $default_image_url;
 	</span>
 
 </div>{/case}
-{case value="ias"}
-<div class="layui-input-inline">
-    <input type="text" name="{$field['field'][0]}" value="{$field['value'][0]|htmlspecialchars}"
-           size="{$field['config'][0]['size']}">
-    <select name="{$field['field'][1]}" data-toggle="selectpicker" data-width="{$field['config'][1]['width']}">
-        {php}foreach($field['config'][1]['options'] as $key_opt =>$option){{/php}
-        {php}
-        $selected = $field['value'][1]==$key_opt ? 'selected' : '';
-        {/php}
-        <option value="{$key_opt}" {$selected}>{$option|htmlspecialchars}</option>
-        {php}}{/php}
-    </select>
 
-</div>
 {default/}
 <span style="color: #f00;">错误：未知字段类型 {$field.type}</span>
 <input type="hidden" name="{$field.field}" value="{$field.value|htmlspecialchars}"/>
