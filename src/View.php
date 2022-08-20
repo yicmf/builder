@@ -192,7 +192,7 @@
 		 * @return string
 		 * @author 微尘 <yicmf@qq.com>
 		 */
-		public function fetch($template = 'name', $vars = [])
+		public function fetch($template = 'view', $vars = [])
 		{
 			// 将数据融入到key中
 			foreach ($this->_keyList as &$e) {
