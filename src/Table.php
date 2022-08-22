@@ -846,6 +846,7 @@
 				'field' => $field,
 				'type' => 'datepicker',
 				'value' => $default,
+				'condition' => 'between',
 				'placeholder' => $placeholder,
 				'width' => $width,
 				'options' => $options,
