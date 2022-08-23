@@ -84,6 +84,11 @@
 			'bottom' => false,
 			'clearFilter' => true
 		];
+		protected $_tabs = [
+			'tabs'=>[],
+			'default'=>0,
+			'field'=>'',
+		];
 		/**
 		 * 操作表宽度
 		 * @var int
@@ -144,6 +149,29 @@
 		{
 			$this->_model = $model;
 			$this->_pagination = $pagination;
+			return $this;
+		}
+
+		/**
+		 * tabs
+		 * @param array $lists
+		 * @param boolean $pagination 分页
+		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
+		 */
+		public function searchTabs($field,$lists, $default = 0)
+		{
+			$this->_search[] = [
+				'field' => $field,
+				'type' => 'tabs',
+				'condition' => '=',
+				'value' => '',
+			];
+			$this->_tabs = [
+				'field'=>$field,
+				'tabs'=>$lists,
+				'default'=>$default
+			];
 			return $this;
 		}
 
@@ -1700,7 +1728,7 @@ EOF;
 
 		/**
 		 * 模板显示
-		 * @param string $title 
+		 * @param string $title
 		 * @param string $templet
 		 * @param int|null $width
 		 * @param string|null $style
@@ -2442,6 +2470,15 @@ EOF;
 					$this->assign('hidden', $this->_hidden);
 					$this->assign('page', $this->_pagination ? 1 : 0);
 					$this->assign('auto_refresh', $this->_auto_refresh);
+					if ($this->_tabs['field'])
+					{
+						$this->assign('tabs', $this->_tabs['tabs']);
+						$this->assign('tabs_default', $this->_tabs['default']);
+						$this->assign('tabs_field', $this->_tabs['field']);
+						$this->assign('tabs_value', $this->_tabs['tabs'][$this->_tabs['default']]['id']);
+					}else{
+						$this->assign('tabs', []);
+					}
 					return parent::_fetch($name, $vars);
 				}
 			}
