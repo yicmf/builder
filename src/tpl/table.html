@@ -59,7 +59,7 @@
         <div class="layui-tab layui-tab-brief" lay-filter="tab-f-sub-{$namespace}-table">
             <ul class="layui-tab-title">
                 {volist name='tabs' id='vo'}
-                <li class="{eq name='tabs_default' value='$key'}layui-this {/eq}">{$vo.value}</li>
+                <li class="{eq name='tabs_default' value='$key'}layui-this {/eq}">{notempty name='vo.badge'}<span class="layui-badge lay-hide">{$vo.badge}}</span>{/notempty}{$vo.value}</li>
                 {/volist}
                 <!--<li>通知<span class="layui-badge lay-hide">6</span></li>-->
             </ul>
