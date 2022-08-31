@@ -17,7 +17,7 @@
 
 <div class="layui-fluid">
     <div class="layui-card">
-        <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="app-forum-list">
+        <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="app-{$namespace}-forum-list">
             <div class="layui-collapse ns-tips" style="display: none">
                 <div class="layui-colla-item">
                     <h2 class="layui-colla-title">操作提示<i class="layui-icon layui-colla-icon"></i></h2>
@@ -163,7 +163,7 @@
                 ,element = layui.element
                 ,soulTable = layui.soulTable
                 ,table = layui.table , r = layui.device();
-            //form.render(null, 'app-forum-list');
+            form.render(null, 'app-{$namespace}-forum-list');
 
             var excel_{$namespace}_table =  table.render({
                     elem: '#{$namespace}-table'
