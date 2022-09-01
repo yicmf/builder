@@ -214,6 +214,7 @@
 
 		/**
 		 * 导出表格
+		 * @param string|\Closure $columns //展示字段
 		 * @param string $filename //支持后缀：xlsx/xls<br>
 		 * @param array $head
 		 * @param array $font
@@ -221,43 +222,56 @@
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
 		 */
-		public function excel($filename = '', $head = [], $font = [], $border = [])
+		public function excel($columns='',$filename = '', $head = [], $font = [], $border = [])
 		{
-			/**
-			 * 'family' => 'Calibri', // 字体
-			 * 'size' => 12,// 字号
-			 * 'color' => '000000', // 字体颜色
-			 * 'bgColor' => 'FFFFFF', // 背景颜色
-			 * 'cellType' => 'String' // 单元格格式 `b` 布尔值, `n` 数字, `e` 错误, `s` 字符, `d` 日期
-			 */
-			$head = empty($head) ? [
-				'family' => 'Calibri',
-				'size' => 12,
-				'color' => '000000',
-				'bgColor' => 'FFFFFF',
-				'cellType' => 'String'
-			] : $head;
-			$font = empty($font) ? [
-				'family' => 'Calibri',
-				'size' => 12,
-				'color' => '000000',
-				'bgColor' => 'FFFFFF',
-				'cellType' => 'String'
-			] : $font;
-			$border = empty($border) ? [
-				'top' => '{ style: \'thin\', color: \'FF5722\' }',
-				'bottom' => '{ style: \'thin\', color: \'FF5722\' }',
-				'left' => '{ style: \'thin\', color: \'FF5722\' }',
-				'right' => '{ style: \'thin\', color: \'FF5722\' }'
-			] : $border;
+			if ($columns instanceof \Closure) {
+				$this->_excel = [
+					'filename' => $filename,
+					'columns' => $columns,
+					'is_custom' => 1,
+					'head' => $head,
+					'url' => $this->request->url().'&page=excel',
+				];
+			}else{
+
+				/**
+				 * 'family' => 'Calibri', // 字体
+				 * 'size' => 12,// 字号
+				 * 'color' => '000000', // 字体颜色
+				 * 'bgColor' => 'FFFFFF', // 背景颜色
+				 * 'cellType' => 'String' // 单元格格式 `b` 布尔值, `n` 数字, `e` 错误, `s` 字符, `d` 日期
+				 */
+				$head = empty($head) ? [
+					'family' => 'Calibri',
+					'size' => 12,
+					'color' => '000000',
+					'bgColor' => 'FFFFFF',
+					'cellType' => 'String'
+				] : $head;
+				$font = empty($font) ? [
+					'family' => 'Calibri',
+					'size' => 15,
+					'color' => '000000',
+					'bgColor' => 'FFFFFF',
+					'cellType' => 'String'
+				] : $font;
+				$border = empty($border) ? [
+					'top' => '{ style: \'thin\', color: \'FF5722\' }',
+					'bottom' => '{ style: \'thin\', color: \'FF5722\' }',
+					'left' => '{ style: \'thin\', color: \'FF5722\' }',
+					'right' => '{ style: \'thin\', color: \'FF5722\' }'
+				] : $border;
+				$this->_excel = [
+					'filename' => $filename,
+					'head' => $head,
+					'is_custom' => 0,
+					'font' => $font,
+					'border' => $border,
+					'columns' => $columns,
+				];
+			}
 			$this->keyLeftLeader('checkbox');
 			$this->_toolbar[] = ['title' => '导出表格', 'layEvent' => 'LAYTABLE_EXCEL', 'icon' => 'layui-icon-export'];
-			$this->_excel = [
-				'filename' => $filename,
-				'head' => $head,
-				'font' => $font,
-				'border' => $border,
-			];
 			return $this;
 		}
 
@@ -2277,72 +2291,75 @@ EOF;
 				}
 				return json($result);
 			} else {
-				if ($this->request->has('page', 'get')) {
-//					try {
-					$this->_field = $this->_getField($this->_field);
-					$list_rows = $this->request->has('limit', 'param') ? $this->request->param('limit') : Config::get('paginate.list_rows');
-					$page = $this->request->has('page', 'param') ? $this->request->param('page') : 1;
-					$result = [];
-					$searchWhere = $this->_searchWhere();
-					$searchOrder = $this->_searchOrder();
-					$model = $this->_model;
-					if ($model instanceof \Closure) {
-						// 闭包
-						$result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
-					} elseif (!is_null($model)) {
-						if (is_string($model)) {
-							$whereModel = $model::where($searchWhere)
-//							->field(implode($this->_field, ','))
-								->where($this->_where);
-						} else {
-							$whereModel = $model->where($searchWhere)
-//							->field(implode($this->_field, ','))
-								->where($this->_where);
-						}
-
-						$result['code'] = 0;
-						$result['count'] = $whereModel->count();
-						if (count($this->_count)) {
-							$lists = $whereModel->withCount($this->_count)
-								->order($searchOrder)
-								->limit($list_rows * ($page - 1), $list_rows)->select();
-						} else {
-							$lists = $whereModel
-								->order($searchOrder)
-								->limit($list_rows * ($page - 1), $list_rows)->select();
-						}
-					} else {
-						if ($this->_data instanceof \Closure) {
-							$data = $this->_data;
+				$page_param = $this->request->get('page', 0);
+				if ($page_param) {
+					try {
+						$this->_field = $this->_getField($this->_field);
+						$list_rows = $this->request->has('limit', 'param') ? $this->request->param('limit') : Config::get('paginate.list_rows');
+						$page = $this->request->has('page', 'param') ? $this->request->param('page') : 1;
+						$result = [];
+						$searchWhere = $this->_searchWhere();
+						$searchOrder = $this->_searchOrder();
+						$model = $this->_model;
+						if ($model instanceof \Closure) {
 							// 闭包
-							$lists = $data($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
-						} else {
-							$lists = $this->_data;
-						}
-						if (isset($lists['code'])) {
-							$result = $lists;
-							$lists = $lists['data'];
-						} else {
+							$result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+						} elseif (!is_null($model)) {
+							if (is_string($model)) {
+								$whereModel = $model::where($searchWhere)
+//							->field(implode($this->_field, ','))
+									->where($this->_where);
+							} else {
+								$whereModel = $model->where($searchWhere)
+//							->field(implode($this->_field, ','))
+									->where($this->_where);
+							}
+
 							$result['code'] = 0;
-							$result['count'] = count($this->_data);
+							$result['count'] = $whereModel->count();
+							if (count($this->_count)) {
+								$lists = $whereModel->withCount($this->_count)
+									->order($searchOrder)
+									->limit($list_rows * ($page - 1), $list_rows)->select();
+							} else {
+								$lists = $whereModel
+									->order($searchOrder)
+									->limit($list_rows * ($page - 1), $list_rows)->select();
+							}
+						} else {
+							if ($this->_data instanceof \Closure) {
+								$data = $this->_data;
+								// 闭包
+								$lists = $data($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+							} else {
+								$lists = $this->_data;
+							}
+							if (isset($lists['code'])) {
+								$result = $lists;
+								$lists = $lists['data'];
+							} else {
+								$result['code'] = 0;
+								$result['count'] = count($this->_data);
+							}
 						}
-					}
 //					dump($lists);
 //					exit();
-					// 数据转换
-					if (!empty($lists)) {
-						// 采用分页类||单纯的数据数组
-						foreach ($lists as $key => $list) {
-							$lists[$key] = $this->convertKey($list);
+						// 数据转换
+						if (!empty($lists)) {
+							// 采用分页类||单纯的数据数组
+							foreach ($lists as $key => $list) {
+								$lists[$key] = $this->convertKey($list);
+							}
 						}
+						$result['data'] = $lists;
+					} catch (Exception $e) {
+						$result['code'] = 0;
+						$result['message'] = $e->getMessage();
 					}
-					$result['data'] = $lists;
-//					} catch (Exception $e) {
-//						$result['code'] = 0;
-//						$result['message'] = $e->getMessage();
-//					}
+
 					return json($result);
-				} else {
+				}
+				else {
 
 					foreach ($this->_keyList as $index => $item) {
 						if (isset($item['type']) && $item['type'] == 'hidden') {
@@ -2424,7 +2441,7 @@ EOF;
 						}
 					}
 					if (isset($this->_excel['filename']) && !$this->_excel['filename']) {
-						$this->_excel['filename'] = $this->_title . '_' . time_format(time(), 'Y_m_d');
+						$this->_excel['filename'] = $this->_title . '_' . time_format(time(), 'Y_m_d').'.xlsx';
 					}
 
 					$this->assign('menu_title', $this->_title);

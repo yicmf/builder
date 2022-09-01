@@ -382,16 +382,37 @@
                         case 'LAYTABLE_EXCEL':
                             var that = this;
                             var table_param = {$excel|raw|json_encode};
+
+                    // window.open('http://shop.co/ucenter/admin.User/outxls')
+
+                    //  window.location.href = 'http://shop.co/ucenter/admin.User/outxls'
                     $(that).after('<ul class="layui-table-tool-panel"><li class="excel-select">导出选中</li><li class="excel-all">导出所有</li></ul>');
                     $('.layui-table-tool-panel .excel-all').click(function(){
-                        table_param['filename'] =  table_param['filename']+'.xls';
-                        soulTable.export(excel_{$namespace}_table, table_param);
+                        // table_param['filename'] =  table_param['filename']+'.xlsx';
+                        console.log(table_param)
+                        var url = $(this).data('url');
+                        console.log(url);
+                        console.log(excel_{$namespace}_table);
+                        if(table_param.is_custom)
+                        {
+                            //window.location.href = table_param.url;
+                        }else{
+                            soulTable.export(excel_{$namespace}_table, table_param);
+                        }
                     });
                     $('.layui-table-tool-panel .excel-select').click(function(){
                         if (table.checkStatus('{$namespace}-table').data.length > 0) {
                             table_param['checked'] = true;
-                            table_param['filename'] =  table_param['filename']+'_选中.xls';
-                            soulTable.export(excel_{$namespace}_table, table_param);
+                            // table_param['filename'] =  table_param['filename']+'_选中.xlsx';
+                            var url = $(this).data('url');
+                            console.log(url);
+                            console.log(excel_{$namespace}_table);
+                            if(table_param.is_custom)
+                            {
+                                // window.location.href = table_param.url;
+                            }else{
+                                soulTable.export(excel_{$namespace}_table, table_param);
+                            }
                         } else {
                             layer.msg('勾选数据不能为空！');
                         }
