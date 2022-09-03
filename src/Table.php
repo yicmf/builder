@@ -85,9 +85,9 @@
 			'clearFilter' => true
 		];
 		protected $_tabs = [
-			'tabs'=>[],
-			'default'=>0,
-			'field'=>'',
+			'tabs' => [],
+			'default' => 0,
+			'field' => '',
 		];
 		/**
 		 * 操作表宽度
@@ -159,7 +159,7 @@
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
-		public function searchTabs($field,$lists, $default = 0)
+		public function searchTabs($field, $lists, $default = 0)
 		{
 			$this->_search[] = [
 				'field' => $field,
@@ -168,9 +168,9 @@
 				'value' => '',
 			];
 			$this->_tabs = [
-				'field'=>$field,
-				'tabs'=>$lists,
-				'default'=>$default
+				'field' => $field,
+				'tabs' => $lists,
+				'default' => $default
 			];
 			return $this;
 		}
@@ -222,7 +222,7 @@
 		 * @return $this
 		 * @author 微尘 <yicmf@qq.com>
 		 */
-		public function excel($columns='',$filename = '', $head = [], $font = [], $border = [])
+		public function excel($columns = '', $filename = '', $head = [], $font = [], $border = [])
 		{
 			if ($columns instanceof \Closure) {
 				$this->_excel = [
@@ -230,9 +230,9 @@
 					'columns' => $columns,
 					'is_custom' => 1,
 					'head' => $head,
-					'url' => $this->request->url().'&page=excel',
+					'url' => $this->request->url() . '&page=excel',
 				];
-			}else{
+			} else {
 
 				/**
 				 * 'family' => 'Calibri', // 字体
@@ -1526,8 +1526,8 @@ EOF;
 		 * @param string $sort
 		 * @param int $width
 		 * @param string $style
-		 * @author  : 微尘 <yicmf@qq.com>
 		 * @return $this
+		 * @author  : 微尘 <yicmf@qq.com>
 		 */
 		public function keyId($title = 'ID', $sort = false, $width = 80, $style = '')
 		{
@@ -2053,7 +2053,7 @@ EOF;
 		 * @param string $url
 		 * @param string $title
 		 * @param array $status
-		 * @param string  $dialog false 使用tab , min max mid 分别大中小弹窗，或者数组自定义
+		 * @param string $dialog false 使用tab , min max mid 分别大中小弹窗，或者数组自定义
 		 * @return $this
 		 * @author  : 微尘 <yicmf@qq.com>
 		 */
@@ -2089,6 +2089,7 @@ EOF;
 		{
 			return $this->keyDoAction($url, $title, empty($status) ? [1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'close-fill');
 		}
+
 		/**
 		 * 通过审核
 		 * @param string $url
@@ -2300,6 +2301,7 @@ EOF;
 						$result = [];
 						$searchWhere = $this->_searchWhere();
 						$searchOrder = $this->_searchOrder();
+//						dump($searchWhere);exit();
 						$model = $this->_model;
 						if ($model instanceof \Closure) {
 							// 闭包
@@ -2358,8 +2360,7 @@ EOF;
 					}
 
 					return json($result);
-				}
-				else {
+				} else {
 
 					foreach ($this->_keyList as $index => $item) {
 						if (isset($item['type']) && $item['type'] == 'hidden') {
@@ -2441,7 +2442,7 @@ EOF;
 						}
 					}
 					if (isset($this->_excel['filename']) && !$this->_excel['filename']) {
-						$this->_excel['filename'] = $this->_title . '_' . time_format(time(), 'Y_m_d').'.xlsx';
+						$this->_excel['filename'] = $this->_title . '_' . time_format(time(), 'Y_m_d') . '.xlsx';
 					}
 
 					$this->assign('menu_title', $this->_title);
@@ -2487,13 +2488,12 @@ EOF;
 					$this->assign('hidden', $this->_hidden);
 					$this->assign('page', $this->_pagination ? 1 : 0);
 					$this->assign('auto_refresh', $this->_auto_refresh);
-					if ($this->_tabs['field'])
-					{
+					if ($this->_tabs['field']) {
 						$this->assign('tabs', $this->_tabs['tabs']);
 						$this->assign('tabs_default', $this->_tabs['default']);
 						$this->assign('tabs_field', $this->_tabs['field']);
 						$this->assign('tabs_value', $this->_tabs['tabs'][$this->_tabs['default']]['id']);
-					}else{
+					} else {
 						$this->assign('tabs', []);
 					}
 					return parent::_fetch($name, $vars);
@@ -2547,12 +2547,12 @@ EOF;
 				$db_fields = $this->_field;
 			}
 			$where = [];
+			$_search_field = [];
 			if (is_array($fields)) {
 				foreach ($this->_search as $search) {
 					if (in_array($search['field'], $db_fields) && isset($fields[$search['field']]) && $fields[$search['field']] != '') {
-						if ('=' == $search['condition']) {
-							$where[] = [$search['field'], '=', $fields[$search['field']]];
-						} elseif ('like' === $search['condition']) {
+						$_search_field[] = $search['field'];
+						if ('like' === $search['condition']) {
 							$where[] = [$search['field'], 'like', '%' . $fields[$search['field']] . '%'];
 						} elseif ('between' === $search['condition']) {
 							if ('datepicker' === $search['type']) {
@@ -2562,34 +2562,33 @@ EOF;
 								}
 							}
 						} elseif ('search_user' == $search['condition']) {
-
 							$ids = Db::name('user')
 								->where('status', '>', -2)
 								->where('id|account|email|nickname', 'like', '%' . $fields[$search['field']] . '%')
 								->column('id');
 							$where[] = [$search['field'], 'in', $ids];
+						} else {
+							$where[] = [$search['field'], '=', $fields[$search['field']]];
 						}
 					}
 				}
-
-
 			}
 			$urlFields = $this->request->except(explode(',', 'v,page,limit,user,m,field,video,store'));
 			if (is_array($urlFields)) {
 				foreach ($urlFields as $field => $field_value) {
-					if (!in_array($field, $db_fields)) {
+					if (!in_array($field, $db_fields) || in_array($field, $_search_field)) {
 						continue;
 					}
-					$out = false;
-					foreach ($this->_search as $search) {
-						if ($search['field'] == $field) {
-							$out = true;
-							continue;
-						}
-					}
-					if ($out) {
-						continue;
-					}
+//					$out = false;
+//					foreach ($this->_search as $search) {
+//						if ($search['field'] == $field) {
+//							$out = true;
+//							continue;
+//						}
+//					}
+//					if ($out) {
+//						continue;
+//					}
 					$where[] = [$field, '=', $field_value];
 				}
 			}
