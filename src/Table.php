@@ -1757,7 +1757,6 @@ EOF;
    $templet
 </script>
 EOF;
-			$this->_field[] = 'skus';
 			$this->_keyList[] = [
 				'field' => 'skus',
 				'title' => $title,
@@ -2455,7 +2454,7 @@ EOF;
 					$this->assign('suggest', $this->_suggest);
 					$this->assign('statistics', $this->_statistics);
 					$this->assign('warning', $this->_warning);
-					$this->assign('keyList', $this->_keyList);
+					$this->assign('keyList',array_values($this->_keyList));
 					$this->assign('buttonList', $this->_buttonList);
 					$this->assign('callback', $this->_callback);
 					$this->assign('excel', $this->_excel);
