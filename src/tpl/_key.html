@@ -1437,7 +1437,7 @@ $checked = $field['value']==$key ? 'checked' : '';
             </div>
             <button type="button" class="layui-btn button-upload-auth-image-back">身份证背面</button>
         </div>
-        <div class="layui-col-xs2 {php} if( !$field['options']['need_hand'] ||!isset($field['data']['auth'])){ echo 'layui-hide';}{/php} " id="show_hand">
+        <div class="layui-col-xs2 {php} if( $field['options']['need_hand'] == 0){ echo 'layui-hide';}{/php} " id="show_hand">
             <div class="layui-upload-list front">
                 <img class="layui-upload-img-card button-upload-auth-image-hand"
                      src="{$field['data']['hand']['url']|default='__COMMON__/images/idcard/h.jpg'}">
