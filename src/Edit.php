@@ -392,17 +392,10 @@ class Edit extends Builder
 
     /**
      * 新窗口选择一个
-     * @param        $field
-     * @param        $url
-     * @param        $title
-     * @param string $show_field
-     * @param null $tips
-     * @param null $default
-     * @param int $size
-     * @param null $verify
-     * @return $this
-     */
-    /**
+     *
+     * ->keyBelongTo('Document.document_id','im/admin.Document/index','关联常见问题','title')
+     * ->setTrigger('type',0,'reply')
+     * ->setTrigger('type',1,'Document_id')
      * @param $field
      * @param $url
      * @param $title
