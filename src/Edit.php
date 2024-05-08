@@ -390,10 +390,12 @@ class Edit extends Builder
     }
 
 
+
     /**
      * 新窗口选择一个
-     *
-     * ->keyBelongTo('Document.document_id','im/admin.Document/index','关联常见问题','title')
+     * ->keyBelongTo('document.title|ducoment_id','im/admin.Document/index','关联常见问题')
+     * ->keyBelongTo('document|ducoment_id','im/admin.Document/index','关联常见问题','title')
+     * ->keyBelongTo('document.title','im/admin.Document/index','关联常见问题')
      * ->setTrigger('type',0,'reply')
      * ->setTrigger('type',1,'Document_id')
      * @param $field
@@ -405,10 +407,10 @@ class Edit extends Builder
      * @param $size
      * @param $verify
      * @return $this
-     * @throws Exception
      */
-    public function keyBelongTo($field, $url, $title, $show_field = 'id', $tips = null, $default = null, $size = null, $verify = null)
+    public function keyBelongTo($field, $url, $title, $show_field = '', $tips = null, $default = null, $size = null, $verify = null)
     {
+        $old_filed = $field;
         if (strpos($field, '|')) {
             // 获取field
             $temp = explode('|', $field);
@@ -421,16 +423,15 @@ class Edit extends Builder
         }
         if (strpos($field, '.')) {
             $temp = explode('.', $field);
-//				$show_field = $temp[1];
-            if (!isset($show_field)) {
-                $v_field = $temp[0];
-            } else {
+            $show_field = $temp[1];
+            $model_name = $temp[0];
+            if (!strpos($old_filed, '|')) {
                 $v_field = $temp[0] . '_id';
             }
         } else {
-            throw new Exception('关联格式错误');
+            $show_field = 'id';
         }
-        return $this->key($v_field, $title, $tips, 'belongTo', ['url' => $url, 'show_field' => $show_field, 'field' => $field, 'limit' => 0], $default, $verify, $size);
+        return $this->key($v_field, $title, $tips, 'belongTo', ['model_name'=>$model_name,'old_field'=>$old_filed,'show_field_value'=>'','url' => $url, 'show_field' => $show_field, 'field' => $field, 'limit' => 0], $default, $verify, $size);
     }
 
     /**
@@ -1701,14 +1702,6 @@ class Edit extends Builder
                     $i++;
                     $n--;
                 }
-            } elseif (strpos($e['field'], '.')) { // 支持点语法
-                $view = $this->app['view'];
-                $temp = explode('.', $e['field']);
-                $e['relation']['parent'] = $temp[0];
-                $e['relation']['child'] = $temp[1];
-                $e['value'] = $view->display('{$data.' . $temp[0] . '?$data.' . $e['field'] . ':\'\'}', ['data' => $this->_data]);
-                $e['field'] = $temp[0] . '[' . $temp[1] . ']';
-//					$e['value'] = isset($this->_data[$temp[0]][$temp[1]]) ? $this->_data[$temp[0]][$temp[1]] : (isset($e['value']) ? $e['value'] : '');
             } elseif (strpos($e['field'], '|')) { // 使用‘|’代表同级字段
 //                    if (isset($e['value'])) {
 //                        $e['value'] = explode('|', $e['field']);
@@ -1722,11 +1715,35 @@ class Edit extends Builder
                         $e['value'][$t_key] = isset($this->_data[$t_value]) ? $this->_data[$t_value] : (isset($e[$t_key]) ? $e[$t_key] : '');
                     }
                 }
-            } else {
+            }  elseif (strpos($e['field'], '.')) { // 支持点语法
+                $temp = explode('.', $e['field']);
+                $e['relation']['parent'] = $temp[0];
+                $e['relation']['child'] = $temp[1];
+                $e['value'] = $this->app['view']->display('{$data.' . $temp[0] . '?$data.' . $e['field'] . ':\'\'}', ['data' => $this->_data]);
+                $e['field'] = $temp[0] . '[' . $temp[1] . ']';
+//					$e['value'] = isset($this->_data[$temp[0]][$temp[1]]) ? $this->_data[$temp[0]][$temp[1]] : (isset($e['value']) ? $e['value'] : '');
+            }else {
                 $e['value'] = isset($this->_data[$e['field']]) ? $this->_data[$e['field']] : (isset($e['value']) ? $e['value'] : '');
             }
+            if ($e['type'] == 'belongTo')
+            {
+                $e['options']['show_field_value'] = $this->app['view']->display('{$data.' . $e['options']['model_name'] . '?$data.' . $e['options']['model_name'].'.' . $e['options']['show_field'] . ':\'\'}', ['data' => $this->_data]);;
+
+            }
+//                dump($e);
+
+//                if (false !== strpos($key['field'], '{$')) {
+//                    $value = $this->app['view']->display($key['field'], ['data' => $data]);
+//                } elseif (false === strpos($key['field'], '{$') && strpos($key['field'], '.')) {
+//                    $field = explode('.', $key['field']);
+//                    $conver_data[$field[0]][$field[1]] = $data[$field[0]] ? $data[$field[0]][$field[1]] : '';
+//                } else {
+//                    $conver_data[$key['field']] = $data[$key['field']];
+//                }
+//
             $this->_keyList[$key] = $e;
         }
+//            dump($this->_keyList);
         if (!$flag && isset($this->_data[$pk])) {
             //自动增加隐藏表单用于编辑;
             $edit['field'] = $pk;

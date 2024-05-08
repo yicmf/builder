@@ -2000,7 +2000,7 @@ EOF;
      */
     public function actionManager($url = 'manager?id={$id}', $title = '授权', $status = [])
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-btn-green', 'auz');
+        return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'form', '', 'layui-btn-green', 'auz');
     }
 
 
@@ -2028,7 +2028,7 @@ EOF;
      * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
-    public function actionAjax($url = 'delete?id={$id}', $title = '删除', $status = [], $message = '', $icon = 'delete', $class = 'layui-btn-danger')
+    public function actionAjax($url = 'delete?id={$id}', $title = '删除', $status = [], $message = '', $icon = 'set', $class = 'layui-btn-normal')
     {
         return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, $class, $icon);
     }
@@ -2347,12 +2347,13 @@ EOF;
                         } else {
                             $lists = $this->_data;
                         }
+
                         if (isset($lists['code'])) {
                             $result = $lists;
                             $lists = $lists['data'];
                         } else {
                             $result['code'] = 0;
-                            $result['count'] = count($this->_data);
+                            $result['count'] = count($lists);
                         }
                     }
 //					dump($lists);
