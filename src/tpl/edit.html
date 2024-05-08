@@ -21,94 +21,94 @@
 			<div class="layui-card">
 				{notempty name='menu_title' }	<div class="layui-card-header">{$menu_title}</div>{/notempty}
 				<div class="layui-card-body" pad15>
-<form class="layui-form" action="" id="form-{$name_space}">
-					<div class="layui-form" wid100 lay-filter="">
+					<form class="layui-form" action="" id="form-{$name_space}">
+						<div class="layui-form" wid100 lay-filter="">
 
-						{present name='keyList'}
-						<!-- 分组start-->
-						{php}if($group){{/php}
-						<div class="layui-tab">
-						<ul class="layui-tab-title">
-							{volist name="group" id="vGroup"}
-							<li class="{if condition='$i eq 1'}layui-this{/if}">
-								{$key}
-							</li>
-							{/volist}
-						</ul>
-							<div class="layui-tab-content">
-							{php} $flag=1;{/php}
-							{volist name="group" id="vGroup"}
-							<div class="layui-tab-item fade {if condition='$i eq 1'}layui-show{/if}" >
-
-
-									{volist name="vGroup" id="g"}
-									{volist name="keyList" id="field"}
-									{php}
-									if (strpos($g, '.')) { // 支持点语法
-									$temp = explode('.', $g);
-									$g = $temp[0].'['.$temp[1].']';
-									}
-									if($field['field'] == $g){{/php}
-									{include file="$key_path"/}
-									{php}}{/php}
+							{present name='keyList'}
+							<!-- 分组start-->
+							{php}if($group){{/php}
+							<div class="layui-tab">
+								<ul class="layui-tab-title">
+									{volist name="group" id="vGroup"}
+									<li class="{if condition='$i eq 1'}layui-this{/if}">
+										{$key}
+									</li>
 									{/volist}
+								</ul>
+								<div class="layui-tab-content">
+									{php} $flag=1;{/php}
+									{volist name="group" id="vGroup"}
+									<div class="layui-tab-item fade {if condition='$i eq 1'}layui-show{/if}" >
+
+
+										{volist name="vGroup" id="g"}
+										{volist name="keyList" id="field"}
+										{php}
+										if (strpos($g, '.')) { // 支持点语法
+										$temp = explode('.', $g);
+										$g = $temp[0].'['.$temp[1].']';
+										}
+										if($field['field'] == $g){{/php}
+										{include file="$key_path"/}
+										{php}}{/php}
+										{/volist}
+										{/volist}
+
+										{php} $flag+=1;{/php}
+									</div>
 									{/volist}
+								</div>
+								<!-- 分组else-->
+								{php}}else{{/php}
 
-								{php} $flag+=1;{/php}
-							</div>
-							{/volist}
-						</div>
-						<!-- 分组else-->
-						{php}}else{{/php}
-
-							{volist name="keyList" id="field"}
-							{include file="$key_path"/}
-							{/volist}
-						{php}}{/php}
-
-						<!-- hidden start-->
-						{volist name="keyList" id="field"}
-						{eq name='field.type' value='hidden'}
-						<input type="hidden" name="{$field.field}" id='key_{$field.field}' value="{$field.value}" />
-						{/eq}
-						{/volist}
-							<input type="hidden" name="m"  value="{$Request.param.m}" />
-						<!-- hidden  end-->
-							<div>
-						{/present}
-
-						{present name='explaints' }
-						{volist name='explaints' id='vo'}
-						<blockquote class="layui-elem-quote"> {php}echo $key+1;{/php}、{$vo|raw}</blockquote>
-						{/volist}
-
-						{/present}
-
-						<div class="layui-form-item">
-							<div class="layui-input-block">
-
-								{volist name='form_buttons' id='vo'}
-
-						<button  type="{$vo.type}"
-										 {eq name="vo.type" value="close"}
-										 onclick="closeTab(this)"
-								{/eq}
-										 class="layui-btn"
-										 {notempty name="vo.url"  } data-url="{$vo.url?:''}" {/notempty}
-										 {notempty name="vo.click"  } onclick="{$vo.click}" {/notempty}
-										 {eq name="vo.type" value="submit"} lay-submit lay-filter="{$filter}"{/eq}  >{$vo.title}</button>
-
+								{volist name="keyList" id="field"}
+								{include file="$key_path"/}
 								{/volist}
+								{php}}{/php}
 
-								{present name='form_close'}
-								<!--	<button  type="button" class="layui-btn layui-btn-primary" onclick="close">{$form_close.title}</button>
-							<button  type="button" class="layui-btn layui-btn-primary" onclick="layer.closeAll()">{$form_close.title}</button>-->
-								{/present}
-							</div>
-						</div>
+								<!-- hidden start-->
+								{volist name="keyList" id="field"}
+								{eq name='field.type' value='hidden'}
+								<input type="hidden" name="{$field.field}" id='key_{$field.field}' value="{$field.value}" />
+								{/eq}
+								{/volist}
+								<input type="hidden" name="m"  value="{$Request.param.m}" />
+								<!-- hidden  end-->
+								<div>
+									{/present}
 
-					</div>
-</form>
+									{present name='explaints' }
+									{volist name='explaints' id='vo'}
+									<blockquote class="layui-elem-quote"> {php}echo $key+1;{/php}、{$vo|raw}</blockquote>
+									{/volist}
+
+									{/present}
+
+									<div class="layui-form-item">
+										<div class="layui-input-block">
+
+											{volist name='form_buttons' id='vo'}
+
+											<button  type="{$vo.type}"
+													 {eq name="vo.type" value="close"}
+													 onclick="closeTab(this)"
+													 {/eq}
+											class="layui-btn"
+											{notempty name="vo.url"  } data-url="{$vo.url?:''}" {/notempty}
+											{notempty name="vo.click"  } onclick="{$vo.click}" {/notempty}
+											{eq name="vo.type" value="submit"} lay-submit lay-filter="{$filter}"{/eq}  >{$vo.title}</button>
+
+											{/volist}
+
+											{present name='form_close'}
+											<!--	<button  type="button" class="layui-btn layui-btn-primary" onclick="close">{$form_close.title}</button>
+                                        <button  type="button" class="layui-btn layui-btn-primary" onclick="layer.closeAll()">{$form_close.title}</button>-->
+											{/present}
+										</div>
+									</div>
+
+								</div>
+					</form>
 				</div>
 			</div>
 		</div>
@@ -279,7 +279,7 @@
 					{
 
 						layer.msg(err.responseJSON.message);
-				}else{
+					}else{
 						layer.msg('调试');
 						console.log(err);
 					}
@@ -356,47 +356,62 @@
 			});
 		};
 
-			//绑定选择事件
-			{volist name='triggers' id='trigger'}
-				form.on('{$trigger.field.type}(filter_{$name_space}_{$trigger.field.field})', function(data){
-					//layer.msg(JSON.stringify(obj.field));
-					console.log(data);
-					console.log(this);
-					{$trigger['tpl']}
+		//绑定选择事件
+		{volist name='triggers' id='trigger'}
+		form.on('{$trigger.field.type}(filter_{$name_space}_{$trigger.field.field})', function(data){
+			//layer.msg(JSON.stringify(obj.field));
+			console.log(data);
+			console.log(this);
+			{$trigger['tpl']}
 
-					{php}  if('checkbox' == $trigger['field']['type']) {{/php}
-						var trigger_value = new Array();
-						$("#form-{$name_space}").find('input[lay-filter=filter_{$name_space}_{$trigger.field.field}]:checked').each(function() {
-							trigger_value.push($(this).val());
-						});
+			{php}  if('checkbox' == $trigger['field']['type']) {{/php}
+				var trigger_value = new Array();
+				$("#form-{$name_space}").find('input[lay-filter=filter_{$name_space}_{$trigger.field.field}]:checked').each(function() {
+					trigger_value.push($(this).val());
+				});
 
-						var trigger_checked = data.elem.checked;
-						{volist name='trigger.data' id='vo'}
+				var trigger_checked = data.elem.checked;
+				{volist name='trigger.data' id='vo'}
 
-						var trigger_field_{$vo.field} =
+				var trigger_field_{$vo.field} =
 
 						0{volist name='vo.value' id='vvo'} +($.inArray("{$vvo}",trigger_value) + 1){/volist};
 
-							console.log("{$vo.field}"+ trigger_field_{$vo.field} )
-							if (trigger_field_{$vo.field}>0)
-							{
-								$('{$vo.jquery}').show();
-							}else{
-									$('{$vo.jquery}').hide();
-							}
-						{/volist}
+					console.log("{$vo.field}"+ trigger_field_{$vo.field} )
+					if (trigger_field_{$vo.field}>0)
+					{
+						$('{$vo.jquery}').show();
+					}else{
+						$('{$vo.jquery}').hide();
+					}
+					{/volist}
 
 						{php}  }{/php}
 
-								{php}  if('switch' == $trigger['field']['type']) {{/php}
+						{php}  if('switch' == $trigger['field']['type']) {{/php}
 
-									if (this.checked) {
-										$("#builder_switch_{$trigger['field']['field']}").val(1);
-									} else {
-										$("#builder_switch_{$trigger['field']['field']}").val(0);
-									}
+							if (this.checked) {
+								$("#builder_switch_{$trigger['field']['field']}").val(1);
+							} else {
+								$("#builder_switch_{$trigger['field']['field']}").val(0);
+							}
 
-									var trigger_value = this.checked?1:0;
+							var trigger_value = this.checked?1:0;
+							{volist name='trigger.data' id='vo'}
+							if(trigger_value=="{$vo['value']}" )
+							{
+								$('{$vo.jquery_hide}').hide();///111
+								$('{$vo.jquery_show}').show();
+							}
+							{/volist}
+
+
+								{php}  }{/php}
+
+
+								{php}  if('radio' == $trigger['field']['type'] || 'select' == $trigger['field']['type']) {{/php}
+
+									var trigger_value = data['value'];
 									{volist name='trigger.data' id='vo'}
 									if(trigger_value=="{$vo['value']}" )
 									{
@@ -406,53 +421,38 @@
 									{/volist}
 
 
-									{php}  }{/php}
+										{php}  }{/php}
 
+										return false;
+									});
+									{/volist}
 
-							{php}  if('radio' == $trigger['field']['type'] || 'select' == $trigger['field']['type']) {{/php}
+										/*** 隐藏选项2start**/
+										{volist name='triggers' id='trigger'}
 
-								var trigger_value = data['value'];
-								{volist name='trigger.data' id='vo'}
-								if(trigger_value=="{$vo['value']}" )
-								{
-									$('{$vo.jquery_hide}').hide();///111
-									$('{$vo.jquery_show}').show();
-								}
-								{/volist}
-
-
-						{php}  }{/php}
-
-					return false;
-				});
-			{/volist}
-
-				/*** 隐藏选项2start**/
-				{volist name='triggers' id='trigger'}
-
-				{php}  if('checkbox' != $trigger['field']['type']) {{/php}
+										{php}  if('checkbox' != $trigger['field']['type']) {{/php}
 //111111
-						{volist name='trigger.data' id='vo' }
-							{eq name='vo.is_show' value = '1'}
-							$('{$vo.jquery_hide}').hide();
-							{/eq}
-						{/volist}
+										{volist name='trigger.data' id='vo' }
+										{eq name='vo.is_show' value = '1'}
+										$('{$vo.jquery_hide}').hide();
+										{/eq}
+											{/volist}
 
-					{php}  }{/php}
-				{php}  if('checkbox' == $trigger['field']['type']) {{/php}
+												{php}  }{/php}
+											{php}  if('checkbox' == $trigger['field']['type']) {{/php}
 
-				{volist name='trigger.data' id='vo' }
-				{eq name='vo.is_show' value = '0'}
-				$('{$vo.jquery}').hide();
-				{/eq}
-					{/volist}
+												{volist name='trigger.data' id='vo' }
+												{eq name='vo.is_show' value = '0'}
+												$('{$vo.jquery}').hide();
+												{/eq}
+													{/volist}
 
-					{php}  }{/php}
+														{php}  }{/php}
 
 
-				{/volist}
-			/*** 隐藏选项2end**/
+													{/volist}
+														/*** 隐藏选项2end**/
 
-		});
+													});
 </script>
 

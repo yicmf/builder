@@ -99,8 +99,10 @@
     {/case}
     {case value="password"}
     <div class="layui-input-inline">
-        <input type="password" name="{$field.field}" autocomplete="off" lay-verify="{$field.verify}" class="layui-input"
-               value="{$field.value|htmlspecialchars}">
+        <input type="password" name="{$field.field}" autocomplete="off" lay-verify="{$field.verify}" class="layui-input" >
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        {/notempty}
     </div>
     {/case}
     {case value="readonly"}
@@ -372,15 +374,18 @@
 
     {php}
     // unset($field['data']);
-    // dump($field);exit();
+    //  dump($field);exit();
     {/php}
-    <div class="layui-input-inline">
+    <div class="layui-input-block">
         <input type="hidden" name="{$field['field']}" value="{$field['value']}" id="find_dialog_id_{$field['jquery_id']}">
-
         <input type="text" class="layui-input" value="{$field['value']}" size="{$field['size']}"  lay-verify="{$field['verify']|raw}" id="find_dialog_{$field['jquery_id']}" readonly>
+        <div class="layui-form-mid layui-word-aux"  style="display: none" >清空选择</div>
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        {/notempty}
     </div>
 
-    <div class="layui-form-mid layui-word-aux"  style="display: none" >清空选择</div>
+
     <script type="text/javascript">
 
         layui.use(["laytpl",'admin','forum','table','soulTable',"element"], function(){
@@ -397,12 +402,12 @@
                 var data = obj.data;
                 console.log(data);
                 admin.popup({
-                    title: '编辑回帖'
+                    title: '{$field.title}'
                     ,area: ['900px', '600px']
                     ,id: 'LAY-popup-forum-edit'
                     ,resize: false
                     ,success: function(layero, index){
-                        view(this.id).render('{$field.options.url}?selected_id='+$("#find_dialog_id_{$field['jquery_id']}").val(), data).done(function(){
+                        view(this.id).render('{$field.options.url}__selected_type=radio&selected_id='+$("#find_dialog_id_{$field['jquery_id']}").val(), data).done(function(){
                             form.render(null, 'layuiadmin-app-forum-reply');
 
                             //监听提交
@@ -1437,13 +1442,13 @@ $checked = $field['value']==$key ? 'checked' : '';
             </div>
             <button type="button" class="layui-btn button-upload-auth-image-back">身份证背面</button>
         </div>
-        <div class="layui-col-xs2 {php} if( $field['options']['need_hand'] == 0){ echo 'layui-hide';}{/php} " id="show_hand">
+        <div class="layui-col-xs2 {php} if( !$field['options']['need_hand'] ||!isset($field['data']['auth'])){ echo 'layui-hide';}{/php} " id="show_hand">
             <div class="layui-upload-list front">
                 <img class="layui-upload-img-card button-upload-auth-image-hand"
                      src="{$field['data']['hand']['url']|default='__COMMON__/images/idcard/h.jpg'}">
                 <input type="hidden" id="hand_id" name="hand_id"
                        value="{$field['data']['hand_id']|default=''}"/>
-                <p id="test-upload-demoText"></p>
+                <p id="test-upload-demoText1"></p>
             </div>
             <button type="button" class="layui-btn button-upload-auth-image-hand">手持身份证</button>
         </div>
