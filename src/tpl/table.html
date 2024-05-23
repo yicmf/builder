@@ -1,5 +1,12 @@
 
+<style>
+    .layui-table-cell {
+        height: auto;
 
+        line-height: 28px;
+
+    }
+</style>
 <title>{$menu_title}</title>
 <script type="text/html" template>
     <link rel="stylesheet" href="{{ layui.setter.base }}style/template.css?v={{ layui.admin.v }}-1" media="all">
@@ -137,6 +144,13 @@
     <script type="text/html" id="62271a4aaa0f8">
         <i class="layui-icon layui-icon-rmb"></i> {{d.price}}
     </script>
+    <style>
+
+        .layui-table-cell {
+
+            height: auto!important;
+        }
+    </style>
     <script>
         Date.prototype.Format = function (fmt) { //author: meizz
             var o = {
@@ -202,6 +216,18 @@
             }
         ,autoSort: false
                 ,done:function(res, curr, count){
+
+
+                $(".layui-table-main tr").each(function (index, val) {
+                    $(".layui-table-fixed").each(function () {
+                        $($(this).find(".layui-table-body tbody tr")[index]).height($(val).height());
+                    });
+                });
+                $(".layui-table-header tr").each(function (index, val) {
+                    $(".layui-table-fixed").each(function () {
+                        $($(this).find(".layui-table-header thead tr")[index]).height($(val).height());
+                    });
+                });
                 if (0!= res.code)
                 {
                     layer.msg(res.msg);
@@ -513,6 +539,21 @@
 
                                 });
                             }
+                        });
+
+                    } else if(obj.event === 'view'){
+                        var url = $(this).data('url');
+                        url = url.replace('{namespace_filter}','{$namespace}');
+                        for(var key in obj.data){
+                            url = url.replace('{$'+key+'}',obj.data[key]);
+                        }
+                        console.log(url);
+                        layer.open({
+                            type: 2,
+                            title: $(this).data('title')
+                            ,area: [$(this).data('width')+'px', $(this).data('height')+'px']
+                            ,id: 'LAY-popup-{$namespace}-add',
+                            content:  url
                         });
 
                     } else if(obj.event === 'ajax'){

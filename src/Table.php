@@ -1816,6 +1816,29 @@ EOF;
     }
 
     /**
+     * 预览，无响应操作
+     * @param string $field
+     * @param string $title
+     * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
+     * @param array $arr
+     * @param int|null $width
+     * @return Table
+     */
+    public function keyView($field, $title, $url, $arr = [], $width = '')
+    {
+        $dialog_width = isset($arr['width']) ? $arr['width'] : $this->dialog_width_default;
+        $dialog_height = isset($arr['height']) ? $arr['height'] : $this->dialog_height_default;
+        // 修整添加多个空字段时显示不正常的
+        $templet = uniqid();
+        $this->_templets[] = <<<EOF
+ <script type="text/html" id="$templet">
+          <a style="cursor:pointer "  lay-event="view" data-url="$url" data-width="$dialog_width" data-height="$dialog_height" ><i class="layui-icon layui-icon-search"></i> {{d.$field}}</a>
+        </script>
+EOF;
+        return $this->key($field, $title, false, $width, 'normal', '', '#' . $templet);
+    }
+
+    /**
      * 新的tab窗口
      * @param string $field
      * @param string $title
