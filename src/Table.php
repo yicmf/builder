@@ -89,6 +89,8 @@ class Table extends Builder
         'default' => 0,
         'field' => '',
     ];
+    // 左侧分类
+    protected $_left_tag = [];
     /**
      * 操作表宽度
      * @var int
@@ -149,6 +151,26 @@ class Table extends Builder
     {
         $this->_model = $model;
         $this->_pagination = $pagination;
+        return $this;
+    }
+
+    /**
+     * 左侧分类
+     */
+    public function tag($tag, $title = '标签', $value = '', $field = 'tag_id', $width = 2)
+    {
+
+        $this->_search[] = [
+            'field' => $field,
+            'type' => 'hidden',
+            'condition' => 'in',
+            'value' => $value,
+        ];
+        $this->_left_tag['title'] = $title;
+        $this->_left_tag['data'] = $tag;
+        $this->_left_tag['width'] = $width;
+        $this->_left_tag['field'] = $field;
+        $this->_left_tag['value'] = '';
         return $this;
     }
 
@@ -2135,7 +2157,7 @@ EOF;
      * @return Table
      * @author  : 微尘 <yicmf@qq.com>
      */
-    public function actionRestore($url = 'restore?id={$id}', $title = '还原', $status = [], $message = '')
+    public function actionRestore($url = 'restore?id={$id}', $title = '启用', $status = [], $message = '')
     {
         return $this->keyDoAction($url, $title, empty($status) ? [-1, -2] : $status, 'ajax', $message, 'btn-red', 'ok-circle');
     }
@@ -2335,7 +2357,8 @@ EOF;
                     $result = [];
                     $searchWhere = $this->_searchWhere();
                     $searchOrder = $this->_searchOrder();
-//						dump($searchWhere);exit();
+//                    dump($searchWhere);
+//                    exit();
                     $model = $this->_model;
                     if ($model instanceof \Closure) {
                         // 闭包
@@ -2531,6 +2554,7 @@ EOF;
                 } else {
                     $this->assign('tabs', []);
                 }
+                $this->assign('tag_tree', $this->_left_tag); 
                 return parent::_fetch($name, $vars);
             }
         }
@@ -2571,6 +2595,8 @@ EOF;
     protected function _searchWhere()
     {
         $fields = $this->request->param('field/a');
+//        dump($fields);
+//        dump($this->_search);
         $model = $this->_model;
         if (!is_null($model)) {
             if (is_string($model)) {
@@ -2602,6 +2628,8 @@ EOF;
                             ->where('id|account|email|nickname', 'like', '%' . $fields[$search['field']] . '%')
                             ->column('id');
                         $where[] = [$search['field'], 'in', $ids];
+                    } elseif ('in' == $search['condition']) {
+                        $where[] = [$search['field'], 'in', $fields[$search['field']]];
                     } else {
                         $where[] = [$search['field'], '=', $fields[$search['field']]];
                     }
