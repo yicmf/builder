@@ -181,13 +181,21 @@ class Table extends Builder
      * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
-    public function searchTabs($field, $lists, $default = 0)
+    public function searchTabs($field, $lists, $default = '')
     {
+        if (empty($lists))
+        {
+            throw new Exception('数据缺失');
+        }
+        if (empty($default))
+        {
+            $default = $lists[0]['id'];
+        }
         $this->_search[] = [
             'field' => $field,
             'type' => 'tabs',
             'condition' => '=',
-            'value' => '',
+            'value' => $default,
         ];
         $this->_tabs = [
             'field' => $field,
@@ -2524,12 +2532,17 @@ EOF;
                  */
                 $this->assign('pk', $this->_default_pk);
                 /* 加入搜索 */
+                $search_value  = [];
                 if (count($this->_search) > 0) {
                     $this->assign('searches', $this->_search);
                     if (count($this->_search_more) > 0) {
                         $this->assign('search_more', $this->_search_more);
                     }
+                    foreach ($this->_search as $index => $search_item) {
+                        $search_value[$search_item['field']] = $search_item['value'];
+                    }
                 }
+                $this->assign('search_value',$search_value);
                 if (empty($this->_searchPostUrl)) {
                     $this->_searchPostUrl = $this->request->url();
                 }
@@ -2548,13 +2561,13 @@ EOF;
                 $this->assign('auto_refresh', $this->_auto_refresh);
                 if ($this->_tabs['field']) {
                     $this->assign('tabs', $this->_tabs['tabs']);
-                    $this->assign('tabs_default', $this->_tabs['default']);
+                    $this->assign('tabs_value', $this->_tabs['default']);
                     $this->assign('tabs_field', $this->_tabs['field']);
-                    $this->assign('tabs_value', $this->_tabs['tabs'][$this->_tabs['default']]['id']);
+//                    $this->assign('tabs_value', $this->_tabs['tabs'][$this->_tabs['default']]['id']);
                 } else {
                     $this->assign('tabs', []);
                 }
-                $this->assign('tag_tree', $this->_left_tag); 
+                $this->assign('tag_tree', $this->_left_tag);
                 return parent::_fetch($name, $vars);
             }
         }

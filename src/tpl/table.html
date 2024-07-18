@@ -93,7 +93,7 @@
                 <div class="layui-tab layui-tab-brief" lay-filter="tab-f-sub-{$namespace}-table">
                     <ul class="layui-tab-title">
                         {volist name='tabs' id='vo'}
-                        <li class="{eq name='tabs_default' value='$key'}layui-this {/eq}">{notempty name='vo.badge'}<span class="layui-badge lay-hide">{$vo.badge}}</span>{/notempty}{$vo.value}</li>
+                        <li class="{eq name='tabs_value' value='$vo.id'}layui-this {/eq}">{notempty name='vo.badge'}<span class="layui-badge lay-hide">{$vo.badge}}</span>{/notempty}{$vo.title}</li>
                         {/volist}
                         <!--<li>通知<span class="layui-badge lay-hide">6</span></li>-->
                     </ul>
@@ -107,8 +107,6 @@
                     <table class="layui-hide" id="{$namespace}-table" lay-filter="{$namespace}-table"></table>
                 </div>
                 {/notempty}
-
-
             </div>
         </div>
     </div>
@@ -215,6 +213,7 @@
                     elem: '#{$namespace}-table'
                     ,id: '{$namespace}-table'
                     ,url:'{$searchPostUrl|raw}'
+                    ,where:{field: {$search_value|raw|json_encode}}
                     ,cellMinWidth:120
                     ,skin: 'row'//设置表格边框风格。可选值：grid|line|row|nob
                     , loading: true
