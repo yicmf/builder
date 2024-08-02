@@ -10,9 +10,9 @@
 
 	namespace yicmf\builder;
 
-	use app\admin\model\Menu as MenuModel;
 	use Overtrue\Pinyin\Pinyin;
 	use think\helper\Str;
+    use think\facade\Db;
 
 	class View extends Builder
 	{
@@ -206,7 +206,7 @@
 				$button['attr'] = $this->compileHtmlAttr($button['attr']);
 			}
 			// 查询当前菜单
-			$menu = MenuModel::where('status', 1)
+			$menu =  Db::name('menu')->where('status', 1)
 				->where('action', $this->request->action())
 				->where('controller', $this->request->controller())
 				->where('module', $this->module)
@@ -221,7 +221,7 @@
 					$this->assign('menu_group_title', $menu['group']);
 				}
 				if ($menu['pid']) {
-					$p_menu = MenuModel::where('status', 1)
+					$p_menu = Db::name('menu')->where('status', 1)
 						->where('id', $menu['pid'])
 						->find();
 					if ($p_menu) {

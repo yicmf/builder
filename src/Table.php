@@ -21,7 +21,6 @@ use think\facade\Config;
 use think\facade\Hook;
 use think\Exception;
 use app\file\model\Picture as PictureModel;
-use app\admin\model\Menu as MenuModel;
 use app\file\model\Attachment as AttachmentModel;
 
 class Table extends Builder
@@ -2480,7 +2479,7 @@ EOF;
                     $menu_param = '';
                 }
                 // 查询当前菜单
-                $menu = MenuModel::where('status', 1)
+                $menu =  Db::name('menu')->where('status', 1)
                     ->where('param', 'in', [$menu_param, ''])
                     ->where('action', $this->request->action())
                     ->where('controller', $this->request->controller())
@@ -2495,7 +2494,7 @@ EOF;
                         $this->assign('menu_group_title', $menu['group']);
                     }
                     if ($menu['pid']) {
-                        $p_menu = MenuModel::where('status', 1)
+                        $p_menu =  Db::name('menu')->where('status', 1)
                             ->where('id', $menu['pid'])
                             ->find();
                         if ($p_menu) {
