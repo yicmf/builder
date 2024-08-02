@@ -43,10 +43,10 @@
     <style>
 
         #test-colorpicker-{$field.jquery_id} span
-        {
-            height: 26px;
-            line-height: 26px;
-        }
+                                             {
+                                                 height: 26px;
+                                                 line-height: 26px;
+                                             }
     </style>
     <div class="layui-input-inline">
 
@@ -382,7 +382,7 @@
 
     {php}
     // unset($field['data']);
- //dump($field);exit();
+    //dump($field);exit();
     {/php}
     <div class="layui-input-block">
         <input type="hidden" name="{$field['field']}" value="{$field['value']}" id="find_dialog_id_{$field['jquery_id']}">
@@ -1226,7 +1226,7 @@ $checked = $field['value']==$key ? 'checked' : '';
     {php}
     if(is_string($field['value']))
     {
-    $images = \app\file\model\Image::where('id','in',$field['value'])->select();
+    $images = \think\facade\Db::name('image')->where('id','in',$field['value'])->select();
     }else{
     $images = $field['value'];
     }
@@ -1405,7 +1405,7 @@ $checked = $field['value']==$key ? 'checked' : '';
     {php}
     if(is_string($field['value']))
     {
-    $images = \app\file\model\Image::where('id','in',$field['value'])->select();
+    $images = \think\facade\Db::name('image')->where('id','in',$field['value'])->select();
     }else{
     $images = $field['value'];
     }
@@ -1613,7 +1613,7 @@ $checked = $field['value']==$key ? 'checked' : '';
 $default_image_url='/static/common/images/default_image_240.gif';
 $images = [];
 if(is_numeric($field['value']) && $field['value']>0){
-$Image = \app\file\model\Image::find($field['value']);
+$Image = \think\facade\Db::name('image')->find($field['value']);
 if($Image){
 $field['value'] = $Image['id'];
 $field['url'] = $Image['url'];
