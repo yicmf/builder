@@ -1001,6 +1001,7 @@ class Table extends Builder
         $this->_search[] = [
             'title' => $title,
             'field' => $field,
+            'value' => $default,
             'default' => $default,
             'type' => 'select',
             'placeholder' => $placeholder,
@@ -1237,7 +1238,7 @@ EOF;
      */
     public function keyText($field, $title, $sort = false, $width = '', $style = '')
     {
-        return $this->key($field, text($title), $sort, $width, 'normal', $style, '');
+        return $this->key($field, $title, $sort, $width, 'normal', $style, '',[],'text');
     }
 
 
@@ -1692,7 +1693,7 @@ EOF;
      * @param string|null $style
      * @return $this
      */
-    public function keyUser($field, $title, $url = 'ucenter/admin.User/update', $width = 150, $style = '')
+    public function keyUser($field, $title, $url = '/ucenter/admin/User/update', $width = 150, $style = '')
     {
         if (strpos($field, '|')) {
             $temp = explode('|', $field);
@@ -2482,8 +2483,13 @@ EOF;
                 $menu =  Db::name('menu')->where('status', 1)
                     ->where('param', 'in', [$menu_param, ''])
                     ->where('action', $this->request->action())
-                    ->where('controller', $this->request->controller())
-                    ->where('module', $this->module)
+                    ->when($this->module, function ($query) {
+                        // 满足条件后执行
+                        $query >where('module', $this->module);
+                    }, function ($query) {
+                        // 不满足条件执行
+                        $query ->where('controller', str_replace('.','/',$this->request->controller()));
+                    })
                     ->order('param DESC')
                     ->find();
                 if ($menu) {

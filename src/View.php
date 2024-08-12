@@ -10,9 +10,9 @@
 
 	namespace yicmf\builder;
 
+    use think\facade\Db;
 	use Overtrue\Pinyin\Pinyin;
 	use think\helper\Str;
-    use think\facade\Db;
 
 	class View extends Builder
 	{
@@ -221,7 +221,7 @@
 					$this->assign('menu_group_title', $menu['group']);
 				}
 				if ($menu['pid']) {
-					$p_menu = Db::name('menu')->where('status', 1)
+					$p_menu =  Db::name('menu')->where('status', 1)
 						->where('id', $menu['pid'])
 						->find();
 					if ($p_menu) {
