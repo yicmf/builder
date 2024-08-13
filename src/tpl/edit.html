@@ -203,7 +203,27 @@
 			}
 		});
 // 单元格编辑事件
-
+// 		table.on('edit({$filter})', function(obj){
+// 			var field = obj.field; // 得到修改的字段
+// 			var value = obj.value // 得到修改后的值
+// 			var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
+// 			var data = obj.data // 得到所在行所有键值
+// 			var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
+// 			console.log(obj); // 查看对象所有成员
+//
+// 			// 值的校验
+// 			if(value.replace(/\s/g, '') === ''){
+// 				layer.tips('值不能为空', this, {tips: 1});
+// 				return obj.reedit(); // 重新编辑 -- v2.8.0 新增
+// 			}
+// 			// 编辑后续操作，如提交更新请求，以完成真实的数据更新
+// 			// …
+//
+// 			// 更新当前缓存数据
+// 			var update = {};
+// 			update[field] = value;
+// 			obj.update(update, true); // 参数 true 为 v2.7 新增功能，即同步更新其他包含自定义模板并可能存在关联的列视图
+// 		});
 		form.on('submit({$filter})', function(obj){
 			//	layer.msg(JSON.stringify(obj.field));
 			//	layer.msg(JSON.stringify(obj.field));

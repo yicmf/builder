@@ -40,6 +40,7 @@ class Table extends Builder
     private $_pagination = true;
 
     private $_data = [];
+    private $_quick_update = [];
 
     private $_searchPostUrl;
 
@@ -76,7 +77,7 @@ class Table extends Builder
     protected $_auto_refresh = 0;
     // 默认获取状态的字段
     protected $_default_status = 'status';
-    private $_toolbar = ['filter', 'print'];// ['filter', 'exports', 'print'];
+    protected $_toolbar = ['filter', 'print'];// ['filter', 'exports', 'print'];
     protected $_filter = [
         //['column','data','condition','editCondition','excel']
         'items' => ['column', 'data'],
@@ -182,12 +183,10 @@ class Table extends Builder
      */
     public function searchTabs($field, $lists, $default = '')
     {
-        if (empty($lists))
-        {
+        if (empty($lists)) {
             throw new Exception('数据缺失');
         }
-        if (empty($default))
-        {
+        if (empty($default)) {
             $default = $lists[0]['id'];
         }
         $this->_search[] = [
@@ -1051,6 +1050,20 @@ class Table extends Builder
         return $this;
     }
 
+
+    public function quickUpdate($fields, $update)
+    {
+        $fields = is_array($fields) ? $fields : explode(',', $field);
+        foreach ($fields as $index => $item) {
+            if (is_numeric($index)) {
+                $this->_quick_update[$item] = ['option' => ['text'], 'qucik_edit' => $update];
+            } else {
+                $this->_quick_update[$index] = ['option' => $item, 'qucik_edit' => $update];
+            }
+        }
+        return $this;
+    }
+
     /**
      * 需要展示的键值
      * @param       $field
@@ -1065,7 +1078,7 @@ class Table extends Builder
      * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
-    public function key($field, $title, $sort = false, $width = '', $type = 'normal', $style = '', $templet = '', $map = [], $edit = '')
+    public function key($field, $title, $sort = false, $width = '', $type = 'normal', $style = '', $templet = '', $map = [])
     {
         if (false === strpos($field, '{$') && strpos($field, '.')) {
             $templet = uniqid();
@@ -1152,7 +1165,6 @@ EOF;
                 'hide' => $hide,
                 'filter' => $filter,
                 //                'tips' => $tips,
-                'edit' => $edit,
                 'style' => $style,
                 'fixed' => $fixed,
                 'templet' => $templet,
@@ -1238,7 +1250,7 @@ EOF;
      */
     public function keyText($field, $title, $sort = false, $width = '', $style = '')
     {
-        return $this->key($field, $title, $sort, $width, 'normal', $style, '',[],'text');
+        return $this->key($field, $title, $sort, $width, 'normal', $style);
     }
 
 
@@ -2250,332 +2262,373 @@ EOF;
     public function fetch($name = '', $vars = [])
     {
         if ($this->request->isPost()) {
-            try {
+            if ($this->request->get('__method', 'excel') == 'quick') {
+                $update = $this->request->post();
                 $searchWhere = $this->_searchWhere();
-                $searchOrder = $this->_searchOrder();
-                if ($this->request->has('columns')) {
-                    // 获取筛选条件
-                    $columns = json_decode(htmlspecialchars_decode($this->request->post('columns/s')), true);
-                    $result = [];
-                    $model = $this->_model;
-                    if ($model instanceof \Closure) {
-                        // 闭包
-                        $result = [];
-                    } elseif (empty($this->_data)) {
-                        if (is_string($model)) {
-                            $whereModel = $model::where($searchWhere)
-                                ->where($this->_where);
-                        } else {
-                            $whereModel = $model->where($searchWhere)
-                                ->where($this->_where);
-                        }
-                        if (count($this->_count)) {
-                            $result = [];
-                        } else {
-                            foreach ($this->_keyList as $index => $item) {
-                                if (in_array($item['field'], $columns)) {
-                                    $column = $whereModel->field($item['field'])->distinct(true)->limit(10)->column($item['field']);
-//										if (count($item['map']) > 0 && $column) {
-//											$temp = [];
-//											foreach ($column as $i => $co) {
-//												if (isset($item['map'][$co])) {
-//													$temp[] = $item['map'][$co];
-//												}
-//											}
-//											$column = $temp;
-//										}
-                                    $result[$item['field']] = $column;
-                                }
+                foreach ($this->_quick_update as $__field => $item) {
+                    try {
+                        if ($update['__field'] == $__field) {
+                            $qucikEdit = $item['qucik_edit'];
+                            if ($qucikEdit instanceof \Closure) {
+                                // 闭包
+                                $qucikEdit($update, $this->_where, $searchWhere);
+                            } else {
+                                $this->_model::where('id', $update['id'])->where($this->_where)->update([$update['__field'] => $update['__value']]);
                             }
                         }
-                    } else {
-                        $result = [];
+                        $result = ['code' => 0, 'message' => ''];
+                    } catch (Exception $e) {
+                        $result = ['code' => 1, 'message' => $e->getMessage()];
                     }
-                } else {
-                    $this->_field = $this->_getField($this->_field);
-                    $list_rows = 1000000;
-                    $page = 1;
-                    $result = [];
-                    $model = $this->_model;
-                    if ($model instanceof \Closure) {
-                        // 闭包
-                        $result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
-                    } elseif (empty($this->_data)) {
-                        $whereModel = $model::where($searchWhere)
-                            ->where($this->_where);
-                        $result['code'] = 0;
-                        if (count($this->_count)) {
-                            $lists = $whereModel->withCount($this->_count)
-                                ->order($searchOrder)
-                                ->limit($list_rows * ($page - 1), $list_rows)->select();
-                        } else {
-                            $lists = $whereModel
-                                ->order($searchOrder)
-                                ->limit($list_rows * ($page - 1), $list_rows)->select();
-                        }
-                        $result['count'] = $whereModel->count();
-                    } else {
-                        if ($this->_data instanceof \Closure) {
-                            $data = $this->_data;
-                            // 闭包
-                            $lists = $data($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
-                        } else {
-                            $lists = $this->_data;
-                        }
-                        if (isset($lists['code'])) {
-                            $result = $lists;
-                            $lists = $lists['data'];
-                        } else {
-                            $result['code'] = 0;
-                            $result['count'] = count($this->_data);
-                        }
-                    }
-                    // 数据转换
-                    if (!empty($lists)) {
-                        // 采用分页类||单纯的数据数组
-                        foreach ($lists as $key => $list) {
-                            $lists[$key] = $this->convertKey($list, true);
-                        }
-                    }
-                    $result['data'] = $lists;
                 }
-            } catch (Exception $e) {
-                $result = [];
-            }
-            return json($result);
-        } else {
-            if ($name == '' && $this->request->param('__selected_type', '')) {
-                $selected_type = $this->request->param('__selected_type', '');
-                if ($selected_type == 'radio') {
-                    $this->keyLeftLeader('radio');
-                } else {
-                    $this->keyLeftLeader('checkbox');
-                }
-                $name = 'select';
             } else {
-                $name = 'table';
-            }
-
-            $page_param = $this->request->get('page', 0);
-            if ($page_param) {
                 try {
-                    $this->_field = $this->_getField($this->_field);
-                    $list_rows = $this->request->has('limit', 'param') ? $this->request->param('limit') : Config::get('paginate.list_rows');
-                    $page = $this->request->has('page', 'param') ? $this->request->param('page') : 1;
-                    $result = [];
                     $searchWhere = $this->_searchWhere();
                     $searchOrder = $this->_searchOrder();
-//                    dump($searchWhere);
-//                    exit();
-                    $model = $this->_model;
-                    if ($model instanceof \Closure) {
-                        // 闭包
-                        $result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
-                    } elseif (!is_null($model)) {
-                        if (is_string($model)) {
-                            $whereModel = $model::where($searchWhere)
-//							->field(implode($this->_field, ','))
-                                ->where($this->_where);
-                        } else {
-                            $whereModel = $model->where($searchWhere)
-//							->field(implode($this->_field, ','))
-                                ->where($this->_where);
-                        }
-
-                        $result['code'] = 0;
-                        $result['count'] = $whereModel->count();
-                        if (count($this->_count)) {
-                            $lists = $whereModel->withCount($this->_count)
-                                ->order($searchOrder)
-                                ->limit($list_rows * ($page - 1), $list_rows)->select();
-                        } else {
-                            $lists = $whereModel
-                                ->order($searchOrder)
-                                ->limit($list_rows * ($page - 1), $list_rows)->select();
-                        }
-                    } else {
-                        if ($this->_data instanceof \Closure) {
-                            $data = $this->_data;
+                    if ($this->request->has('columns')) {
+                        // 获取筛选条件
+                        $columns = json_decode(htmlspecialchars_decode($this->request->post('columns/s')), true);
+                        $result = [];
+                        $model = $this->_model;
+                        if ($model instanceof \Closure) {
                             // 闭包
-                            $lists = $data($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
-                        } else {
-                            $lists = $this->_data;
-                        }
-
-                        if (isset($lists['code'])) {
-                            $result = $lists;
-                            $lists = $lists['data'];
-                        } else {
-                            $result['code'] = 0;
-                            $result['count'] = count($lists);
-                        }
-                    }
-//					dump($lists);
-//					exit();
-                    // 数据转换
-                    if (!empty($lists)) {
-                        // 采用分页类||单纯的数据数组
-                        foreach ($lists as $key => $list) {
-                            $lists[$key] = $this->convertKey($list);
-                        }
-                    }
-                    $result['data'] = $lists;
-                } catch (Exception $e) {
-                    $result['code'] = 0;
-                    $result['message'] = $e->getMessage();
-                }
-
-                return json($result);
-            } else {
-
-                foreach ($this->_keyList as $index => $item) {
-                    if (isset($item['type']) && $item['type'] == 'hidden') {
-                        unset($this->_keyList[$index]);
-                    } elseif (isset($item['type']) && $item['type'] == 'child') //'type'=>'child',
-                    {
-                        unset($this->_keyList[$index]['field']);
-                    }
-                }
-                if (count($this->_do_action)) {
-                    if (is_null($this->_action_width)) {
-                        $status = [];
-                        $object = [];
-                        foreach ($this->_do_action as $item) {
-                            if (is_object($item['status'])) {
-                                if (!in_array($item['title'], $object)) {
-                                    $object[] = $item['title'];
-                                }
+                            $result = [];
+                        } elseif (empty($this->_data)) {
+                            if (is_string($model)) {
+                                $whereModel = $model::where($searchWhere)->where($this->_where);
                             } else {
-                                foreach ($item['status'] as $v) {
-                                    if (isset($status[$v])) {
-                                        $status[$v] = $status[$v] + 1;
-                                    } else {
-                                        $status[$v] = 1;
+                                $whereModel = $model->where($searchWhere)->where($this->_where);
+                            }
+                            if (count($this->_count)) {
+                                $result = [];
+                            } else {
+                                foreach ($this->_keyList as $index => $item) {
+                                    if (in_array($item['field'], $columns)) {
+                                        $column = $whereModel->field($item['field'])->distinct(true)->limit(10)->column($item['field']);
+                                        //										if (count($item['map']) > 0 && $column) {
+                                        //											$temp = [];
+                                        //											foreach ($column as $i => $co) {
+                                        //												if (isset($item['map'][$co])) {
+                                        //													$temp[] = $item['map'][$co];
+                                        //												}
+                                        //											}
+                                        //											$column = $temp;
+                                        //										}
+                                        $result[$item['field']] = $column;
                                     }
                                 }
                             }
-                        }
-                        $max = 1;
-                        foreach ($status as $v) {
-                            if ($max < $v) {
-                                $max = $v;
-                            }
-                        }
-                        $this->_action_width = (($max + count($object) - 1) * 70 + 100);
-                    }
-                    $this->_keyList[] = [
-                        'fixed' => 'right',
-                        'title' => '操作',
-                        'align' => 'center',
-                        'toolbar' => '#' . $this->_namespace . '-table-action',
-                        'width' => $this->_action_width
-                    ];
-                }
-                !empty($this->_left_leader) && array_unshift($this->_keyList, $this->_left_leader);
-                $get = $this->request->except(explode(',', 'v,m,status'), 'get');
-                if (!empty($get)) {
-                    $menu_param = http_build_query($get);
-
-                } else {
-                    $menu_param = '';
-                }
-                // 查询当前菜单
-                $menu =  Db::name('menu')->where('status', 1)
-                    ->where('param', 'in', [$menu_param, ''])
-                    ->where('action', $this->request->action())
-                    ->when($this->module, function ($query) {
-                        // 满足条件后执行
-                        $query >where('module', $this->module);
-                    }, function ($query) {
-                        // 不满足条件执行
-                        $query ->where('controller', str_replace('.','/',$this->request->controller()));
-                    })
-                    ->order('param DESC')
-                    ->find();
-                if ($menu) {
-                    $this->_title = $menu['title'];
-                }
-                if ($menu && !$this->_title) {
-                    if ($menu['group']) {
-                        $this->assign('menu_group_title', $menu['group']);
-                    }
-                    if ($menu['pid']) {
-                        $p_menu =  Db::name('menu')->where('status', 1)
-                            ->where('id', $menu['pid'])
-                            ->find();
-                        if ($p_menu) {
-                            $this->assign('p_menu_title', $p_menu['title']);
                         } else {
-                            $this->assign('p_menu_title', $menu['title']);
+                            $result = [];
                         }
                     } else {
-                        $this->assign('p_menu_title', $menu['title']);
+                        $this->_field = $this->_getField($this->_field);
+                        $list_rows = 1000000;
+                        $page = 1;
+                        $result = [];
+                        $model = $this->_model;
+                        if ($model instanceof \Closure) {
+                            // 闭包
+                            $result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+                        } elseif (empty($this->_data)) {
+                            $whereModel = $model::where($searchWhere)->where($this->_where);
+                            $result['code'] = 0;
+                            if (count($this->_count)) {
+                                $lists = $whereModel->withCount($this->_count)->order($searchOrder)->limit($list_rows * ($page - 1), $list_rows)->select();
+                            } else {
+                                $lists = $whereModel->order($searchOrder)->limit($list_rows * ($page - 1), $list_rows)->select();
+                            }
+                            $result['count'] = $whereModel->count();
+                        } else {
+                            if ($this->_data instanceof \Closure) {
+                                $data = $this->_data;
+                                // 闭包
+                                $lists = $data($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+                            } else {
+                                $lists = $this->_data;
+                            }
+                            if (isset($lists['code'])) {
+                                $result = $lists;
+                                $lists = $lists['data'];
+                            } else {
+                                $result['code'] = 0;
+                                $result['count'] = count($this->_data);
+                            }
+                        }
+                        // 数据转换
+                        if (!empty($lists)) {
+                            // 采用分页类||单纯的数据数组
+                            foreach ($lists as $key => $list) {
+                                $lists[$key] = $this->convertKey($list, true);
+                            }
+                        }
+                        $result['data'] = $lists;
                     }
+                } catch (Exception $e) {
+                    $result = [];
                 }
-                if (isset($this->_excel['filename']) && !$this->_excel['filename']) {
-                    $this->_excel['filename'] = $this->_title . '_' . time_format(time(), 'Y_m_d') . '.xlsx';
-                }
+            }
+            return json($result);
+        } else {
 
-                $this->assign('menu_title', $this->_title);
-                // 显示页面
-                $this->assign('templets', $this->_templets);
-                $this->assign('menu_title', $this->_title);
-                $this->assign('do_action', $this->_do_action);
-                $this->assign('toolbar', $this->_toolbar);
-                $this->assign('namespace', $this->_namespace);
-                $this->assign('suggest', $this->_suggest);
-                $this->assign('statistics', $this->_statistics);
-                $this->assign('warning', $this->_warning);
-                $this->assign('keyList', array_values($this->_keyList));
-                $this->assign('buttonList', $this->_buttonList);
-                $this->assign('callback', $this->_callback);
-                $this->assign('excel', $this->_excel);
-                $this->assign('filter', $this->_filter);
-                // 数据转换
-                /*
-                 * 配置主键*
-                 */
-                $this->assign('pk', $this->_default_pk);
-                /* 加入搜索 */
-                $search_value  = [];
-                if (count($this->_search) > 0) {
-                    $this->assign('searches', $this->_search);
-                    if (count($this->_search_more) > 0) {
-                        $this->assign('search_more', $this->_search_more);
+            $__method = $this->request->get('__method', 'fetch');
+
+            switch ($__method) {
+                case 'quick':
+
+                    foreach ($this->_quick_update as $index => $item) {
+
+                        dump($item);
                     }
-                    foreach ($this->_search as $index => $search_item) {
-                        $search_value[$search_item['field']] = $search_item['value'];
+                    dump($__method);
+                    break;
+                case 'ajax':
+                    $result = $this->_formatAjaxData();
+                    return json($result);
+                    break;
+                default:
+                    if ($name == '' && $this->request->param('__selected_type', '')) {
+                        $selected_type = $this->request->param('__selected_type', '');
+                        if ($selected_type == 'radio') {
+                            $this->keyLeftLeader('radio');
+                        } else {
+                            $this->keyLeftLeader('checkbox');
+                        }
+                        $name = 'select';
+                    } else {
+                        $name = 'table';
                     }
-                }
-                $this->assign('search_value',$search_value);
-                if (empty($this->_searchPostUrl)) {
-                    $this->_searchPostUrl = $this->request->url();
-                }
-                if (strpos($this->_searchPostUrl, '/Admin')) {
-                    $this->_searchPostUrl = str_replace('/Admin', '/admin', $this->_searchPostUrl);
-                }
-                $this->assign('searchPostUrl', $this->_searchPostUrl);
-                /* 复选框 */
-                $this->assign('group', $this->_group);
-                /* 加入筛选select */
-                $this->assign('selects', $this->_select);
-                $this->assign('selectPostUrl', $this->_selectPostUrl);
-                /* 加入隐藏表单 */
-                $this->assign('hidden', $this->_hidden);
-                $this->assign('page', $this->_pagination ? 1 : 0);
-                $this->assign('auto_refresh', $this->_auto_refresh);
-                if ($this->_tabs['field']) {
-                    $this->assign('tabs', $this->_tabs['tabs']);
-                    $this->assign('tabs_value', $this->_tabs['default']);
-                    $this->assign('tabs_field', $this->_tabs['field']);
+                    $this->_formantKeyList();
+                    $this->_setMenu();
+                    // 显示页面
+                    $this->assign('templets', $this->_templets);
+                    $this->assign('do_action', $this->_do_action);
+                    $this->assign('toolbar', $this->_toolbar);
+                    $this->assign('namespace', $this->_namespace);
+                    $this->assign('suggest', $this->_suggest);
+                    $this->assign('statistics', $this->_statistics);
+                    $this->assign('warning', $this->_warning);
+                    $this->assign('keyList', array_values($this->_keyList));
+                    $this->assign('buttonList', $this->_buttonList);
+                    $this->assign('callback', $this->_callback);
+                    $this->assign('excel', $this->_excel);
+                    if (isset($this->_excel['filename']) && !$this->_excel['filename']) {
+                        $this->_excel['filename'] = $this->_title . '_' . time_format(time(), 'Y_m_d') . '.xlsx';
+                    }
+                    $this->assign('filter', $this->_filter);
+                    // 数据转换
+                    /*
+                     * 配置主键*
+                     */
+                    $this->assign('pk', $this->_default_pk);
+                    /* 加入搜索 */
+                    $search_value = [];
+                    if (count($this->_search) > 0) {
+                        $this->assign('searches', $this->_search);
+                        if (count($this->_search_more) > 0) {
+                            $this->assign('search_more', $this->_search_more);
+                        }
+                        foreach ($this->_search as $index => $search_item) {
+                            $search_value[$search_item['field']] = $search_item['value'];
+                        }
+                    }
+                    $this->assign('search_value', $search_value);
+                    if (empty($this->_searchPostUrl)) {
+                        $this->_searchPostUrl = $this->request->url();
+                    }
+                    if (strpos($this->_searchPostUrl, '/Admin')) {
+                        $this->_searchPostUrl = str_replace('/Admin', '/admin', $this->_searchPostUrl);
+                    }
+                    $this->assign('searchPostUrl', $this->_searchPostUrl);
+                    /* 复选框 */
+                    $this->assign('group', $this->_group);
+                    /* 加入筛选select */
+                    $this->assign('selects', $this->_select);
+                    $this->assign('selectPostUrl', $this->_selectPostUrl);
+                    /* 加入隐藏表单 */
+                    $this->assign('hidden', $this->_hidden);
+                    $this->assign('page', $this->_pagination ? 1 : 0);
+                    $this->assign('auto_refresh', $this->_auto_refresh);
+                    if ($this->_tabs['field']) {
+                        $this->assign('tabs', $this->_tabs['tabs']);
+                        $this->assign('tabs_value', $this->_tabs['default']);
+                        $this->assign('tabs_field', $this->_tabs['field']);
 //                    $this->assign('tabs_value', $this->_tabs['tabs'][$this->_tabs['default']]['id']);
-                } else {
-                    $this->assign('tabs', []);
-                }
-                $this->assign('tag_tree', $this->_left_tag);
-                return parent::_fetch($name, $vars);
+                    } else {
+                        $this->assign('tabs', []);
+                    }
+                    $this->assign('tag_tree', $this->_left_tag);
+                    return parent::_fetch($name, $vars);
             }
         }
+    }
+
+    protected function _formantKeyList()
+    {
+        foreach ($this->_keyList as $index => $item) {
+            foreach ($this->_quick_update as $index2 => $item2) {
+                if ($index2 == $this->_keyList[$index]['field']) {
+                    $this->_keyList[$index]['edit'] = 'text';
+                }
+            }
+            if (isset($item['type']) && $item['type'] == 'hidden') {
+                unset($this->_keyList[$index]);
+            } elseif (isset($item['type']) && $item['type'] == 'child') //'type'=>'child',
+            {
+                unset($this->_keyList[$index]['field']);
+            }
+        }
+        if (count($this->_do_action)) {
+            if (is_null($this->_action_width)) {
+                $status = [];
+                $object = [];
+                foreach ($this->_do_action as $item) {
+                    if (is_object($item['status'])) {
+                        if (!in_array($item['title'], $object)) {
+                            $object[] = $item['title'];
+                        }
+                    } else {
+                        foreach ($item['status'] as $v) {
+                            if (isset($status[$v])) {
+                                $status[$v] = $status[$v] + 1;
+                            } else {
+                                $status[$v] = 1;
+                            }
+                        }
+                    }
+                }
+                $max = 1;
+                foreach ($status as $v) {
+                    if ($max < $v) {
+                        $max = $v;
+                    }
+                }
+                $this->_action_width = (($max + count($object) - 1) * 70 + 100);
+            }
+            $this->_keyList[] = [
+                'fixed' => 'right',
+                'title' => '操作',
+                'align' => 'center',
+                'toolbar' => '#' . $this->_namespace . '-table-action',
+                'width' => $this->_action_width
+            ];
+        }
+        !empty($this->_left_leader) && array_unshift($this->_keyList, $this->_left_leader);
+    }
+
+    protected function _setMenu()
+    {
+        $get = $this->request->except(explode(',', 'v,m,status'), 'get');
+        if (!empty($get)) {
+            $menu_param = http_build_query($get);
+        } else {
+            $menu_param = '';
+        }
+        // 查询当前菜单
+        $menu = Db::name('menu')->where('status', 1)
+            ->where('param', 'in', [$menu_param, ''])
+            ->where('action', $this->request->action())
+            ->when($this->module, function ($query) {
+                // 满足条件后执行
+                $query > where('module', $this->module);
+            }, function ($query) {
+                // 不满足条件执行
+                $query->where('controller', str_replace('.', '/', $this->request->controller()));
+            })
+            ->order('param DESC')
+            ->find();
+        if ($menu) {
+            $this->_title = $menu['title'];
+        }
+        if ($menu && !$this->_title) {
+            if ($menu['group']) {
+                $this->assign('menu_group_title', $menu['group']);
+            }
+            if ($menu['pid']) {
+                $p_menu = Db::name('menu')->where('status', 1)
+                    ->where('id', $menu['pid'])
+                    ->find();
+                if ($p_menu) {
+                    $this->assign('p_menu_title', $p_menu['title']);
+                } else {
+                    $this->assign('p_menu_title', $menu['title']);
+                }
+            } else {
+                $this->assign('p_menu_title', $menu['title']);
+            }
+        }
+        $this->assign('menu_title', $this->_title);
+    }
+
+    protected function _formatAjaxData()
+    {
+        try {
+            $this->_field = $this->_getField($this->_field);
+            $list_rows = $this->request->has('limit', 'param') ? $this->request->param('limit') : Config::get('paginate.list_rows');
+            $page = $this->request->has('page', 'param') ? $this->request->param('page') : 1;
+            $result = [];
+            $searchWhere = $this->_searchWhere();
+            $searchOrder = $this->_searchOrder();
+//                    dump($searchWhere);
+//                    exit();
+            $model = $this->_model;
+            if ($model instanceof \Closure) {
+                // 闭包
+                $result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+            } elseif (!is_null($model)) {
+                if (is_string($model)) {
+                    $whereModel = $model::where($searchWhere)
+//							->field(implode($this->_field, ','))
+                        ->where($this->_where);
+                } else {
+                    $whereModel = $model->where($searchWhere)
+//							->field(implode($this->_field, ','))
+                        ->where($this->_where);
+                }
+
+                $result['code'] = 0;
+                $result['count'] = $whereModel->count();
+                if (count($this->_count)) {
+                    $lists = $whereModel->withCount($this->_count)
+                        ->order($searchOrder)
+                        ->limit($list_rows * ($page - 1), $list_rows)->select();
+                } else {
+                    $lists = $whereModel
+                        ->order($searchOrder)
+                        ->limit($list_rows * ($page - 1), $list_rows)->select();
+                }
+            } else {
+                if ($this->_data instanceof \Closure) {
+                    $data = $this->_data;
+                    // 闭包
+                    $lists = $data($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+                } else {
+                    $lists = $this->_data;
+                }
+
+                if (isset($lists['code'])) {
+                    $result = $lists;
+                    $lists = $lists['data'];
+                } else {
+                    $result['code'] = 0;
+                    $result['count'] = count($lists);
+                }
+            }
+//					dump($lists);
+//					exit();
+            // 数据转换
+            if (!empty($lists)) {
+                // 采用分页类||单纯的数据数组
+                foreach ($lists as $key => $list) {
+                    $lists[$key] = $this->convertKey($list);
+                }
+            }
+            $result['data'] = $lists;
+        } catch (Exception $e) {
+            $result['code'] = 0;
+            $result['message'] = $e->getMessage();
+        }
+        return $result;
     }
 
 

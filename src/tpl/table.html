@@ -179,6 +179,12 @@
 
             height: auto!important;
         }
+        .layui-table-hover,
+        .layui-table-click,
+        .layui-table[lay-even] tbody tr:nth-child(even){background-color: #f8f8f8;}
+        .layui-table-checked{background-color: #dbfbf0;}
+        .layui-table-checked.layui-table-hover,
+        .layui-table-checked.layui-table-click{background-color: #abf8dd;}
     </style>
     <script>
         Date.prototype.Format = function (fmt) { //author: meizz
@@ -212,7 +218,7 @@
             var excel_{$namespace}_table =  table.render({
                     elem: '#{$namespace}-table'
                     ,id: '{$namespace}-table'
-                    ,url:'{$searchPostUrl|raw}'
+                    ,url:'{$searchPostUrl|raw}&__method=ajax'
                     ,where:{field: {$search_value|raw|json_encode}}
                     ,cellMinWidth:120
                     ,skin: 'row'//设置表格边框风格。可选值：grid|line|row|nob
@@ -232,36 +238,34 @@
                     ,defaultToolbar: {$toolbar|raw|json_encode}
                 ,title: '用户数据表'
                 ,cols: [{$keyList|raw|json_encode}]
-        ,page: true
+                ,page: true
                 ,overflow: {
-                type: 'tips'
-                // ,hoverTime: 500 // 悬停时间，单位ms, 悬停 hoverTime 后才会显示，默认为 0
-                // ,color: 'black' // 字体颜色
-                // ,bgColor: 'white' // 背景色
-            }
-        ,filter:  {$filter|raw|json_encode}
-        ,excel:  {$excel|raw|json_encode}
-        ,text: {
-                none: '暂无相关数据' //默认：无数据。注：该属性为 layui 2.2.5 开始新增
-            }
-        ,autoSort: false
+                    type: 'tips'
+                    // ,hoverTime: 500 // 悬停时间，单位ms, 悬停 hoverTime 后才会显示，默认为 0
+                    // ,color: 'black' // 字体颜色
+                    // ,bgColor: 'white' // 背景色
+                }
+                ,filter:  {$filter|raw|json_encode}
+                ,excel:  {$excel|raw|json_encode}
+                ,text: {
+                        none: '暂无相关数据' //默认：无数据。注：该属性为 layui 2.2.5 开始新增
+                    }
+                ,autoSort: false
                 ,done:function(res, curr, count){
-
-
-                $(".layui-table-main tr").each(function (index, val) {
-                    $(".layui-table-fixed").each(function () {
-                        $($(this).find(".layui-table-body tbody tr")[index]).height($(val).height());
+                    $(".layui-table-main tr").each(function (index, val) {
+                        $(".layui-table-fixed").each(function () {
+                            $($(this).find(".layui-table-body tbody tr")[index]).height($(val).height());
+                        });
                     });
-                });
-                $(".layui-table-header tr").each(function (index, val) {
-                    $(".layui-table-fixed").each(function () {
-                        $($(this).find(".layui-table-header thead tr")[index]).height($(val).height());
+                    $(".layui-table-header tr").each(function (index, val) {
+                        $(".layui-table-fixed").each(function () {
+                            $($(this).find(".layui-table-header thead tr")[index]).height($(val).height());
+                        });
                     });
-                });
-                if (0!= res.code)
-                {
-                    layer.msg(res.msg);
-                }else{
+                    if (0!= res.code)
+                    {
+                        layer.msg(res.msg);
+                    }else{
                     layui.each(res.data,function(index,d){
                         // console.log(index);//data-index
                         var row = $("[lay-id='{$namespace}-table']").find(".layui-table-body [data-index='" + index + "']");
@@ -376,18 +380,51 @@
                     // var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
                     console.log(obj); // 查看对象所有成员
 
+                    $.ajax({
+                        url:'{$searchPostUrl|raw}&__method=quick', //请求的url地址
+                        dataType:"json", //返回格式为json
+                        async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                        type:"POST", //请求方式
+                        data: {
+                        id:data.id,
+                        __field:obj.field,
+                        __value:obj.value,
+                        }, //请求方式
+                        success:function(req){
+                            //请求成功时处理
+                            if ( 0 == req.code || 200 == req.code)
+                            {
+                                req.message && layer.msg(req.message);
+                            }
+                            else{
+                                layer.msg(req.message);
+                            }
+                        },
+                        complete:function(){
+                            //请求完成的处理
+                        },
+                        error:function(err){
+                            //请求出错处理
+                            console.log(err)
+                             layer.alert(err.responseJSON.message || '未知错误', {
+                                    icon: 5,
+                                    skin: 'layer-ext-demo' //见：扩展说明
+                             })
+                        }
+                    });
+
                     // 值的校验
-                    if(value.replace(/\s/g, '') === ''){
-                        layer.tips('值不能为空', this, {tips: 1});
-                        return obj.reedit(); // 重新编辑 -- v2.8.0 新增
-                    }
+                    // if(value.replace(/\s/g, '') === ''){
+                    //     layer.tips('值不能为空', this, {tips: 1});
+                    //     return obj.reedit(); // 重新编辑 -- v2.8.0 新增
+                    // }
                     // 编辑后续操作，如提交更新请求，以完成真实的数据更新
                     // …
 
                     // 更新当前缓存数据
-                    var update = {};
-                    update[field] = value;
-                    obj.update(update, true); // 参数 true 为 v2.7 新增功能，即同步更新其他包含自定义模板并可能存在关联的列视图
+                    // var update = {};
+                    // update[field] = value;
+                    // obj.update(update, true); // 参数 true 为 v2.7 新增功能，即同步更新其他包含自定义模板并可能存在关联的列视图
                 });
 
                 // TODO:携带带搜索条件
@@ -452,19 +489,10 @@
                             error:function(err){
                                 //请求出错处理
                                 console.log(err)
-                                if (err.responseJSON.message)
-                                {
-                                    layer.alert(err.responseJSON.message, {
-                                        icon: 5,
-                                        skin: 'layer-ext-demo' //见：扩展说明
-                                    })
-
-                                }else{
-                                    layer.alert('未知错误', {
-                                        icon: 5,
-                                        skin: 'layer-ext-demo' //见：扩展说明
-                                    })
-                                }
+                                layer.alert(err.responseJSON.message || '未知错误', {
+                                    icon: 5,
+                                    skin: 'layer-ext-demo' //见：扩展说明
+                                })
                             }
                         });
                     }
@@ -527,9 +555,9 @@
                         $('.layui-table-tool-panel .excel-all').click(function(){
                             // table_param['filename'] =  table_param['filename']+'.xlsx';
                             console.log(table_param)
-                            var url = $(this).data('url');
-                            console.log(url);
                             console.log(excel_{$namespace}_table);
+                            table_param.url = '{$searchPostUrl|raw}&__method=quick';
+                            console.log(table_param)
                             if(table_param.is_custom)
                             {
                                 //window.location.href = table_param.url;
@@ -604,6 +632,10 @@
                                               error:function(err){
                                                   //请求出错处理
                                                   layer.msg(JSON.stringify(err));
+                                                   layer.alert(err.responseJSON.message || '未知错误', {
+                                                            icon: 5,
+                                                            skin: 'layer-ext-demo' //见：扩展说明
+                                                     })
                                               }
                                           });
 
@@ -612,7 +644,6 @@
                                   });
                               }
                           });*/
-
                     }
                     //监听行工具事件
                     table.on('tool({$namespace}-table)', function(obj){
