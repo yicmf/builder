@@ -1051,13 +1051,31 @@ class Table extends Builder
     }
 
 
-    public function quickUpdate($fields, $update)
+    public function quickUpdate($fields, $update=null)
     {
-        $fields = is_array($fields) ? $fields : explode(',', $field);
+        $fields = is_array($fields) ? $fields : explode(',', $fields);
         foreach ($fields as $index => $item) {
             if (is_numeric($index)) {
-                $this->_quick_update[$item] = ['option' => ['text'], 'qucik_edit' => $update];
+                $this->_quick_update[$item] = ['option' => ['type'=>'text'], 'qucik_edit' => $update];
             } else {
+                if ($item['type'] == 'select')
+                {
+                    $templet = uniqid();
+                    $op = json_encode($item['option']);
+                    $this->_templets[] = <<<EOF
+<script type="text/html" id="$templet">
+  {{#  var cityList = $op; }}
+  <select name="$index" lay-filter="select-demo" lay-append-to="body"  lay-ignore>
+    <option value="">请选择</option>
+    {{#  layui.each(cityList, function(i, v){ }}
+    <option value="{{= v }}" {{= v === d.city ? 'selected' : '' }}>{{= v }}</option>
+    {{#  }); }}
+  </select> 
+</script>
+EOF;
+                    $templet = '#' . $templet;
+                    $item['templet'] = $templet;
+                }
                 $this->_quick_update[$index] = ['option' => $item, 'qucik_edit' => $update];
             }
         }
@@ -2271,7 +2289,7 @@ EOF;
                             $qucikEdit = $item['qucik_edit'];
                             if ($qucikEdit instanceof \Closure) {
                                 // 闭包
-                                $qucikEdit($update, $this->_where, $searchWhere);
+                                $qucikEdit($update,$update['__field'],$update['__value'], $this->_where, $searchWhere);
                             } else {
                                 $this->_model::where('id', $update['id'])->where($this->_where)->update([$update['__field'] => $update['__value']]);
                             }
@@ -2380,7 +2398,6 @@ EOF;
 
                         dump($item);
                     }
-                    dump($__method);
                     break;
                 case 'ajax':
                     $result = $this->_formatAjaxData();
@@ -2467,8 +2484,14 @@ EOF;
     {
         foreach ($this->_keyList as $index => $item) {
             foreach ($this->_quick_update as $index2 => $item2) {
-                if ($index2 == $this->_keyList[$index]['field']) {
-                    $this->_keyList[$index]['edit'] = 'text';
+                if ($index2 == $this->_keyList[$index]['field']) { 
+                    if ($item2['option']['type']=='select')
+                    {
+                        $this->_keyList[$index]['templet'] =$item2['option']['templet'];
+                    }else{
+
+                        $this->_keyList[$index]['edit'] = 'text';
+                    }
                 }
             }
             if (isset($item['type']) && $item['type'] == 'hidden') {
@@ -2614,7 +2637,8 @@ EOF;
                     $result['count'] = count($lists);
                 }
             }
-//					dump($lists);
+//
+//                dump($lists);	dump($lists);
 //					exit();
             // 数据转换
             if (!empty($lists)) {
@@ -2794,7 +2818,7 @@ EOF;
      */
     private function convertKey($data, $excel = false)
     {
-        $conver_data = [];
+        $conver_data = $data;
         isset($data['status']) && $conver_data['status'] = $data['status'];
         isset($data['id']) && $conver_data['id'] = $data['id'];
 

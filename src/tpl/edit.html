@@ -253,15 +253,15 @@
 								},req.wait*1000);
 							}
 						}
-						if (req.reload)
-						{
-							if(parseFloat(dialog_index)>0)
-							{
-								layui.table.reload('{$filter}-table'); //重载表格
-							}else{
-								layui.index.render();
-							}
-						}
+						// if (req.reload)
+						// {
+						// 	if(parseFloat(dialog_index)>0)
+						// 	{
+						// 		layui.table.reload('{$filter}-table'); //重载表格
+						// 	}else{
+						// 		layui.index.render();
+						// 	}
+						// }
 						layer.msg(req.message,{
 							time:req.wait*1000
 						});

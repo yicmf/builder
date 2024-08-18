@@ -15,7 +15,7 @@
         <input type="text" name="{$field.field}" value="{$field.value|htmlspecialchars}" class="layui-input"
                lay-verify="{$field.verify}" placeholder="{$field.placeholder|raw}"/>
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw}</div>
         {/notempty}
     </div>
     {/case}
@@ -26,7 +26,7 @@
                lay-verify="{$field.verify}" placeholder="{$field.placeholder|raw}"/>
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     {/case}
     {case value="inline"}
@@ -35,7 +35,7 @@
                class="layui-input" placeholder="{$field.placeholder|raw}"/>
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     {/case}
 
@@ -89,7 +89,7 @@
     <div class="layui-input-block" style="padding: 9px 0px;line-height: 20px;">
         <span style=" float: left;display: block;">{$field.value}</span>
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux" style="padding: 0px 0!important;">（{$field.tips}）</div>
+        <div class="layui-form-mid layui-word-aux" style="padding: 0px 0!important;">（{$field.tips|raw|html_entity_decode}）</div>
         {/notempty}
     </div>
 
@@ -99,7 +99,7 @@
     <div class="layui-input-block">
         {$field.value|raw}
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
         {/notempty}
     </div>
 
@@ -109,7 +109,7 @@
     <div class="layui-input-inline">
         <input type="password" name="{$field.field}" autocomplete="off" lay-verify="{$field.verify}" class="layui-input" >
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
         {/notempty}
     </div>
     {/case}
@@ -118,7 +118,7 @@
         <input type="text"  class="layui-input" value="{$field.value|htmlspecialchars}" placeholder="无需填写" readonly>
 
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
         {/notempty}
     </div>
     {/case}
@@ -127,7 +127,7 @@
         <input id="copy_{$name_space}_{$field.field}" type="text" onmouseenter="this.select()" data-clipboard-text="{$field.value|htmlspecialchars}"  class="layui-input" value="{$field.value|htmlspecialchars}"  readonly>
 
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
         {/notempty}
     </div>
 
@@ -215,7 +215,7 @@
         <textarea name="{$field.field}" class="layui-textarea" cols="{$field['size'][0]}" rows="{$field['size'][1]}"
                   lay-verify="{$field['verify']|raw}">{$field.value|htmlspecialchars}</textarea>
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
         {/notempty}
     </div>
 
@@ -239,7 +239,7 @@
     </div>
 
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
 
     <script>
@@ -314,7 +314,7 @@
 
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     {/case}
     {case value="email"}
@@ -323,7 +323,7 @@
                lay-verify="{$field['verify']|raw}" value="{$field['value']}">
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     {/case}
     {case value="number"}
@@ -332,7 +332,7 @@
     </div>
 
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     {/case}
     {case value="url"}
@@ -340,7 +340,7 @@
         <input type="text" class="layui-input" value="{$field['value']}" size="{$field['size']}" name="{$field.field}"
                lay-verify="{$field['verify']|raw}">
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
         {/notempty}
     </div>
 
@@ -350,7 +350,7 @@
         <div id="slideTest3" class="demo-slider"></div>
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     <script>
         layui.use('slider', function(){
@@ -389,7 +389,7 @@
         <input type="text" class="layui-input" value="{$field.options.show_field_value}" size="{$field['size']}"  lay-verify="{$field['verify']|raw}" id="find_dialog_{$field['jquery_id']}" readonly>
         <div class="layui-form-mid layui-word-aux"  style="display: none" >清空选择</div>
         {notempty name='field.tips'}
-        <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
         {/notempty}
     </div>
 
@@ -529,7 +529,7 @@
         <input type="hidden" name="{$field.field}" value="{$field['value']}" id="key_{$field['field']}">
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     <script>
         layui.use(['rate'], function () {
@@ -559,7 +559,7 @@
         <!-- 单选菜单end -->
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     {/case}
     {case value="select_multiple"}
@@ -719,7 +719,7 @@
         <!-- 多选菜单end -->
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
 
     <script type="text/javascript">
@@ -768,7 +768,7 @@
 
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
 
     {/case}
@@ -785,7 +785,7 @@
 
     </div>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
     <script type="text/javascript">
         layui.use(['form'], function () {
@@ -853,7 +853,7 @@
 <div class="layui-input-inline">
     　<textarea  id="{$field.id_name}" style="padding: 0;" name="{$field.field}" class="layui-textarea" >{$field.value|raw}</textarea>
     {notempty name='field.tips'}
-    <div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
     {/notempty}
 </div>
 
@@ -1040,7 +1040,7 @@ $field['value_a'] = implode(' - ',$field['value']);
 </div>
 {php}}{/php}
 {notempty name='field.tips'}
-<div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+<div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
 {/notempty}
 <script>
     layui.use('laydate', function () {
@@ -1142,7 +1142,7 @@ $checked = $field['value']==$key ? 'checked' : '';
 
 </div>
 {notempty name='field.tips'}
-<div class="layui-form-mid layui-word-aux">{$field.tips}</div>
+<div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
 {/notempty}
 {/case}
 {case value='dragsort_li'}
@@ -1672,7 +1672,7 @@ $field['url'] = $default_image_url;
                 //  ,accept: 'file' //普通文件
                 //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
                 //   ,size: 60 //限制文件大小，单位 KB
-                , url: "{:url('file/Image/upload')}"
+                , url: "{:url('/file/image/upload')}"
                 , before: function (obj) {
                     //预读本地文件示例，不支持ie8
                     obj.preview(function (index, file, result) {
