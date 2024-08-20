@@ -1982,10 +1982,10 @@ EOF;
         if (false === strpos($url, '/')) {
             if (false !== strpos($this->request->controller(), 'Admin.')) {
                 // 补充
-                $url = $this->module . '/' . lcfirst($this->request->controller()) . '/' . $url;
+                $url = ($this->module?($this->module.'/'):'') . lcfirst($this->request->controller()) . '/' . $url;
             } else {
                 // 补充
-                $url = $this->module . '/' . $this->request->controller() . '/' . $url;
+                $url =  ($this->module?($this->module.'/'):'')  . $this->request->controller() . '/' . $url;
             }
         }
         if (false !== strpos($url, '{$')) {
@@ -2587,7 +2587,7 @@ EOF;
     {
         try {
             $this->_field = $this->_getField($this->_field);
-            $list_rows = $this->request->has('limit', 'param') ? $this->request->param('limit') : Config::get('paginate.list_rows');
+            $list_rows = $this->request->has('limit', 'param') ? $this->request->param('limit') : 15;
             $page = $this->request->has('page', 'param') ? $this->request->param('page') : 1;
             $result = [];
             $searchWhere = $this->_searchWhere();

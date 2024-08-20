@@ -238,7 +238,15 @@
                     ,defaultToolbar: {$toolbar|raw|json_encode}
                 ,title: '用户数据表'
                 ,cols: [{$keyList|raw|json_encode}]
-                ,page: true
+                ,page: { // 支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+                   // layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'], //自定义分页布局
+                    //curr: 5, //设定初始在第 5 页
+                        limits: [15, 30, 50],
+                            limit: 15
+                    // groups: 1, //只显示 1 个连续页码
+                    // first: false, //不显示首页
+                    // last: false //不显示尾页
+            }
                 ,overflow: {
                     type: 'tips'
                     // ,hoverTime: 500 // 悬停时间，单位ms, 悬停 hoverTime 后才会显示，默认为 0
@@ -667,6 +675,8 @@
                             for(var key in obj.data){
                                 url = url.replace('{$'+key+'}',obj.data[key]);
                             }
+
+
                             admin.popup({
                                 title: $(this).data('title')
                                 ,area: [$(this).data('width')+'px', $(this).data('height')+'px']
