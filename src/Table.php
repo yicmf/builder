@@ -2838,7 +2838,12 @@ EOF;
                         $value = $this->app['view']->display($key['field'], ['data' => $data]);
                     } elseif (false === strpos($key['field'], '{$') && strpos($key['field'], '.')) {
                         $field = explode('.', $key['field']);
-                        $conver_data[$field[0]][$field[1]] = $data[$field[0]] ? $data[$field[0]][$field[1]] : '';
+                        if ($data[$field[0]])
+                        {
+                            $conver_data[$field[0]][$field[1]] = $data[$field[0]][$field[1]];
+                        }else{
+                            $conver_data[$field[0]] = null;
+                        }
                     } else {
                         $conver_data[$key['field']] = $data[$key['field']];
                     }
