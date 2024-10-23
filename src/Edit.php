@@ -1065,7 +1065,7 @@
 			$max_size = 0;
 			$exts = '';
 			$mimes = '';
-			return $this->key($field, $title, $tips, 'image',
+			return $this->key($field, $title, $tips, 'image_model',
 				['button' => $button, 'limit' => 1, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
 				, $default, $verify);
 		}
