@@ -1685,6 +1685,104 @@ $field['url'] = $default_image_url;
                         return layer.msg(res.message);
                     } else {
                         //上传成功
+                        $("#upload-normal-image-val-{$field.jquery_id}").val(res.data.original);
+                    }
+                }
+                , error: function () {
+                    //演示失败状态，并实现重传
+                    var demoText = $('#test-upload-demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        uploadInst.upload();
+                    });
+                }
+            });
+
+        });
+    </script>
+
+
+</div>{/case}
+
+{case value="image_model"}
+
+{php}
+
+$default_image_url='/static/common/images/default_image_240.gif';
+$images = [];
+if(is_numeric($field['value']) && $field['value']>0){
+$Image = \think\facade\Db::name('image')->find($field['value']);
+if($Image){
+$field['value'] = $Image['id'];
+$field['url'] = $Image['url'];
+}else{
+$field['value'] = '';
+$field['url'] = $default_image_url;
+}
+}elseif(is_object($field['value'])){
+$picture = $field['value'];
+$field['value'] = $picture['id'];
+$field['url'] = $picture['url'];
+
+}else{
+if($field['value'])
+{
+$field['url'] = $field['value'];
+}else{
+$field['value'] = '';
+$field['url'] = $default_image_url;
+}
+
+}
+{/php}
+
+<div class="layui-input-inline">
+    <button type="button" class="layui-btn" id="button-upload-normal-image-{$field.jquery_id}">上传图片</button>
+    <div class="layui-upload-list">
+        <input type="hidden" name="{$field.field}" id="upload-normal-image-val-{$field.jquery_id}" value="{$field['value']}"/>
+
+        <div class="thumbnail" >
+            <i class="layui-icon layui-icon-close-fill remove-picture" onclick="removeUploadImage(this,'{$field.field}')"></i>
+            <img class="layui-upload-img" id="upload-normal-image-{$field.jquery_id}" src="{$field['url']}" >
+            <p id="test-upload-demoText"></p>
+        </div>
+
+        {php}// dump($field['jquery_id']); {/php}
+    </div>
+    <script>
+        layui.use(['admin', 'upload'], function () {
+            var $ = layui.jquery
+                , upload = layui.upload;
+
+            window.removeUploadImage = function (obj,field) {
+                // console.log(obj);
+                // $(obj).parent().remove();
+                //  getUploadValue(field);
+                $("#upload-normal-image-"+field).attr('src','{$default_image_url}')
+                $("#upload-normal-image-val-"+field).val('')
+            }
+            //普通图片上传
+            var uploadInst = upload.render({
+                elem: '#button-upload-normal-image-{$field.jquery_id}'
+                ,multiple: 1
+                ,accept: 'images' //图片
+                ,acceptMime: 'image/*'
+                //  ,accept: 'file' //普通文件
+                //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
+                //   ,size: 60 //限制文件大小，单位 KB
+                , url: "{:url('/file/image/upload')}"
+                , before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $("#upload-normal-image-{$field.jquery_id}").attr('src', result); //图片链接（base64）
+                    });
+                }
+                , done: function (res) {
+                    //如果上传失败
+                    if (res.code > 0) {
+                        return layer.msg(res.message);
+                    } else {
+                        //上传成功
                         $("#upload-normal-image-val-{$field.jquery_id}").val(res.data.id);
                     }
                 }
