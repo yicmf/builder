@@ -9,6 +9,9 @@
         border: 1px solid #e6e6e6;
         background-color: #f2f2f2;
     }
+    .layui-table-cell img{
+        height: 28px;
+    }
 </style>
 <div class="layui-card layadmin-header">
     <div class="layui-breadcrumb" lay-filter="breadcrumb">
@@ -114,9 +117,10 @@
     <script type="text/html" id="{$namespace}-table-search">
         <div class="layui-btn-container">
             {volist name="buttonList" id="button"}
-            {eq name='button.attr.event' value='ajax'}
+            {neq name='button.attr.event' value='ajax'}
             <button class="layui-btn layui-btn-sm  {$button.attr.class} " data-title="{$button.title}"
                     data-width="{$button.attr.width|default=''}"
+                    data-id="{$button.attr.id|default='id'}"
                     data-height="{$button.attr.height|default=''}"
                     data-message="{$button.attr.message|default=''}"  lay-event="{$button.attr.event}" data-url="{$button.attr.url}" >
                 <i class="layui-icon layui-icon-face-smile layui-hide"></i>
@@ -125,7 +129,7 @@
             <a class="layui-btn layui-btn-sm  {$button.attr.class} " lay-href="{$button.attr.url}" >
                 <i class="layui-icon layui-icon-face-smile layui-hide"></i>
                 {$button.title}</a>
-            {/eq}
+            {/neq}
             {/volist}
         </div>
     </script>
@@ -533,8 +537,11 @@
                                 eventAjax(url,data,this);
                                 break;
                             case 'popup':
-                                console.log(1);
                                 var url = $(this).data('url');
+                                var id = $(this).data('id');
+
+                                console.log(id);
+                                console.log(url);
                                 url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
                                 var ids = new Array();
                                 var data = checkStatus.data;
@@ -544,7 +551,7 @@
                                 }
                                 if (data.length)
                                 {
-                                    url = url+'&id='+ids.join(',');
+                                    url = url+'&'+id+'='+ids.join(',');
                                 }
                                 popupFuc(url,obj,this)
                                 break;
@@ -600,12 +607,30 @@
                     //监听工具条
                     function popupFuc(url,obj,btn)
                     {
-                        element.tabAdd('demo', {
-                            title: '新选项'+ (Math.random()*1000|0) //用于演示
-                            ,content: '内容'+ (Math.random()*1000|0)
-                            ,id: new Date().getTime() //实际使用一般是规定好的id，这里以时间戳模拟下
-                        })
-                        /*  admin.popup({
+                        // element.tabAdd('demo', {
+                        //     title: '新选项'+ (Math.random()*1000|0) //用于演示
+                        //     ,content: '内容'+ (Math.random()*1000|0)
+                        //     ,id: new Date().getTime() //实际使用一般是规定好的id，这里以时间戳模拟下
+                        // })
+                        console.log(url)
+                        // view(this.id).render('im/admin/Document/index?__selected_type=radio&selected_id='+$("#find_dialog_id_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(), obj).done(function(){
+                        // view(this.id).render('pos.admin.Pos/transfer?type=1&id=1996', obj).done(function(){
+                        //     form.render(null, 'layuiadmin-app-forum-reply');
+                        //
+                        //     //监听提交
+                        //     form.on('submit(layuiadmin-app-forumreply-submit)', function(obj){
+                        //         var field = data.field; //获取提交的字段
+                        //         var value = JSON.parse(field.data);
+                        //         console.log(value)
+                        //         $("#find_dialog_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(value["title"])
+                        //         $("#find_dialog_id_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(value['id'])
+                        //         //提交 Ajax 成功后，关闭当前弹层并重载表格
+                        //         //$.ajax({});
+                        //         // layui.table.reload('LAY-app-forumreply-list'); //重载表格
+                        //         layer.close(index); //执行关闭
+                        //     });
+                        // });
+                         admin.popup({
                               title: $(btn).data('title')
                               ,area: [$(btn).data('width'), $(btn).data('height')]
                               ,id: 'LAY-popup-workorder-add'
@@ -651,7 +676,7 @@
                                       });
                                   });
                               }
-                          });*/
+                          });
                     }
                     //监听行工具事件
                     table.on('tool({$namespace}-table)', function(obj){
