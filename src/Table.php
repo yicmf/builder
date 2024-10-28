@@ -1747,7 +1747,7 @@ EOF;
 <script type="text/html" id="$templet_name">
   {{#  if(d.{$with_field}){ }}
     <a style="cursor:pointer " lay-href="$url" >
-  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
+  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar.url:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
   </a>
   {{#  }else{ }}    
        <div style="cursor:pointer ">
@@ -2452,7 +2452,7 @@ EOF;
                         }
                         foreach ($this->_search as $index => $search_item) {
                             $search_value[$search_item['field']] = $search_item['value'];
-                        }
+                        } 
                     }
                     $this->assign('search_value', $search_value);
                     if (empty($this->_searchPostUrl)) {
@@ -2460,8 +2460,7 @@ EOF;
                     }
                     if (strpos($this->_searchPostUrl, '/Admin')) {
                         $this->_searchPostUrl = str_replace('/Admin', '/admin', $this->_searchPostUrl);
-                    }
-                    dump($this->_buttonList);
+                    } 
                     $this->assign('searchPostUrl', $this->_searchPostUrl);
                     /* 复选框 */
                     $this->assign('group', $this->_group);
