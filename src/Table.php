@@ -575,7 +575,12 @@ class Table extends Builder
     {
         if (false === strpos($attr['url'], '/')) {
             // 补充
-            $attr['url'] = $this->module . '/' . $this->request->controller() . '/' . $attr['url'];
+             if ($this->module)
+            {
+                $attr['url'] = $this->module . '/' . $this->request->controller() . '/' . $attr['url'];
+            }else{
+                $attr['url'] =  $this->request->controller() . '/' . $attr['url'];
+            }
         }
         $attr['height'] = is_numeric($attr['height']) ? ($attr['height'] . 'px') : $attr['height'];
         $attr['width'] = is_numeric($attr['width']) ? ($attr['width'] . 'px') : $attr['width'];
