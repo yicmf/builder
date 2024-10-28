@@ -575,7 +575,7 @@ class Table extends Builder
     {
         if (false === strpos($attr['url'], '/')) {
             // 补充
-             if ($this->module)
+            if ($this->module)
             {
                 $attr['url'] = $this->module . '/' . $this->request->controller() . '/' . $attr['url'];
             }else{
@@ -1747,7 +1747,7 @@ EOF;
 <script type="text/html" id="$templet_name">
   {{#  if(d.{$with_field}){ }}
     <a style="cursor:pointer " lay-href="$url" >
-  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar.url:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
+  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
   </a>
   {{#  }else{ }}    
        <div style="cursor:pointer ">
@@ -2461,6 +2461,7 @@ EOF;
                     if (strpos($this->_searchPostUrl, '/Admin')) {
                         $this->_searchPostUrl = str_replace('/Admin', '/admin', $this->_searchPostUrl);
                     }
+                    dump($this->_buttonList);
                     $this->assign('searchPostUrl', $this->_searchPostUrl);
                     /* 复选框 */
                     $this->assign('group', $this->_group);
