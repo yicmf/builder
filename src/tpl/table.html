@@ -440,7 +440,7 @@
                 });
 
 form.on('switch(demo-templet-status)', function(obj){
-                    var state = obj.elem.checked?0:1;
+                   var state = obj.elem.checked?1:0;
                     //方法一取数据（根据相对位置取）
                     var id = obj.othis.parents('tr').find("td :first").text();
                     //方法二取数据 （根据索引table.cache里面的行数据）
