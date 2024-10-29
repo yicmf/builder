@@ -1055,7 +1055,13 @@ class Table extends Builder
         return $this;
     }
 
+/**
 
+->quickUpdate(['title'
+                    ,'type' =>['option' => ['1'=>'你好'], 'type' => 'select']
+                    ,'is_effect' =>['option' => ['type'=>'text'], 'type' => 'switch']
+                ])
+*/
     public function quickUpdate($fields, $update=null)
     {
         $fields = is_array($fields) ? $fields : explode(',', $fields);
@@ -1080,6 +1086,19 @@ class Table extends Builder
 EOF;
                     $templet = '#' . $templet;
                     $item['templet'] = $templet;
+                }}elseif ('switch' == $item['type']) {
+
+                    $templet = uniqid();
+                    $op = json_encode($item['option']);
+                    $this->_templets[] = <<<EOF
+<script type="text/html" id="$templet">
+  <!-- 这里的 checked 的状态值判断仅作为演示 -->
+  <input type="checkbox" name="$index" value="{{= d.$index }}" title="ON|OFF"  lay-skin="switch" lay-filter="demo-templet-status" {{= d.$index == 1 ? "checked" : "" }}>
+</script>
+EOF;
+                    $templet = '#' . $templet;
+                    $item['templet'] = $templet;
+
                 }
                 $this->_quick_update[$index] = ['option' => $item, 'qucik_edit' => $update];
             }
