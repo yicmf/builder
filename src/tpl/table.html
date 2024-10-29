@@ -439,6 +439,60 @@
                     // obj.update(update, true); // 参数 true 为 v2.7 新增功能，即同步更新其他包含自定义模板并可能存在关联的列视图
                 });
 
+form.on('switch(demo-templet-status)', function(obj){
+                    var state = obj.elem.checked?0:1;
+                    //方法一取数据（根据相对位置取）
+                    var id = obj.othis.parents('tr').find("td :first").text();
+                    //方法二取数据 （根据索引table.cache里面的行数据）
+                    var index  = obj.othis.parents('tr').attr("data-index");
+                    var field = obj.field; // 得到修改的字段
+                    var value = obj.value // 得到修改后的值
+                    // var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
+                    var data = obj.data // 得到所在行所有键值
+                    // var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
+                    // console.log(obj); // 查看对象所有成员
+                    // console.log(field); // 查看对象所有成员
+                    // console.log(id); // 查看对象所有成员
+                    // console.log(obj.othis.siblings().data('name')); // 查看对象所有成员
+                    // // console.log(obj.othis.parent('div').find("input :first").data('name')); // 查看对象所有成员
+                    // console.log(obj.othis.parents('tr').find("td :first")); // 查看对象所有成员
+
+
+                    $.ajax({
+                        url:'{$searchPostUrl|raw}&__method=quick', //请求的url地址
+                        dataType:"json", //返回格式为json
+                        async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                        type:"POST", //请求方式
+                        data: {
+                        id:id,
+                        __field:obj.othis.siblings().data('name'),
+                        __value:state,
+                        }, //请求方式
+                        success:function(req){
+                            //请求成功时处理
+                            if ( 0 == req.code || 200 == req.code)
+                            {
+                                req.message && layer.msg(req.message);
+                            }
+                            else{
+                                layer.msg(req.message);
+                            }
+                        },
+                        complete:function(){
+                            //请求完成的处理
+                        },
+                        error:function(err){
+                            //请求出错处理
+                            console.log(err)
+                             layer.alert(err.responseJSON.message || '未知错误', {
+                                    icon: 5,
+                                    skin: 'layer-ext-demo' //见：扩展说明
+                             })
+                        }
+                    });
+
+                });
+
                 // TODO:携带带搜索条件
                 table.on('sort({$namespace}-table)', function(obj){ //注：sort 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
                     console.log(obj.field); //当前排序的字段名
