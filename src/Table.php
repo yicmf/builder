@@ -1090,10 +1090,10 @@ EOF;
 
                     $templet = uniqid();
                     $op = json_encode($item['option']);
-                    $this->_templets[] = <<<EOF
+                                    $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet">
   <!-- 这里的 checked 的状态值判断仅作为演示 -->
-  <input type="checkbox" name="$index" value="{{= d.$index }}" title="ON|OFF"  lay-skin="switch" lay-filter="demo-templet-status" {{= d.$index == 1 ? "checked" : "" }}>
+  <input type="checkbox" data-name="$index" name="$index" value="{{= d.$index }}" title="ON|OFF"  lay-skin="switch" lay-filter="demo-templet-status" {{= d.$index == 1 ? "checked" : "" }}>
 </script>
 EOF;
                     $templet = '#' . $templet;
