@@ -655,6 +655,67 @@ form.on('switch(demo-templet-status)', function(obj){
                     case 'LAYTABLE_TIPS':
                         layer.alert('这是工具栏右侧自定义的一个图标按钮');
                         break;
+
+
+                        case 'import':
+                        var a = document.createElement('button');
+                        var url = $(this).data('url');
+                        var id = $(this).data('id');
+                        url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
+                        var ids = new Array();
+                        var data = checkStatus.data;
+
+                        for (let i = 0; i < data.length; i++) {
+                            ids.push(data[i]['id']);
+                        }
+                        if (data.length)
+                        {
+                            url = url+'&'+id+'='+ids.join(',');
+                        }
+                        upload.render({
+                            elem: a
+                            ,accept: 'file' //普通文件
+                             ,exts: 'csv|xls|xlsx' //只允许上传压缩文件'csv', 'xls','xlsx'
+                            //   ,size: 60 //限制文件大小，单位 KB
+                            , auto: true
+                            , url: "<?php echo url('/file/Attachment/upload'); ?>"
+                            , size: 1024 * 5 //限制文件大小，单位 KB
+                            ,done: function(res){
+                                $.ajax({
+                                    url:url, //请求的url地址
+                                    dataType:"json", //返回格式为json
+                                    async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                                    type:"POST", //请求方式
+                                    data: {
+                                    file_id:res.data.id
+                                    },
+                                    success:function(req){
+                                        //请求成功时处理
+                                        if ( 0 == req.code)
+                                        {
+                                            layer.msg(req.message);
+                                            layui.table.reload('{$namespace}-table'); //重载表格
+                                            layer.close(index); //执行关闭
+                                        }else{
+                                            layer.msg(req.message);
+                                        }
+                                    },
+                                    complete:function(){
+                                        //请求完成的处理
+                                    },
+                                    error:function(err){
+                                        //请求出错处理
+                                        layer.msg(JSON.stringify(err));
+                                        layer.alert(err.responseJSON.message || '未知错误', {
+                                            icon: 5,
+                                            skin: 'layer-ext-demo' //见：扩展说明
+                                        })
+                                    }
+                                });
+
+                            }
+                        });
+                        a.click();
                     };
                     });
 
