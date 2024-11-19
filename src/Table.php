@@ -503,6 +503,32 @@ class Table extends Builder
     }
 
     /**
+     * 导入表格
+     * @param string $url
+     * @param string $title
+     * @return Table
+     */
+    public function buttonExcelImport($url = 'import', $title = '导入',$attr = [])
+    {
+        if (false === strpos($url, '/')) {
+            // 补充
+            if ($this->module)
+            {
+                $url = $this->module . '/' . $this->request->controller() . '/' . $url;
+            }else{
+                $url =  $this->request->controller() . '/' . $url;
+            }
+        }
+        $default['url'] = $url;
+        $default['class'] = 'layui-bg-green';
+        $default['icon'] = 'plus';
+        $default['event'] = 'import';
+        $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
+
+        return $this->button($title, array_merge($default, $attr));
+    }
+
+    /**
      * 加入新增按钮.
      * @param string $url
      * @param string $title
