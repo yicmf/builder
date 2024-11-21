@@ -3,7 +3,7 @@
 // +----------------------------------------------------------------------
 // | builder
 // +----------------------------------------------------------------------
-// | Copyright (c) 2015-2022 http://www.yicmf.com, All rights reserved.
+// | Copyright (c) 2015-2024 http://www.yicmf.com, All rights reserved.
 // +----------------------------------------------------------------------
 // | Author: 微尘 <yicmf@qq.com>
 // +----------------------------------------------------------------------
@@ -1082,11 +1082,6 @@ class Table extends Builder
     }
 
 
-->quickUpdate(['title'
-                    ,'type' =>['option' => ['1'=>'你好'], 'type' => 'select']
-                    ,'is_effect' =>['option' => ['type'=>'text'], 'type' => 'switch']
-                ])
-*/
     public function quickUpdate($fields, $update=null)
     {
         $fields = is_array($fields) ? $fields : explode(',', $fields);
@@ -1214,8 +1209,8 @@ EOF;
         }
         if ($type == 'children') {
             $key = [
-//					'type' => $type,
-//					'field' => $field,
+                'type' => $type,
+                'field' => $field,
                 'title' => $title,
                 'collapse' => 1,
                 'childWidth' => 'full',
@@ -1684,7 +1679,7 @@ EOF;
         $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
-<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title="点击查看大图"
+<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
  layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
 </script>
 EOF;
@@ -1706,7 +1701,7 @@ EOF;
 <script type="text/html" id="$templet_name">
 <div class="layer-photos" id="layer-photos-$field-{{d.id}}"  style="display: inline-block">
   {{#  layui.each(d.{$field}, function(index, item){ }}
-<img style="width: 50px;cursor:pointer" title="点击查看大图" layer-src="{{item}}" src="{{item}}">
+<img style="width: 50px;cursor:pointer" title="" layer-src="{{item}}" src="{{item}}">
  {{#  }); }}
 </div>
 </script>
@@ -1748,7 +1743,7 @@ EOF;
 //EOF;
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
-<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title="点击查看大图"
+<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
  layer-src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}" src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}"></div>
 </script>
 EOF;
@@ -1818,7 +1813,7 @@ EOF;
 <script type="text/html" id="$templet_name">
   {{#  if(d.{$with_field}){ }}
     <a style="cursor:pointer " lay-href="$url" >
-  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}?d.{$with_field}.avatar.url:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
+  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}.avatar?d.{$with_field}.avatar:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
   </a>
   {{#  }else{ }}    
        <div style="cursor:pointer ">
