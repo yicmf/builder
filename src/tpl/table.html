@@ -216,14 +216,14 @@
             return fmt;
         }
         var tab_values = {$tabs|json_encode|raw};
-        layui.use(['admin','forum','table',"element",'upload'], function(){
+        layui.use(['admin','forum','table',"element",'upload','soulTable'], function(){
             var $ = layui.$
                 ,admin = layui.admin
                 ,view = layui.view
                 ,form = layui.form
                 ,upload  = layui.upload
                 ,element = layui.element
-                //,soulTable = layui.soulTable
+                ,soulTable = layui.soulTable
                 ,table = layui.table , r = layui.device();
             form.render(null, 'app-{$namespace}-forum-list');
 
@@ -322,7 +322,7 @@
                             $($(this).find(".layui-table-header thead tr")[index]).height($(val).height());
                         });
                     });
-                    // soulTable.render(this)
+                    soulTable.render(this)
                 }
 
             }
