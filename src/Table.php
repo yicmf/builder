@@ -509,7 +509,7 @@ class Table extends Builder
      * @param string $width
      * @param string $height
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonUpdate($url = 'update', $title = '新增', $width = '', $height = '', $attr = [])
     {
@@ -527,7 +527,7 @@ class Table extends Builder
      * 导入表格
      * @param string $url
      * @param string $title
-     * @return Table
+     * @return $this
      */
     public function buttonExcelImport($url = 'import', $title = '导入',$attr = [])
     {
@@ -576,7 +576,7 @@ class Table extends Builder
      * @param string $title
      * @param string $icon
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonFull($url, $title = '新增', $icon = 'plus', $attr = [])
     {
@@ -597,7 +597,7 @@ class Table extends Builder
      * @param string $url
      * @param string $title
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonCustom($url, $title, $attr = [])
     {
@@ -616,7 +616,7 @@ class Table extends Builder
      * @param string $title
      * @param array $attr
      * @param string $toggle
-     * @return Table
+     * @return $this
      */
     public function buttonDialog($title, $attr, $toggle = 'navtab')
     {
@@ -648,7 +648,7 @@ class Table extends Builder
      * @param string $title
      * @param array $attr
      * @param string $toggle
-     * @return Table
+     * @return $this
      */
     public function buttonAjax($url, $title, $toggle = 'doajax', $attr = [])
     {
@@ -675,7 +675,7 @@ class Table extends Builder
      * @param string $url
      * @param string $title
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonDisable($url, $title = '禁用', $attr = [])
     {
@@ -691,7 +691,7 @@ class Table extends Builder
      * @param string $url
      * @param string $title
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonEnable($url, $title = '启用', $attr = [])
     {
@@ -707,7 +707,7 @@ class Table extends Builder
      * @param string $url
      * @param string $title
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonDelete($url, $title = '删除选中', $attr = [])
     {
@@ -725,7 +725,7 @@ class Table extends Builder
      * @param string $url
      * @param string $title
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonDeleteAll($url, $title = '删除所有', $attr = [])
     {
@@ -761,7 +761,7 @@ class Table extends Builder
      * @param string $url
      * @param string $title
      * @param array $attr
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function buttonRefresh($url, $title = '刷新', $attr = [])
@@ -776,7 +776,7 @@ class Table extends Builder
      * @param string $url
      * @param string $title
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonRestore($url, $title = '还原', $attr = [])
     {
@@ -790,7 +790,7 @@ class Table extends Builder
     /**
      * 彻底删除回收站.
      * @param null|string $url
-     * @return Table
+     * @return $this
      */
     public function buttonClear($url = null)
     {
@@ -1337,7 +1337,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyText($field, $title, $sort = false, $width = '', $style = '')
@@ -1351,7 +1351,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyEditerText($field, $title, $sort = false, $width = '', $style = '')
@@ -1376,7 +1376,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyAuthor($field, $title, $sort = false, $width = '', $style = '')
@@ -1388,7 +1388,7 @@ EOF;
     /**
      * 隐藏显示
      * @param string|array $field 键名
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyHidden($field)
@@ -1399,7 +1399,7 @@ EOF;
     /**
      * 追加字段
      * @param string|array $field 键名
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function append($field)
@@ -1414,7 +1414,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param string|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyDecimal($field, $title, $sort = false, $width = '', $style = '')
@@ -1443,7 +1443,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param string|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyDollar($field, $title, $sort = false, $width = '', $style = '')
@@ -1464,7 +1464,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param string|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyDiamond($field, $title, $sort = false, $width = '', $style = '')
@@ -1485,7 +1485,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param string|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyRmb($field, $title, $sort = false, $width = '', $style = '')
@@ -1506,7 +1506,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param string|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyTemplate($field, $templet, $title, $sort = false, $width = '', $style = '')
@@ -1527,7 +1527,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param string|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyCount($field, $title, $sort = true, $width = '', $style = '')
@@ -1543,7 +1543,7 @@ EOF;
      * @param bool $sort 排序方式，默认是不参与排序
      * @param string|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyField($field, $title, $sort = false, $width = '', $style = '', $templet = '')
@@ -1557,7 +1557,7 @@ EOF;
      * @param string $title 标题
      * @param bool $sort 排序方式，默认是不参与排序
      * @param null $width
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyColor($field, $title, $sort = false, $width = '')
@@ -1570,7 +1570,7 @@ EOF;
      * @param string $title
      * @param bool $sort
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyCreateTime($title = '创建时间', $sort = false, $style = '')
@@ -1583,7 +1583,7 @@ EOF;
      * @param string $title
      * @param bool $sort
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyUpdateTime($title = '更新时间', $sort = false, $style = '')
@@ -1596,7 +1596,7 @@ EOF;
      * @param string $title
      * @param bool $sort
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyTime($field, $title, $format = 'yyyy-MM-dd HH:mm:ss', $sort = false, $style = '')
@@ -1625,7 +1625,7 @@ EOF;
      * @param       $title
      * @param bool $sort
      * @param null $width
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyEmail($field, $title, $sort = false, $width = '')
@@ -1637,7 +1637,7 @@ EOF;
      * 显示html
      * @param string $field
      * @param string $title
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyHtml($field, $title)
@@ -1888,7 +1888,7 @@ EOF;
      * @param \Closure $closure
      * @param int|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyClosure($title, $closure, $width = '', $style = '')
@@ -1903,7 +1903,7 @@ EOF;
      * @param string $templet
      * @param int|null $width
      * @param string|null $style
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function keyTemplateChild($title, $templet, $width = 80, $style = '')
@@ -1935,7 +1935,7 @@ EOF;
      * @param int|null $width
      * @param string|null $style
      * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
-     * @return Table
+     * @return $this
      */
     public function keyLink($field, $title, $url, $target = '_self', $width = '', $style = '')
     {
@@ -1956,7 +1956,7 @@ EOF;
      * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
      * @param array $arr
      * @param int|null $width
-     * @return Table
+     * @return $this
      */
     public function keyDialog($field, $title, $url, $arr = [], $width = '')
     {
@@ -1979,7 +1979,7 @@ EOF;
      * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
      * @param array $arr
      * @param int|null $width
-     * @return Table
+     * @return $this
      */
     public function keyView($field, $title, $url, $arr = [], $width = '')
     {
@@ -2001,7 +2001,7 @@ EOF;
      * @param string $title
      * @param $url string 可以是函数或U函数解析的字符串。如果是字符串，该函数将附带一个id参数
      * @param int|null $width
-     * @return Table
+     * @return $this
      */
     public function keyTab($field, $title, $url, $width = '')
     {
@@ -2026,7 +2026,7 @@ EOF;
      * @param string $title
      * @param string|boolean $sort
      * @param int|null $width
-     * @return Table
+     * @return $this
      */
     public function keyProgress($field, $title, $sort = false, $width = '')
     {
@@ -2147,7 +2147,7 @@ EOF;
      * 不可操作
      * @param string $title
      * @param array $status
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function actionDisable($title = '不可操作', $status = [])
@@ -2261,7 +2261,7 @@ EOF;
      * @param string $title
      * @param array $status
      * @param string $message
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function actionForbid($url = 'forbid?id={$id}', $title = '禁用', $status = [], $message = '')
@@ -2275,7 +2275,7 @@ EOF;
      * @param string $title
      * @param array $status
      * @param string $message
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function actionToCheck($url = 'check?id={$id}', $title = '通过审核', $status = [], $message = '')
@@ -2289,7 +2289,7 @@ EOF;
      * @param string $title
      * @param array $status
      * @param string $message
-     * @return Table
+     * @return $this
      * @author  : 微尘 <yicmf@qq.com>
      */
     public function actionRestore($url = 'restore?id={$id}', $title = '启用', $status = [], $message = '')
