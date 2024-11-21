@@ -1,18 +1,7 @@
 
 <title>{$menu_title}</title>
-<script type="text/html" template>
-    <link rel="stylesheet" href="{{ layui.setter.base }}style/template.css?v={{ layui.admin.v }}-1" media="all">
-</script>
-<style>
-    #organizationTreeBar {
-        padding: 10px 15px;
-        border: 1px solid #e6e6e6;
-        background-color: #f2f2f2;
-    }
-    .layui-table-cell img{
-        height: 28px;
-    }
-</style>
+
+
 <div class="layui-card layadmin-header">
     <div class="layui-breadcrumb" lay-filter="breadcrumb">
         <a lay-href="">{$p_menu_title|default=''}</a>
@@ -22,6 +11,23 @@
         <a><cite>{$menu_title}</cite></a>
     </div>
 </div>
+
+
+<!--<style>-->
+<!--    #organizationTreeBar {-->
+<!--        padding: 10px 15px;-->
+<!--        border: 1px solid #e6e6e6;-->
+<!--        background-color: #f2f2f2;-->
+<!--    }-->
+<!--    .layui-table-cell img{-->
+<!--        height: 28px;-->
+<!--    }-->
+<!--</style>-->
+
+<!--<script type="text/html" template>-->
+<!--    <link rel="stylesheet" href="{{ layui.setter.paths.base }}style/template.css?v={{ layui.admin.v }}-1" media="all">-->
+<!--</script>-->
+
 
 <div class="layui-fluid">
 
@@ -122,7 +128,9 @@
                     data-width="{$button.attr.width|default=''}"
                     data-id="{$button.attr.id|default='id'}"
                     data-height="{$button.attr.height|default=''}"
-                    data-message="{$button.attr.message|default=''}"  lay-event="{$button.attr.event}" data-url="{$button.attr.url}" >
+                    data-message="{$button.attr.message|default=''}"
+                    lay-event="{$button.attr.event}"
+                    data-url="{$button.attr.url}" >
                 <i class="layui-icon layui-icon-face-smile layui-hide"></i>
                 {$button.title}</button>
             {else/}
@@ -177,19 +185,19 @@
     <script type="text/html" id="62271a4aaa0f8">
         <i class="layui-icon layui-icon-rmb"></i> {{d.price}}
     </script>
-    <style>
+<!--    <style>-->
 
-        .layui-table-cell {
+<!--        .layui-table-cell {-->
 
-            height: auto!important;
-        }
-        .layui-table-hover,
-        .layui-table-click,
-        .layui-table[lay-even] tbody tr:nth-child(even){background-color: #f8f8f8;}
-        .layui-table-checked{background-color: #dbfbf0;}
-        .layui-table-checked.layui-table-hover,
-        .layui-table-checked.layui-table-click{background-color: #abf8dd;}
-    </style>
+<!--            height: auto!important;-->
+<!--        }-->
+<!--        .layui-table-hover,-->
+<!--        .layui-table-click,-->
+<!--        .layui-table[lay-even] tbody tr:nth-child(even){background-color: #f8f8f8;}-->
+<!--        .layui-table-checked{background-color: #dbfbf0;}-->
+<!--        .layui-table-checked.layui-table-hover,-->
+<!--        .layui-table-checked.layui-table-click{background-color: #abf8dd;}-->
+<!--    </style>-->
     <script>
         Date.prototype.Format = function (fmt) { //author: meizz
             var o = {
@@ -208,13 +216,14 @@
             return fmt;
         }
         var tab_values = {$tabs|json_encode|raw};
-        layui.use(["laytpl",'admin','tree','forum','table','soulTable',"element"], function(){
+        layui.use(['admin','forum','table',"element",'upload'], function(){
             var $ = layui.$
                 ,admin = layui.admin
                 ,view = layui.view
                 ,form = layui.form
+                ,upload  = layui.upload
                 ,element = layui.element
-                ,soulTable = layui.soulTable
+                //,soulTable = layui.soulTable
                 ,table = layui.table , r = layui.device();
             form.render(null, 'app-{$namespace}-forum-list');
 
@@ -224,7 +233,9 @@
                     ,id: '{$namespace}-table'
                     ,url:'{$searchPostUrl|raw}&__method=ajax'
                     ,where:{field: {$search_value|raw|json_encode}}
+                    ,escape:0
                     ,cellMinWidth:120
+                   // ,lineStyle: 'height:auto'
                     ,skin: 'row'//设置表格边框风格。可选值：grid|line|row|nob
                     , loading: true
                     ,parseData: function(res){ //res 即为原始返回的数据
@@ -264,22 +275,18 @@
                     }
                 ,autoSort: false
                 ,done:function(res, curr, count){
-                    $(".layui-table-main tr").each(function (index, val) {
-                        $(".layui-table-fixed").each(function () {
-                            $($(this).find(".layui-table-body tbody tr")[index]).height($(val).height());
-                        });
-                    });
-                    $(".layui-table-header tr").each(function (index, val) {
-                        $(".layui-table-fixed").each(function () {
-                            $($(this).find(".layui-table-header thead tr")[index]).height($(val).height());
-                        });
-                    });
+
                     if (0!= res.code)
                     {
                         layer.msg(res.msg);
                     }else{
-                    layui.each(res.data,function(index,d){
+                        layui.each(res.data,function(index,d){
                         // console.log(index);//data-index
+
+                                // let rh = $('div[lay-table-id="ID-Table-Current"] .layui-table-main .layui-table').find("tr").eq(index).css("height")//数据表身
+                                // $('div[lay-table-id="ID-Table-Current"] .layui-table-fixed-l .layui-table-body .layui-table').find("tr").eq(index).css("height", rh)//序号表身
+                                // $('div[lay-table-id="ID-Table-Current"] .layui-table-fixed-r .layui-table-body .layui-table').find("tr").eq(index).css("height", rh)//国定栏表身
+
                         var row = $("[lay-id='{$namespace}-table']").find(".layui-table-body [data-index='" + index + "']");
                         if (row.length)
                         {
@@ -305,7 +312,17 @@
                             }
                         })
                     })
-                    soulTable.render(this)
+                        $(".layui-table-main tr").each(function (index, val) {
+                            $(".layui-table-fixed").each(function () {
+                                $($(this).find(".layui-table-body tbody tr")[index]).height($(val).height());
+                            });
+                        });
+                        $(".layui-table-header tr").each(function (index, val) {
+                            $(".layui-table-fixed").each(function () {
+                                $($(this).find(".layui-table-header thead tr")[index]).height($(val).height());
+                            });
+                        });
+                   // soulTable.render(this)
                 }
 
             }
@@ -439,8 +456,8 @@
                     // obj.update(update, true); // 参数 true 为 v2.7 新增功能，即同步更新其他包含自定义模板并可能存在关联的列视图
                 });
 
-form.on('switch(demo-templet-status)', function(obj){
-                   var state = obj.elem.checked?1:0;
+                form.on('switch(demo-templet-status)', function(obj){
+                    var state = obj.elem.checked?1:0;
                     //方法一取数据（根据相对位置取）
                     var id = obj.othis.parents('tr').find("td :first").text();
                     //方法二取数据 （根据索引table.cache里面的行数据）
@@ -565,7 +582,7 @@ form.on('switch(demo-templet-status)', function(obj){
                     //头工具栏事件
                     table.on('toolbar({$namespace}-table)', function(obj){
                         var checkStatus = table.checkStatus(obj.config.id);
-
+console.log(obj.event)
                         switch(obj.event){
                             case 'getCheckData':
                                 var data = checkStatus.data;
@@ -654,10 +671,7 @@ form.on('switch(demo-templet-status)', function(obj){
                         break;
                     case 'LAYTABLE_TIPS':
                         layer.alert('这是工具栏右侧自定义的一个图标按钮');
-                        break;
-
-
-                        case 'import':
+                    case 'import':
                         var a = document.createElement('button');
                         var url = $(this).data('url');
                         var id = $(this).data('id');
@@ -716,6 +730,7 @@ form.on('switch(demo-templet-status)', function(obj){
                             }
                         });
                         a.click();
+                        break;
                     };
                     });
 
