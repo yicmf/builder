@@ -3,7 +3,7 @@
 // +----------------------------------------------------------------------
 // | builder
 // +----------------------------------------------------------------------
-// | Copyright (c) 2015-2024 http://www.yicmf.com, All rights reserved.
+// | Copyright (c) 2015-2022 http://www.yicmf.com, All rights reserved.
 // +----------------------------------------------------------------------
 // | Author: 微尘 <yicmf@qq.com>
 // +----------------------------------------------------------------------
@@ -503,6 +503,27 @@ class Table extends Builder
     }
 
     /**
+     * 加入新增按钮.
+     * @param string $url
+     * @param string $title
+     * @param string $width
+     * @param string $height
+     * @param array $attr
+     * @return Table
+     */
+    public function buttonUpdate($url = 'update', $title = '新增', $width = '', $height = '', $attr = [])
+    {
+        $default['url'] = $url;
+        $default['class'] = 'layui-bg-green';
+        $default['icon'] = 'plus';
+        $default['width'] = $width ?: $this->dialog_width_default;
+        $default['height'] = $height ?: $this->dialog_height_default;
+        $default['data-title'] = $title != '新增' ? $title : $this->request->controller() . '新增';
+        $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
+        return $this->buttonDialog($title, array_merge($default, $attr));
+    }
+
+    /**
      * 导入表格
      * @param string $url
      * @param string $title
@@ -535,7 +556,7 @@ class Table extends Builder
      * @param string $width
      * @param string $height
      * @param array $attr
-     * @return Table
+     * @return $this
      */
     public function buttonUpdate($url = 'update', $title = '新增', $width = '', $height = '', $attr = [])
     {
@@ -1081,7 +1102,6 @@ class Table extends Builder
         return $this;
     }
 
-/**
 
 ->quickUpdate(['title'
                     ,'type' =>['option' => ['1'=>'你好'], 'type' => 'select']
@@ -1097,7 +1117,7 @@ class Table extends Builder
             } else {
                 if ($item['type'] == 'select')
                 {
-                    $templet = uniqid();
+                    $templet = 'k'.uniqid();
                     $op = json_encode($item['option']);
                     $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet">
@@ -1112,11 +1132,11 @@ class Table extends Builder
 EOF;
                     $templet = '#' . $templet;
                     $item['templet'] = $templet;
-                }}elseif ('switch' == $item['type']) {
+                }elseif ('switch' == $item['type']) {
 
-                    $templet = uniqid();
+                    $templet = 'k'.uniqid();
                     $op = json_encode($item['option']);
-                                    $this->_templets[] = <<<EOF
+                    $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet">
   <!-- 这里的 checked 的状态值判断仅作为演示 -->
   <input type="checkbox" data-name="$index" name="$index" value="{{= d.$index }}" title="ON|OFF"  lay-skin="switch" lay-filter="demo-templet-status" {{= d.$index == 1 ? "checked" : "" }}>
@@ -1149,7 +1169,7 @@ EOF;
     public function key($field, $title, $sort = false, $width = '', $type = 'normal', $style = '', $templet = '', $map = [])
     {
         if (false === strpos($field, '{$') && strpos($field, '.')) {
-            $templet = uniqid();
+            $templet = 'k'.uniqid();
             if (preg_match('/(.*)\[:(.*)\]/', $field, $matches)) {
                 $field = $matches[1];
                 $foreignKey = $matches[2];
@@ -1239,6 +1259,10 @@ EOF;
                 'map' => $map,
                 //                'even' => true,
             ];
+            if (!$templet)
+            {
+                unset($key['templet']);
+            }
         }
         $reKey = [];
         !empty($width) && $key['width'] = $width;
@@ -1280,7 +1304,7 @@ EOF;
         }
         $map_result[0] = $map[1];
         $map_result[1] = $map[0];
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet">
     <input type="checkbox" disabled  lay-skin="switch" lay-text="$map_text" {{ d.{$field} == 1 ? 'checked' : '' }}>
@@ -1318,6 +1342,29 @@ EOF;
      */
     public function keyText($field, $title, $sort = false, $width = '', $style = '')
     {
+        return $this->key($field, $title, $sort, $width, 'normal', $style);
+    }
+    /**
+     * 显示纯文本
+     * @param string $field 键名
+     * @param string $title 标题
+     * @param bool $sort 排序方式，默认是不参与排序
+     * @param null $width
+     * @param string|null $style
+     * @return Table
+     * @author  : 微尘 <yicmf@qq.com>
+     */
+    public function keyEditerText($field, $title, $sort = false, $width = '', $style = '')
+    {
+        $templet = 'k'.uniqid();
+
+
+        $this->_templets[] = <<<EOF
+<script type="text/html" id="$templet">
+    
+    <div>{{- d.$field }}</div>
+</script>
+EOF;
         return $this->key($field, $title, $sort, $width, 'normal', $style);
     }
 
@@ -1372,7 +1419,7 @@ EOF;
      */
     public function keyDecimal($field, $title, $sort = false, $width = '', $style = '')
     {
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
 
         if ($style == '' && 'zh-cn' == $langSet = $this->app->lang->defaultLangSet()) {
             $style = 'rmb';
@@ -1401,7 +1448,7 @@ EOF;
      */
     public function keyDollar($field, $title, $sort = false, $width = '', $style = '')
     {
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet">
    <i class="layui-icon layui-icon-dollar"></i> {{d.$field}}
@@ -1422,7 +1469,7 @@ EOF;
      */
     public function keyDiamond($field, $title, $sort = false, $width = '', $style = '')
     {
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet">
    <i class="layui-icon layui-icon-diamond"></i> {{d.$field}}
@@ -1443,7 +1490,7 @@ EOF;
      */
     public function keyRmb($field, $title, $sort = false, $width = '', $style = '')
     {
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet">
    <i class="layui-icon layui-icon-rmb"></i> {{d.$field}}
@@ -1464,7 +1511,7 @@ EOF;
      */
     public function keyTemplate($field, $templet, $title, $sort = false, $width = '', $style = '')
     {
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
    $templet
@@ -1554,7 +1601,7 @@ EOF;
      */
     public function keyTime($field, $title, $format = 'yyyy-MM-dd HH:mm:ss', $sort = false, $style = '')
     {
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
    {{#  
@@ -1619,7 +1666,7 @@ EOF;
             }
             $width = $max * 5 + 40;
         }
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $map_en = json_encode($map, JSON_UNESCAPED_UNICODE);
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
@@ -1654,7 +1701,7 @@ EOF;
      */
     public function keyImage($field, $title, $style = '')
     {
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
@@ -1674,7 +1721,7 @@ EOF;
      */
     public function keyImages($field, $title, $style = '')
     {
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
@@ -1707,7 +1754,7 @@ EOF;
         } else {
             $temp = $field;
         }
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
         if (is_array($temp)) {
             $with_field = $temp[0];
@@ -1716,7 +1763,7 @@ EOF;
         }
 //			$this->_templets[] = <<<EOF
 //<script type="text/html" id="$templet_name">
-//<div class="layer-photos"  style="display: inline-block" id="layer-photos-$with_field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看大图"
+//<div class="layer-photos"  style="display: inline-block" id="layer-photos-$with_field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title=""
 // layer-src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}" src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}"></div>
 //</script>
 //EOF;
@@ -1729,7 +1776,7 @@ EOF;
 
 //			$this->_templets[] = <<<EOF
 //<script type="text/html" id="$templet_name">
-//<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title="点击查看大图"
+//<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
 // layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
 //</script>
 //EOF;
@@ -1750,7 +1797,7 @@ EOF;
      */
     public function keyImagesModel($field, $title, $style = '')
     {
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
 <div class="layer-photos"  style="display: inline-block" id="layer-photos-$field-{{d.id}}">
@@ -1785,7 +1832,7 @@ EOF;
             $with_field = implode('_', $temp);
         }
         $this->_with[$with_field] = ['id', 'avatar', 'nickname'];
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
         $url = url($url) . '?id={{d.' . $with_field . '.id}}';
         $this->_templets[] = <<<EOF
@@ -1814,7 +1861,7 @@ EOF;
      */
     public function keyIp($field = 'ip', $title = 'IP地址', $sort = false, $type = '')
     {
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
    <i class="layui-icon layui-icon-link"></i> <a href="https://www.ip.cn/?ip={{d.$field}}" target="_blank"> {{d.$field}}</a> 
@@ -1861,7 +1908,7 @@ EOF;
      */
     public function keyTemplateChild($title, $templet, $width = 80, $style = '')
     {
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet_name">
    $templet
@@ -1893,7 +1940,7 @@ EOF;
     public function keyLink($field, $title, $url, $target = '_self', $width = '', $style = '')
     {
         // 修整添加多个空字段时显示不正常的
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
 <script type="text/html" id="$templet">
    <i class="layui-icon layui-icon-link"></i> <a href="$url" target="$target"> {{d.$field}}</a> 
@@ -1916,7 +1963,7 @@ EOF;
         $dialog_width = isset($arr['width']) ? $arr['width'] : $this->dialog_width_default;
         $dialog_height = isset($arr['height']) ? $arr['height'] : $this->dialog_height_default;
         // 修整添加多个空字段时显示不正常的
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
  <script type="text/html" id="$templet">
           <a style="cursor:pointer "  lay-event="dialog" data-url="$url" data-width="$dialog_width" data-height="$dialog_height" ><i class="layui-icon layui-icon-search"></i> {{d.$field}}</a>
@@ -1939,7 +1986,7 @@ EOF;
         $dialog_width = isset($arr['width']) ? $arr['width'] : $this->dialog_width_default;
         $dialog_height = isset($arr['height']) ? $arr['height'] : $this->dialog_height_default;
         // 修整添加多个空字段时显示不正常的
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
  <script type="text/html" id="$templet">
           <a style="cursor:pointer "  lay-event="view" data-url="$url" data-width="$dialog_width" data-height="$dialog_height" ><i class="layui-icon layui-icon-search"></i> {{d.$field}}</a>
@@ -1964,7 +2011,7 @@ EOF;
             $url = str_replace('}', '}}', $url);
         }
         // 修整添加多个空字段时显示不正常的
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
  <script type="text/html" id="$templet">
           <a style="cursor:pointer " lay-href="$url" ><i class="layui-icon layui-icon-layouts"></i> {{d.$field}}</a>
@@ -1984,7 +2031,7 @@ EOF;
     public function keyProgress($field, $title, $sort = false, $width = '')
     {
         // 修整添加多个空字段时显示不正常的
-        $templet = uniqid();
+        $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
   <script type="text/html" id="$templet">
         <div class="layui-progress layuiadmin-order-progress" lay-filter="progress-"+ {{ d.id }} +"">
@@ -2005,7 +2052,7 @@ EOF;
      */
     public function keyStatus($map = null, $sort = false, $style = '')
     {
-        $templet_name = uniqid();
+        $templet_name = 'k'.uniqid();
         $map = !is_null($map) ? $map : [
             -2 => '已删除',
             -1 => '禁用',
@@ -2475,6 +2522,8 @@ EOF;
                     $this->assign('suggest', $this->_suggest);
                     $this->assign('statistics', $this->_statistics);
                     $this->assign('warning', $this->_warning);
+
+
                     $this->assign('keyList', array_values($this->_keyList));
                     $this->assign('buttonList', $this->_buttonList);
                     $this->assign('callback', $this->_callback);
@@ -2497,7 +2546,7 @@ EOF;
                         }
                         foreach ($this->_search as $index => $search_item) {
                             $search_value[$search_item['field']] = $search_item['value'];
-                        } 
+                        }
                     }
                     $this->assign('search_value', $search_value);
                     if (empty($this->_searchPostUrl)) {
@@ -2505,7 +2554,7 @@ EOF;
                     }
                     if (strpos($this->_searchPostUrl, '/Admin')) {
                         $this->_searchPostUrl = str_replace('/Admin', '/admin', $this->_searchPostUrl);
-                    } 
+                    }
                     $this->assign('searchPostUrl', $this->_searchPostUrl);
                     /* 复选框 */
                     $this->assign('group', $this->_group);
@@ -2534,12 +2583,14 @@ EOF;
     {
         foreach ($this->_keyList as $index => $item) {
             foreach ($this->_quick_update as $index2 => $item2) {
-                if ($index2 == $this->_keyList[$index]['field']) { 
+                if ($index2 == $this->_keyList[$index]['field']) {
                     if ($item2['option']['type']=='select')
                     {
                         $this->_keyList[$index]['templet'] =$item2['option']['templet'];
+                    }elseif ($item2['option']['type']=='switch')
+                    {
+                        $this->_keyList[$index]['templet'] =$item2['option']['templet'];
                     }else{
-
                         $this->_keyList[$index]['edit'] = 'text';
                     }
                 }
