@@ -3,7 +3,7 @@
 // +----------------------------------------------------------------------
 // | builder
 // +----------------------------------------------------------------------
-// | Copyright (c) 2015-2024 http://www.yicmf.com, All rights reserved.
+// | Copyright (c) 2015-2022 http://www.yicmf.com, All rights reserved.
 // +----------------------------------------------------------------------
 // | Author: 微尘 <yicmf@qq.com>
 // +----------------------------------------------------------------------
@@ -75,6 +75,7 @@ class Table extends Builder
     // 默认获取主键的字段
     protected $_default_pk = 'id';
     protected $_auto_refresh = 0;
+    protected $_total_row = [];
     // 默认获取状态的字段
     protected $_default_status = 'status';
     protected $_toolbar = ['filter', 'print'];// ['filter', 'exports', 'print'];
@@ -236,6 +237,19 @@ class Table extends Builder
     public function filter($filter)
     {
         $this->_filter = array_merge($this->_filter, $filter);
+        return $this;
+    }
+
+
+    /**
+     * 筛选条件
+     * @param array $filter
+     * @return $this
+     * @author  : 微尘 <yicmf@qq.com>
+     */
+    public function totalRowField($field,$templet)
+    {
+        $this->_total_row[] = ['field' => $field, 'templet' => $templet];
         return $this;
     }
 
@@ -1231,6 +1245,7 @@ EOF;
                 'fixed' => $fixed,
                 'templet' => $templet,
                 'map' => $map,
+//                'totalRow' => '{{= parseInt(d.TOTAL_NUMS) }} 次',//totalRow: '合计：'
                 //                'even' => true,
             ];
             if (!$templet)
@@ -2574,6 +2589,12 @@ EOF;
             } elseif (isset($item['type']) && $item['type'] == 'child') //'type'=>'child',
             {
                 unset($this->_keyList[$index]['field']);
+            }
+            foreach ($this->_total_row as $index2 => $item2) {
+
+                if ($this->_keyList[$index]['field'] == $this->_total_row[$index2]['field']) {
+                    $this->_keyList[$index]['totalRow'] = $this->_total_row[$index2]['templet'];
+                }
             }
         }
         if (count($this->_do_action)) {
