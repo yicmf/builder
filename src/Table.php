@@ -550,27 +550,6 @@ class Table extends Builder
     }
 
     /**
-     * 加入新增按钮.
-     * @param string $url
-     * @param string $title
-     * @param string $width
-     * @param string $height
-     * @param array $attr
-     * @return $this
-     */
-    public function buttonUpdate($url = 'update', $title = '新增', $width = '', $height = '', $attr = [])
-    {
-        $default['url'] = $url;
-        $default['class'] = 'layui-bg-green';
-        $default['icon'] = 'plus';
-        $default['width'] = $width ?: $this->dialog_width_default;
-        $default['height'] = $height ?: $this->dialog_height_default;
-        $default['data-title'] = $title != '新增' ? $title : $this->request->controller() . '新增';
-        $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
-        return $this->buttonDialog($title, array_merge($default, $attr));
-    }
-
-    /**
      * 打开全屏操作
      * @param        $url
      * @param string $title
