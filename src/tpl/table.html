@@ -119,784 +119,783 @@
             </div>
         </div>
     </div>
+</div>
 
-    <script type="text/html" id="{$namespace}-table-search">
-        <div class="layui-btn-container">
-            {volist name="buttonList" id="button"}
-            {neq name='button.attr.event' value='ajax'}
-            <button class="layui-btn layui-btn-sm  {$button.attr.class} " data-title="{$button.title}"
-                    data-width="{$button.attr.width|default=''}"
-                    data-id="{$button.attr.id|default='id'}"
-                    data-height="{$button.attr.height|default=''}"
-                    data-message="{$button.attr.message|default=''}"
-                    lay-event="{$button.attr.event}"
-                    data-url="{$button.attr.url}" >
-                <i class="layui-icon layui-icon-face-smile layui-hide"></i>
-                {$button.title}</button>
-            {else/}
-            <a class="layui-btn layui-btn-sm  {$button.attr.class} " lay-href="{$button.attr.url}" >
-                <i class="layui-icon layui-icon-face-smile layui-hide"></i>
-                {$button.title}</a>
-            {/neq}
-            {/volist}
-        </div>
-    </script>
-    <script type="text/html" id="{$namespace}-table-action">
-        {volist name='do_action' id='action'}
-
-        {php}  if ($action['status'] instanceof \Closure) {  {/php}
-        {{#  if(d.{$action['field']}){ }}
-        {php} }else{  {/php}
-        {{# var arr = {$action.status|json_encode};  if( true == arr.includes(d.status)){ }}
-        {php}  }  {/php}
-        {eq name='action.event' value='tab'}
-        <a class="layui-btn layui-btn-xs {$action.attr.class}"
-           lay-href="{$action.url}">
-            {present name='action.attr.icon'}
-            <i class="layui-icon layui-icon-{$action.attr.icon}"></i>
-            {/present}
-            {present name='action.attr.custom_icon'}
-            <i class="iconfont icon-{$action.attr.custom_icon}"></i>
-            {/present}
-            {$action.title}
-        </a>
+<script type="text/html" id="{$namespace}-table-search">
+    <div class="layui-btn-container">
+        {volist name="buttonList" id="button"}
+        {neq name='button.attr.event' value='ajax'}
+        <button class="layui-btn layui-btn-sm  {$button.attr.class} " data-title="{$button.title}"
+                data-width="{$button.attr.width|default=''}"
+                data-id="{$button.attr.id|default='id'}"
+                data-height="{$button.attr.height|default=''}"
+                data-message="{$button.attr.message|default=''}"
+                lay-event="{$button.attr.event}"
+                data-url="{$button.attr.url}" >
+            <i class="layui-icon layui-icon-face-smile layui-hide"></i>
+            {$button.title}</button>
         {else/}
-        <a class="layui-btn layui-btn-xs {$action.attr.class}" lay-event="{$action.event}"
-           data-title="{$action.title}"
-           data-width="{$action.attr.width|default=''}"
-           data-height="{$action.attr.height|default=''}"
-           data-message="{$action.attr.message|default=''}"
-           data-url="{$action.url}">
-            {present name='action.attr.icon'}
-            <i class="layui-icon layui-icon-{$action.attr.icon}"></i>
-            {/present}
-            {present name='action.attr.custom_icon'}
-            <i class="iconfont icon-{$action.attr.custom_icon}"></i>
-            {/present}
-            {$action.title}
-        </a>
-        {/eq}
-        {{#  } }}
+        <a class="layui-btn layui-btn-sm  {$button.attr.class} " lay-href="{$button.attr.url}" >
+            <i class="layui-icon layui-icon-face-smile layui-hide"></i>
+            {$button.title}</a>
+        {/neq}
         {/volist}
-    </script>
-    {volist name='templets' id='vo'}
-    {$vo|raw}
+    </div>
+</script>
+<script type="text/html" id="{$namespace}-table-action">
+    {volist name='do_action' id='action'}
+
+    {php}  if ($action['status'] instanceof \Closure) {  {/php}
+    {{#  if(d.{$action['field']}){ }}
+    {php} }else{  {/php}
+    {{# var arr = {$action.status|json_encode};  if( true == arr.includes(d.status)){ }}
+    {php}  }  {/php}
+    {eq name='action.event' value='tab'}
+    <a class="layui-btn layui-btn-xs {$action.attr.class}"
+       lay-href="{$action.url}">
+        {present name='action.attr.icon'}
+        <i class="layui-icon layui-icon-{$action.attr.icon}"></i>
+        {/present}
+        {present name='action.attr.custom_icon'}
+        <i class="iconfont icon-{$action.attr.custom_icon}"></i>
+        {/present}
+        {$action.title}
+    </a>
+    {else/}
+    <a class="layui-btn layui-btn-xs {$action.attr.class}" lay-event="{$action.event}"
+       data-title="{$action.title}"
+       data-width="{$action.attr.width|default=''}"
+       data-height="{$action.attr.height|default=''}"
+       data-message="{$action.attr.message|default=''}"
+       data-url="{$action.url}">
+        {present name='action.attr.icon'}
+        <i class="layui-icon layui-icon-{$action.attr.icon}"></i>
+        {/present}
+        {present name='action.attr.custom_icon'}
+        <i class="iconfont icon-{$action.attr.custom_icon}"></i>
+        {/present}
+        {$action.title}
+    </a>
+    {/eq}
+    {{#  } }}
     {/volist}
-    <script type="text/html" id="62271a4aaa0f8">
-        <i class="layui-icon layui-icon-rmb"></i> {{d.price}}
-    </script>
-    <!--    <style>-->
+</script>
+{volist name='templets' id='vo'}
+{$vo|raw}
+{/volist}
+<script type="text/html" id="62271a4aaa0f8">
+    <i class="layui-icon layui-icon-rmb"></i> {{d.price}}
+</script>
+<!--    <style>-->
 
-    <!--        .layui-table-cell {-->
+<!--        .layui-table-cell {-->
 
-    <!--            height: auto!important;-->
-    <!--        }-->
-    <!--        .layui-table-hover,-->
-    <!--        .layui-table-click,-->
-    <!--        .layui-table[lay-even] tbody tr:nth-child(even){background-color: #f8f8f8;}-->
-    <!--        .layui-table-checked{background-color: #dbfbf0;}-->
-    <!--        .layui-table-checked.layui-table-hover,-->
-    <!--        .layui-table-checked.layui-table-click{background-color: #abf8dd;}-->
-    <!--    </style>-->
-    <script>
-        Date.prototype.Format = function (fmt) { //author: meizz
-            var o = {
-                "M+" : this.getMonth()+1, //月份
-                "d+" : this.getDate(), //日
-                "h+" : this.getHours()%12 == 0 ? 12 : this.getHours()%12, //小时
-                "H+" : this.getHours(), //小时
-                "m+" : this.getMinutes(), //分
-                "s+" : this.getSeconds(), //秒
-                "q+" : Math.floor((this.getMonth()+3)/3), //季度
-                "S" : this.getMilliseconds() //毫秒
+<!--            height: auto!important;-->
+<!--        }-->
+<!--        .layui-table-hover,-->
+<!--        .layui-table-click,-->
+<!--        .layui-table[lay-even] tbody tr:nth-child(even){background-color: #f8f8f8;}-->
+<!--        .layui-table-checked{background-color: #dbfbf0;}-->
+<!--        .layui-table-checked.layui-table-hover,-->
+<!--        .layui-table-checked.layui-table-click{background-color: #abf8dd;}-->
+<!--    </style>-->
+<script>
+    Date.prototype.Format = function (fmt) { //author: meizz
+        var o = {
+            "M+" : this.getMonth()+1, //月份
+            "d+" : this.getDate(), //日
+            "h+" : this.getHours()%12 == 0 ? 12 : this.getHours()%12, //小时
+            "H+" : this.getHours(), //小时
+            "m+" : this.getMinutes(), //分
+            "s+" : this.getSeconds(), //秒
+            "q+" : Math.floor((this.getMonth()+3)/3), //季度
+            "S" : this.getMilliseconds() //毫秒
+        };
+        if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+        for (var k in o)
+            if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+        return fmt;
+    }
+    var tab_values = {$tabs|json_encode|raw};
+    layui.use(['admin','forum','table',"element",'upload','soulTable'], function(){
+        var $ = layui.$
+            ,admin = layui.admin
+            ,view = layui.view
+            ,form = layui.form
+            ,upload  = layui.upload
+            ,element = layui.element
+            ,soulTable = layui.soulTable
+            ,table = layui.table , r = layui.device();
+        form.render(null, 'app-{$namespace}-forum-list');
+
+
+        var excel_{$namespace}_table =  table.render({
+                elem: '#{$namespace}-table'
+                ,id: '{$namespace}-table'
+                ,url:'{$searchPostUrl|raw}&__method=ajax'
+                ,where:{field: {$search_value|raw|json_encode}}
+            ,escape:0
+            ,cellMinWidth:120
+            // ,lineStyle: 'height:auto'
+            ,skin: 'row'//设置表格边框风格。可选值：grid|line|row|nob
+            , loading: true
+            ,totalRow: false
+            ,parseData: function(res){ //res 即为原始返回的数据
+            return {
+                "code": res.code, //解析接口状态
+                "msg": res.message, //解析提示文本
+                "count": res.count, //解析数据长度
+                "data": res.data //解析数据列表
             };
-            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
-            for (var k in o)
-                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
-            return fmt;
         }
-        var tab_values = {$tabs|json_encode|raw};
-        layui.use(['admin','forum','table',"element",'upload','soulTable'], function(){
-            var $ = layui.$
-                ,admin = layui.admin
-                ,view = layui.view
-                ,form = layui.form
-                ,upload  = layui.upload
-                ,element = layui.element
-                ,soulTable = layui.soulTable
-                ,table = layui.table , r = layui.device();
-            form.render(null, 'app-{$namespace}-forum-list');
+        // , skin: 'line' //行边框风格
+    ,even: true //开启隔行背景
+            ,size: 'md' //小尺寸的表格可选值：sm|md|lg
+            ,toolbar: '#{$namespace}-table-search'
+            ,defaultToolbar: {$toolbar|raw|json_encode}
+    ,title: '用户数据表'
+            ,cols: [{$keyList|raw|json_encode}]
+    ,page: { // 支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+            // layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'], //自定义分页布局
+            //curr: 5, //设定初始在第 5 页
+            limits: [15, 30, 50],
+                limit: 15
+            // groups: 1, //只显示 1 个连续页码
+            // first: false, //不显示首页
+            // last: false //不显示尾页
+        }
+    ,overflow: {
+            type: 'tips'
+            // ,hoverTime: 500 // 悬停时间，单位ms, 悬停 hoverTime 后才会显示，默认为 0
+            // ,color: 'black' // 字体颜色
+            // ,bgColor: 'white' // 背景色
+        }
+    ,filter:  {$filter|raw|json_encode}
+    ,excel:  {$excel|raw|json_encode}
+    ,text: {
+            none: '暂无相关数据' //默认：无数据。注：该属性为 layui 2.2.5 开始新增
+        }
+    ,autoSort: false
+            ,done:function(res, curr, count){
 
+            if (0!= res.code)
+            {
+                layer.msg(res.msg);
+            }else{
+                layui.each(res.data,function(index,d){
+                    // console.log(index);//data-index
 
-            var excel_{$namespace}_table =  table.render({
-                    elem: '#{$namespace}-table'
-                    ,id: '{$namespace}-table'
-                    ,url:'{$searchPostUrl|raw}&__method=ajax'
-                    ,where:{field: {$search_value|raw|json_encode}}
-                ,escape:0
-                ,cellMinWidth:120
-                // ,lineStyle: 'height:auto'
-                ,skin: 'row'//设置表格边框风格。可选值：grid|line|row|nob
-                , loading: true
-                ,totalRow: true
-                ,parseData: function(res){ //res 即为原始返回的数据
-                return {
-                    "code": res.code, //解析接口状态
-                    "msg": res.message, //解析提示文本
-                    "count": res.count, //解析数据长度
-                    "data": res.data //解析数据列表
-                };
-            }
-            // , skin: 'line' //行边框风格
-        ,even: true //开启隔行背景
-                ,size: 'md' //小尺寸的表格可选值：sm|md|lg
-                ,toolbar: '#{$namespace}-table-search'
-                ,defaultToolbar: {$toolbar|raw|json_encode}
-        ,title: '用户数据表'
-                ,cols: [{$keyList|raw|json_encode}]
-        ,page: { // 支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
-                // layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'], //自定义分页布局
-                //curr: 5, //设定初始在第 5 页
-                limits: [15, 30, 50],
-                    limit: 15
-                // groups: 1, //只显示 1 个连续页码
-                // first: false, //不显示首页
-                // last: false //不显示尾页
-            }
-        ,overflow: {
-                type: 'tips'
-                // ,hoverTime: 500 // 悬停时间，单位ms, 悬停 hoverTime 后才会显示，默认为 0
-                // ,color: 'black' // 字体颜色
-                // ,bgColor: 'white' // 背景色
-            }
-        ,filter:  {$filter|raw|json_encode}
-        ,excel:  {$excel|raw|json_encode}
-        ,text: {
-                none: '暂无相关数据' //默认：无数据。注：该属性为 layui 2.2.5 开始新增
-            }
-        ,autoSort: false
-                ,done:function(res, curr, count){
+                    // let rh = $('div[lay-table-id="ID-Table-Current"] .layui-table-main .layui-table').find("tr").eq(index).css("height")//数据表身
+                    // $('div[lay-table-id="ID-Table-Current"] .layui-table-fixed-l .layui-table-body .layui-table').find("tr").eq(index).css("height", rh)//序号表身
+                    // $('div[lay-table-id="ID-Table-Current"] .layui-table-fixed-r .layui-table-body .layui-table').find("tr").eq(index).css("height", rh)//国定栏表身
 
-                if (0!= res.code)
-                {
-                    layer.msg(res.msg);
-                }else{
-                    layui.each(res.data,function(index,d){
-                        // console.log(index);//data-index
-
-                        // let rh = $('div[lay-table-id="ID-Table-Current"] .layui-table-main .layui-table').find("tr").eq(index).css("height")//数据表身
-                        // $('div[lay-table-id="ID-Table-Current"] .layui-table-fixed-l .layui-table-body .layui-table').find("tr").eq(index).css("height", rh)//序号表身
-                        // $('div[lay-table-id="ID-Table-Current"] .layui-table-fixed-r .layui-table-body .layui-table').find("tr").eq(index).css("height", rh)//国定栏表身
-
-                        var row = $("[lay-id='{$namespace}-table']").find(".layui-table-body [data-index='" + index + "']");
-                        if (row.length)
-                        {
-                            if (d._row_class)
-                            {
-                                row.addClass(d._row_class);
-                            }
-                            if (d._row_style)
-                            {
-                                row.css( d._row_style );
-                            }
-                        }
-                        layui.each(d,function(index_d,d_d){
-                            if(null != d_d )
-                            {
-                                if ($('#layer-photos-'+index_d+'-'+d.id).length)
-                                {
-                                    layer.photos({
-                                        photos: '#layer-photos-'+index_d+'-'+d.id
-                                        ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
-                                    });
-                                }
-                            }
-                        })
-                    })
-                    // $(".layui-table-main tr").each(function (index, val) {
-                    //     $(".layui-table-fixed").each(function () {
-                    //         $($(this).find(".layui-table-body tbody tr")[index]).height($(val).height());
-                    //     });
-                    // });
-                    $(".layui-table-header tr").each(function (index, val) {
-                        $(".layui-table-fixed").each(function () {
-                            $($(this).find(".layui-table-header thead tr")[index]).height($(val).height());
-                        });
-                    });
-                    soulTable.render(this)
-                }
-
-            }
-        });
-            element.on('tab(tab-f-sub-{$namespace}-table)', function(elem){
-
-                console.log(elem)
-                console.log(excel_{$namespace}_table)
-                $("#{$namespace}-table-tab-f").val(tab_values[elem.index]['id']);
-                $("#sub-{$namespace}-table-reload-btn").click();
-                /*  table.reload('{$namespace}-table', {
-                      // ,url: '/api/table/search'
-                      where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
-                          status: 1 //排序字段
-                      }
-                  });*/
-                //location.hash = 'test='+ $(this).attr('lay-id');
-            });
-            //监听排序事件
-
-            {notempty name='tag_tree.data'}
-            var tree = layui.tree;
-            // var data = [{title:'江西',id:1,children:[{title:'南昌',id:1000,children:[{title:'青山湖区',id:10001},{title:'高新区',id:10002}]},{title:'九江',id:1001},{title:'赣州',id:1002}]},{title:'广西',id:2,children:[{title:'南宁',id:2000},{title:'桂林',id:2001}]},{title:'陕西',id:3,children:[{title:'西安',id:3000},{title:'延安',id:3001}]},{title:'山西',id:3,children:[{title:'太原',id:4000},{title:'长治',id:4001}]}];
-            // 渲染
-            tree.render({
-                elem: '#ID-tree-{$namespace}-showLine',
-                data: {$tag_tree.data|json_encode|raw},
-                showCheckbox : true,
-                id: 'ID-{$namespace}-data',
-                showLine: false,  // 是否开启连接线
-                oncheck: function(obj){
-                    console.log(obj.data); // 得到当前点击的节点数据
-                    console.log(obj.checked); // 节点是否被选中
-                    console.log(obj.elem); // 得到当前节点元素
-                    console.log(obj); // 得到当前节点元素
-                    var checkedData = tree.getChecked('ID-{$namespace}-data'); // 获取选中节点的数据
-                    console.log(checkedData)
-                    console.log(excel_{$namespace}_table)
-
-                    let ids = new Array();
-
-                    checkedData.forEach(function(element) {
-                        ids.push(element.id)
-                    });
-
-
-                    console.log(ids)
-
-                    $("#{$namespace}-table-tag_tree").val(ids.join(','));
-                    $("#sub-{$namespace}-table-reload-btn").click();
-
-                    // table.reload('{$namespace}-table', {
-                    //     // initSort: obj, //记录初始排序，如果不设的话，将无法标记表头的排序状态。
-                    //     // ,url: '/api/table/search'
-                    //     where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
-                    //         // order_field: obj.field //排序字段
-                    //         // ,order: obj.type //排序方式
-                    //     }
-                    // });
-                },
-                click: function(obj){
-                    console.log(obj.data); // 得到当前点击的节点数据
-                    console.log(obj.state); // 得到当前节点的展开状态：open、close、normal
-                    console.log(obj.elem); // 得到当前节点元素
-                    console.log(obj.data.children); // 当前节点下是否有子节点
-                    // table.reload('{$namespace}-table', {
-                    //     // initSort: obj, //记录初始排序，如果不设的话，将无法标记表头的排序状态。
-                    //     // ,url: '/api/table/search'
-                    //     where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
-                    //         // order_field: obj.field //排序字段
-                    //         // ,order: obj.type //排序方式
-                    //     }
-                    // });
-
-                },
-            });
-            {/notempty}
-
-                table.on('edit({$namespace}-table)', function(obj){
-                    var field = obj.field; // 得到修改的字段
-                    var value = obj.value // 得到修改后的值
-                    // var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
-                    var data = obj.data // 得到所在行所有键值
-                    // var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
-                    console.log(obj); // 查看对象所有成员
-
-                    $.ajax({
-                        url:'{$searchPostUrl|raw}&__method=quick', //请求的url地址
-                        dataType:"json", //返回格式为json
-                        async:true,//请求是否异步，默认为异步，这也是ajax重要特性
-                        type:"POST", //请求方式
-                        data: {
-                            id:data.id,
-                            __field:obj.field,
-                            __value:obj.value,
-                        }, //请求方式
-                        success:function(req){
-                            //请求成功时处理
-                            if ( 0 == req.code || 200 == req.code)
-                            {
-                                req.message && layer.msg(req.message);
-                            }
-                            else{
-                                layer.msg(req.message);
-                            }
-                        },
-                        complete:function(){
-                            //请求完成的处理
-                        },
-                        error:function(err){
-                            //请求出错处理
-                            console.log(err)
-                            layer.alert(err.responseJSON.message || '未知错误', {
-                                icon: 5,
-                                skin: 'layer-ext-demo' //见：扩展说明
-                            })
-                        }
-                    });
-
-                    // 值的校验
-                    // if(value.replace(/\s/g, '') === ''){
-                    //     layer.tips('值不能为空', this, {tips: 1});
-                    //     return obj.reedit(); // 重新编辑 -- v2.8.0 新增
-                    // }
-                    // 编辑后续操作，如提交更新请求，以完成真实的数据更新
-                    // …
-
-                    // 更新当前缓存数据
-                    // var update = {};
-                    // update[field] = value;
-                    // obj.update(update, true); // 参数 true 为 v2.7 新增功能，即同步更新其他包含自定义模板并可能存在关联的列视图
-                });
-
-                form.on('switch(demo-templet-status)', function(obj){
-                    var state = obj.elem.checked?1:0;
-                    //方法一取数据（根据相对位置取）
-                    var id = obj.othis.parents('tr').find("td :first").text();
-                    //方法二取数据 （根据索引table.cache里面的行数据）
-                    var index  = obj.othis.parents('tr').attr("data-index");
-                    var field = obj.field; // 得到修改的字段
-                    var value = obj.value // 得到修改后的值
-                    // var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
-                    var data = obj.data // 得到所在行所有键值
-                    // var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
-                    // console.log(obj); // 查看对象所有成员
-                    // console.log(field); // 查看对象所有成员
-                    // console.log(id); // 查看对象所有成员
-                    // console.log(obj.othis.siblings().data('name')); // 查看对象所有成员
-                    // // console.log(obj.othis.parent('div').find("input :first").data('name')); // 查看对象所有成员
-                    // console.log(obj.othis.parents('tr').find("td :first")); // 查看对象所有成员
-
-
-                    $.ajax({
-                        url:'{$searchPostUrl|raw}&__method=quick', //请求的url地址
-                        dataType:"json", //返回格式为json
-                        async:true,//请求是否异步，默认为异步，这也是ajax重要特性
-                        type:"POST", //请求方式
-                        data: {
-                            id:id,
-                            __field:obj.othis.siblings().data('name'),
-                            __value:state,
-                        }, //请求方式
-                        success:function(req){
-                            //请求成功时处理
-                            if ( 0 == req.code || 200 == req.code)
-                            {
-                                req.message && layer.msg(req.message);
-                            }
-                            else{
-                                layer.msg(req.message);
-                            }
-                        },
-                        complete:function(){
-                            //请求完成的处理
-                        },
-                        error:function(err){
-                            //请求出错处理
-                            console.log(err)
-                            layer.alert(err.responseJSON.message || '未知错误', {
-                                icon: 5,
-                                skin: 'layer-ext-demo' //见：扩展说明
-                            })
-                        }
-                    });
-
-                });
-
-                // TODO:携带带搜索条件
-                table.on('sort({$namespace}-table)', function(obj){ //注：sort 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
-                    console.log(obj.field); //当前排序的字段名
-                    console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
-                    console.log(this); //当前排序的 th 对象
-                    //尽管我们的 table 自带排序功能，但并没有请求服务端。
-                    //有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
-                    table.reload('{$namespace}-table', {
-                        initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。
-                        // ,url: '/api/table/search'
-                        ,where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
-                            order_field: obj.field //排序字段
-                            ,order: obj.type //排序方式
-                        }
-                    });
-                    // layer.msg('服务端排序。order by '+ obj.field + ' ' + obj.type);
-                });
-
-                {neq name='auto_refresh' value='0'}
-                setInterval(function (){
-
-                    //    if($(""))
-                    if($("#{$namespace}-table").length){
-
-                        table.reload('{$namespace}-table',{page: {
-                                curr: 1 //重新从第 1 页开始
-                            }});
-                    }
-                }, {$auto_refresh})
-
-                {/neq}
-                    function eventAjax(url,data,obj)
+                    var row = $("[lay-id='{$namespace}-table']").find(".layui-table-body [data-index='" + index + "']");
+                    if (row.length)
                     {
-                        $.ajax({
-                            url:url, //请求的url地址
-                            dataType:"json", //返回格式为json
-                            async:true,//请求是否异步，默认为异步，这也是ajax重要特性
-                            type:"POST", //请求方式
-                            data:data, //请求方式
-                            success:function(req){
-                                //请求成功时处理
-                                if ( 0 == req.code || 200 == req.code)
-                                {
-                                    if (req.reload)
-                                    {
-                                        table.reload('{$namespace}-table');
-                                    }
-                                    layer.msg(req.message);
-                                }else if(-1 == req.code){
-                                    $(obj).html(req.message);
-                                    eventAjax(url,req,obj)
-                                }
-                                else{
-                                    layer.msg(req.message);
-                                }
-                            },
-                            complete:function(){
-                                //请求完成的处理
-                            },
-                            error:function(err){
-                                //请求出错处理
-                                console.log(err)
-                                layer.alert(err.responseJSON.message || '未知错误', {
-                                    icon: 5,
-                                    skin: 'layer-ext-demo' //见：扩展说明
-                                })
-                            }
-                        });
+                        if (d._row_class)
+                        {
+                            row.addClass(d._row_class);
+                        }
+                        if (d._row_style)
+                        {
+                            row.css( d._row_style );
+                        }
                     }
-                    //头工具栏事件
-                    table.on('toolbar({$namespace}-table)', function(obj){
-                        var checkStatus = table.checkStatus(obj.config.id);
-                        console.log(obj.event)
-                        switch(obj.event){
-                            case 'getCheckData':
-                                var data = checkStatus.data;
-                                if (data.length == 0)
+                    layui.each(d,function(index_d,d_d){
+                        if(null != d_d )
+                        {
+                            if ($('#layer-photos-'+index_d+'-'+d.id).length)
+                            {
+                                layer.photos({
+                                    photos: '#layer-photos-'+index_d+'-'+d.id
+                                    ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+                                });
+                            }
+                        }
+                    })
+                })
+                // $(".layui-table-main tr").each(function (index, val) {
+                //     $(".layui-table-fixed").each(function () {
+                //         $($(this).find(".layui-table-body tbody tr")[index]).height($(val).height());
+                //     });
+                // });
+                $(".layui-table-header tr").each(function (index, val) {
+                    $(".layui-table-fixed").each(function () {
+                        $($(this).find(".layui-table-header thead tr")[index]).height($(val).height());
+                    });
+                });
+                soulTable.render(this)
+            }
+
+        }
+    });
+        element.on('tab(tab-f-sub-{$namespace}-table)', function(elem){
+
+            console.log(elem)
+            console.log(excel_{$namespace}_table)
+            $("#{$namespace}-table-tab-f").val(tab_values[elem.index]['id']);
+            $("#sub-{$namespace}-table-reload-btn").click();
+            /*  table.reload('{$namespace}-table', {
+                  // ,url: '/api/table/search'
+                  where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                      status: 1 //排序字段
+                  }
+              });*/
+            //location.hash = 'test='+ $(this).attr('lay-id');
+        });
+        //监听排序事件
+
+        {notempty name='tag_tree.data'}
+        var tree = layui.tree;
+        // var data = [{title:'江西',id:1,children:[{title:'南昌',id:1000,children:[{title:'青山湖区',id:10001},{title:'高新区',id:10002}]},{title:'九江',id:1001},{title:'赣州',id:1002}]},{title:'广西',id:2,children:[{title:'南宁',id:2000},{title:'桂林',id:2001}]},{title:'陕西',id:3,children:[{title:'西安',id:3000},{title:'延安',id:3001}]},{title:'山西',id:3,children:[{title:'太原',id:4000},{title:'长治',id:4001}]}];
+        // 渲染
+        tree.render({
+            elem: '#ID-tree-{$namespace}-showLine',
+            data: {$tag_tree.data|json_encode|raw},
+            showCheckbox : true,
+            id: 'ID-{$namespace}-data',
+            showLine: false,  // 是否开启连接线
+            oncheck: function(obj){
+                console.log(obj.data); // 得到当前点击的节点数据
+                console.log(obj.checked); // 节点是否被选中
+                console.log(obj.elem); // 得到当前节点元素
+                console.log(obj); // 得到当前节点元素
+                var checkedData = tree.getChecked('ID-{$namespace}-data'); // 获取选中节点的数据
+                console.log(checkedData)
+                console.log(excel_{$namespace}_table)
+
+                let ids = new Array();
+
+                checkedData.forEach(function(element) {
+                    ids.push(element.id)
+                });
+
+
+                console.log(ids)
+
+                $("#{$namespace}-table-tag_tree").val(ids.join(','));
+                $("#sub-{$namespace}-table-reload-btn").click();
+
+                // table.reload('{$namespace}-table', {
+                //     // initSort: obj, //记录初始排序，如果不设的话，将无法标记表头的排序状态。
+                //     // ,url: '/api/table/search'
+                //     where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                //         // order_field: obj.field //排序字段
+                //         // ,order: obj.type //排序方式
+                //     }
+                // });
+            },
+            click: function(obj){
+                console.log(obj.data); // 得到当前点击的节点数据
+                console.log(obj.state); // 得到当前节点的展开状态：open、close、normal
+                console.log(obj.elem); // 得到当前节点元素
+                console.log(obj.data.children); // 当前节点下是否有子节点
+                // table.reload('{$namespace}-table', {
+                //     // initSort: obj, //记录初始排序，如果不设的话，将无法标记表头的排序状态。
+                //     // ,url: '/api/table/search'
+                //     where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                //         // order_field: obj.field //排序字段
+                //         // ,order: obj.type //排序方式
+                //     }
+                // });
+
+            },
+        });
+        {/notempty}
+
+            table.on('edit({$namespace}-table)', function(obj){
+                var field = obj.field; // 得到修改的字段
+                var value = obj.value // 得到修改后的值
+                // var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
+                var data = obj.data // 得到所在行所有键值
+                // var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
+                console.log(obj); // 查看对象所有成员
+
+                $.ajax({
+                    url:'{$searchPostUrl|raw}&__method=quick', //请求的url地址
+                    dataType:"json", //返回格式为json
+                    async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                    type:"POST", //请求方式
+                    data: {
+                        id:data.id,
+                        __field:obj.field,
+                        __value:obj.value,
+                    }, //请求方式
+                    success:function(req){
+                        //请求成功时处理
+                        if ( 0 == req.code || 200 == req.code)
+                        {
+                            req.message && layer.msg(req.message);
+                        }
+                        else{
+                            layer.msg(req.message);
+                        }
+                    },
+                    complete:function(){
+                        //请求完成的处理
+                    },
+                    error:function(err){
+                        //请求出错处理
+                        console.log(err)
+                        layer.alert(err.responseJSON.message || '未知错误', {
+                            icon: 5,
+                            skin: 'layer-ext-demo' //见：扩展说明
+                        })
+                    }
+                });
+
+                // 值的校验
+                // if(value.replace(/\s/g, '') === ''){
+                //     layer.tips('值不能为空', this, {tips: 1});
+                //     return obj.reedit(); // 重新编辑 -- v2.8.0 新增
+                // }
+                // 编辑后续操作，如提交更新请求，以完成真实的数据更新
+                // …
+
+                // 更新当前缓存数据
+                // var update = {};
+                // update[field] = value;
+                // obj.update(update, true); // 参数 true 为 v2.7 新增功能，即同步更新其他包含自定义模板并可能存在关联的列视图
+            });
+
+            form.on('switch(demo-templet-status)', function(obj){
+                var state = obj.elem.checked?1:0;
+                //方法一取数据（根据相对位置取）
+                var id = obj.othis.parents('tr').find("td :first").text();
+                //方法二取数据 （根据索引table.cache里面的行数据）
+                var index  = obj.othis.parents('tr').attr("data-index");
+                var field = obj.field; // 得到修改的字段
+                var value = obj.value // 得到修改后的值
+                // var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
+                var data = obj.data // 得到所在行所有键值
+                // var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
+                // console.log(obj); // 查看对象所有成员
+                // console.log(field); // 查看对象所有成员
+                // console.log(id); // 查看对象所有成员
+                // console.log(obj.othis.siblings().data('name')); // 查看对象所有成员
+                // // console.log(obj.othis.parent('div').find("input :first").data('name')); // 查看对象所有成员
+                // console.log(obj.othis.parents('tr').find("td :first")); // 查看对象所有成员
+
+
+                $.ajax({
+                    url:'{$searchPostUrl|raw}&__method=quick', //请求的url地址
+                    dataType:"json", //返回格式为json
+                    async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                    type:"POST", //请求方式
+                    data: {
+                        id:id,
+                        __field:obj.othis.siblings().data('name'),
+                        __value:state,
+                    }, //请求方式
+                    success:function(req){
+                        //请求成功时处理
+                        if ( 0 == req.code || 200 == req.code)
+                        {
+                            req.message && layer.msg(req.message);
+                        }
+                        else{
+                            layer.msg(req.message);
+                        }
+                    },
+                    complete:function(){
+                        //请求完成的处理
+                    },
+                    error:function(err){
+                        //请求出错处理
+                        console.log(err)
+                        layer.alert(err.responseJSON.message || '未知错误', {
+                            icon: 5,
+                            skin: 'layer-ext-demo' //见：扩展说明
+                        })
+                    }
+                });
+
+            });
+
+            // TODO:携带带搜索条件
+            table.on('sort({$namespace}-table)', function(obj){ //注：sort 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+                console.log(obj.field); //当前排序的字段名
+                console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
+                console.log(this); //当前排序的 th 对象
+                //尽管我们的 table 自带排序功能，但并没有请求服务端。
+                //有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
+                table.reload('{$namespace}-table', {
+                    initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。
+                    // ,url: '/api/table/search'
+                    ,where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+                        order_field: obj.field //排序字段
+                        ,order: obj.type //排序方式
+                    }
+                });
+                // layer.msg('服务端排序。order by '+ obj.field + ' ' + obj.type);
+            });
+
+            {neq name='auto_refresh' value='0'}
+            setInterval(function (){
+
+                //    if($(""))
+                if($("#{$namespace}-table").length){
+
+                    table.reload('{$namespace}-table',{page: {
+                            curr: 1 //重新从第 1 页开始
+                        }});
+                }
+            }, {$auto_refresh})
+
+            {/neq}
+                function eventAjax(url,data,obj)
+                {
+                    $.ajax({
+                        url:url, //请求的url地址
+                        dataType:"json", //返回格式为json
+                        async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                        type:"POST", //请求方式
+                        data:data, //请求方式
+                        success:function(req){
+                            //请求成功时处理
+                            if ( 0 == req.code || 200 == req.code)
+                            {
+                                if (req.reload)
                                 {
-                                    layer.msg('没有选择');
-                                }else{
-                                    layer.alert(JSON.stringify(data));
+                                    table.reload('{$namespace}-table');
                                 }
-                                break;
-                            case 'ajax':
-                                var url = $(this).data('url');
-                                url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
-                                var ids = new Array();
-                                var data = checkStatus.data;
-                                for (let i = 0; i < data.length; i++) {
-                                    ids.push(data[i]['id']);
-                                }
-                                if (data.length)
-                                {
-                                    url = url+'&id='+ids.join(',');
-                                }
-                                eventAjax(url,data,this);
-                                break;
-                            case 'popup':
-                                var url = $(this).data('url');
-                                var id = $(this).data('id');
+                                layer.msg(req.message);
+                            }else if(-1 == req.code){
+                                $(obj).html(req.message);
+                                eventAjax(url,req,obj)
+                            }
+                            else{
+                                layer.msg(req.message);
+                            }
+                        },
+                        complete:function(){
+                            //请求完成的处理
+                        },
+                        error:function(err){
+                            //请求出错处理
+                            console.log(err)
+                            layer.alert(err.responseJSON.message || '未知错误', {
+                                icon: 5,
+                                skin: 'layer-ext-demo' //见：扩展说明
+                            })
+                        }
+                    });
+                }
+                //头工具栏事件
+                table.on('toolbar({$namespace}-table)', function(obj){
+                    var checkStatus = table.checkStatus(obj.config.id);
+                    console.log(obj.event)
+                    switch(obj.event){
+                        case 'getCheckData':
+                            var data = checkStatus.data;
+                            if (data.length == 0)
+                            {
+                                layer.msg('没有选择');
+                            }else{
+                                layer.alert(JSON.stringify(data));
+                            }
+                            break;
+                        case 'ajax':
+                            var url = $(this).data('url');
+                            url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
+                            var ids = new Array();
+                            var data = checkStatus.data;
+                            for (let i = 0; i < data.length; i++) {
+                                ids.push(data[i]['id']);
+                            }
+                            if (data.length)
+                            {
+                                url = url+'&id='+ids.join(',');
+                            }
+                            eventAjax(url,data,this);
+                            break;
+                        case 'popup':
+                            var url = $(this).data('url');
+                            var id = $(this).data('id');
 
-                                console.log(id);
-                                console.log(url);
-                                url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
-                                var ids = new Array();
-                                var data = checkStatus.data;
+                            console.log(id);
+                            console.log(url);
+                            url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
+                            var ids = new Array();
+                            var data = checkStatus.data;
 
-                                for (let i = 0; i < data.length; i++) {
-                                    ids.push(data[i]['id']);
-                                }
-                                if (data.length)
-                                {
-                                    url = url+'&'+id+'='+ids.join(',');
-                                }
-                                popupFuc(url,obj,this)
-                                break;
-                            case 'isAll':
-                                layer.msg(checkStatus.isAll ? '全选': '未全选');
-                                break;
-                            //自定义头工具栏右侧图标 - 提示
-                            case 'LAYTABLE_EXCEL':
-                                var that = this;
-                                var table_param = {$excel|raw|json_encode};
+                            for (let i = 0; i < data.length; i++) {
+                                ids.push(data[i]['id']);
+                            }
+                            if (data.length)
+                            {
+                                url = url+'&'+id+'='+ids.join(',');
+                            }
+                            popupFuc(url,obj,this)
+                            break;
+                        case 'isAll':
+                            layer.msg(checkStatus.isAll ? '全选': '未全选');
+                            break;
+                        //自定义头工具栏右侧图标 - 提示
+                        case 'LAYTABLE_EXCEL':
+                            var that = this;
+                            var table_param = {$excel|raw|json_encode};
 
-                        // window.open('http://shop.co/ucenter/admin.User/outxls')
+                    // window.open('http://shop.co/ucenter/admin.User/outxls')
 
-                        //  window.location.href = 'http://shop.co/ucenter/admin.User/outxls'
-                        $(that).after('<ul class="layui-table-tool-panel"><li class="excel-select">导出选中</li><li class="excel-all">导出所有</li></ul>');
-                        $('.layui-table-tool-panel .excel-all').click(function(){
-                            // table_param['filename'] =  table_param['filename']+'.xlsx';
-                            console.log(table_param)
+                    //  window.location.href = 'http://shop.co/ucenter/admin.User/outxls'
+                    $(that).after('<ul class="layui-table-tool-panel"><li class="excel-select">导出选中</li><li class="excel-all">导出所有</li></ul>');
+                    $('.layui-table-tool-panel .excel-all').click(function(){
+                        // table_param['filename'] =  table_param['filename']+'.xlsx';
+                        console.log(table_param)
+                        console.log(excel_{$namespace}_table);
+                        table_param.url = '{$searchPostUrl|raw}&__method=quick';
+                        console.log(table_param)
+                        if(table_param.is_custom)
+                        {
+                            //window.location.href = table_param.url;
+                        }else{
+                            soulTable.export(excel_{$namespace}_table, table_param);
+                        }
+                    });
+                    $('.layui-table-tool-panel .excel-select').click(function(){
+                        if (table.checkStatus('{$namespace}-table').data.length > 0) {
+                            table_param['checked'] = true;
+                            // table_param['filename'] =  table_param['filename']+'_选中.xlsx';
+                            var url = $(this).data('url');
+                            console.log(url);
                             console.log(excel_{$namespace}_table);
-                            table_param.url = '{$searchPostUrl|raw}&__method=quick';
-                            console.log(table_param)
                             if(table_param.is_custom)
                             {
-                                //window.location.href = table_param.url;
+                                // window.location.href = table_param.url;
                             }else{
                                 soulTable.export(excel_{$namespace}_table, table_param);
                             }
-                        });
-                        $('.layui-table-tool-panel .excel-select').click(function(){
-                            if (table.checkStatus('{$namespace}-table').data.length > 0) {
-                                table_param['checked'] = true;
-                                // table_param['filename'] =  table_param['filename']+'_选中.xlsx';
-                                var url = $(this).data('url');
-                                console.log(url);
-                                console.log(excel_{$namespace}_table);
-                                if(table_param.is_custom)
-                                {
-                                    // window.location.href = table_param.url;
-                                }else{
-                                    soulTable.export(excel_{$namespace}_table, table_param);
-                                }
-                            } else {
-                                layer.msg('勾选数据不能为空！');
-                            }
-                        });
-                        break;
-                    case 'LAYTABLE_TIPS':
-                        layer.alert('这是工具栏右侧自定义的一个图标按钮');
-                    case 'import':
-                        var a = document.createElement('button');
-                        var url = $(this).data('url');
-                        var id = $(this).data('id');
-                        url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
-                        var ids = new Array();
-                        var data = checkStatus.data;
-
-                        for (let i = 0; i < data.length; i++) {
-                            ids.push(data[i]['id']);
+                        } else {
+                            layer.msg('勾选数据不能为空！');
                         }
-                        if (data.length)
-                        {
-                            url = url+'&'+id+'='+ids.join(',');
-                        }
-                        upload.render({
-                            elem: a
-                            ,accept: 'file' //普通文件
-                            ,exts: 'csv|xls|xlsx' //只允许上传压缩文件'csv', 'xls','xlsx'
-                            //   ,size: 60 //限制文件大小，单位 KB
-                            , auto: true
-                            , url: "<?php echo url('/file/Attachment/upload'); ?>"
-                            , size: 1024 * 5 //限制文件大小，单位 KB
-                            ,done: function(res){
-                                $.ajax({
-                                    url:url, //请求的url地址
-                                    dataType:"json", //返回格式为json
-                                    async:true,//请求是否异步，默认为异步，这也是ajax重要特性
-                                    type:"POST", //请求方式
-                                    data: {
-                                        file_id:res.data.id
-                                    },
-                                    success:function(req){
-                                        //请求成功时处理
-                                        if ( 0 == req.code)
-                                        {
-                                            layer.msg(req.message);
-                                            layui.table.reload('{$namespace}-table'); //重载表格
-                                            layer.close(index); //执行关闭
-                                        }else{
-                                            layer.msg(req.message);
-                                        }
-                                    },
-                                    complete:function(){
-                                        //请求完成的处理
-                                    },
-                                    error:function(err){
-                                        //请求出错处理
-                                        layer.msg(JSON.stringify(err));
-                                        layer.alert(err.responseJSON.message || '未知错误', {
-                                            icon: 5,
-                                            skin: 'layer-ext-demo' //见：扩展说明
-                                        })
-                                    }
-                                });
-
-                            }
-                        });
-                        a.click();
-                        break;
-                    };
                     });
+                    break;
+                case 'LAYTABLE_TIPS':
+                    layer.alert('这是工具栏右侧自定义的一个图标按钮');
+                case 'import':
+                    var a = document.createElement('button');
+                    var url = $(this).data('url');
+                    var id = $(this).data('id');
+                    url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
+                    var ids = new Array();
+                    var data = checkStatus.data;
 
-                    //监听工具条
-                    function popupFuc(url,obj,btn)
-                    {
-                        // element.tabAdd('demo', {
-                        //     title: '新选项'+ (Math.random()*1000|0) //用于演示
-                        //     ,content: '内容'+ (Math.random()*1000|0)
-                        //     ,id: new Date().getTime() //实际使用一般是规定好的id，这里以时间戳模拟下
-                        // })
-                        console.log(url)
-                        // view(this.id).render('im/admin/Document/index?__selected_type=radio&selected_id='+$("#find_dialog_id_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(), obj).done(function(){
-                        // view(this.id).render('pos.admin.Pos/transfer?type=1&id=1996', obj).done(function(){
-                        //     form.render(null, 'layuiadmin-app-forum-reply');
-                        //
-                        //     //监听提交
-                        //     form.on('submit(layuiadmin-app-forumreply-submit)', function(obj){
-                        //         var field = data.field; //获取提交的字段
-                        //         var value = JSON.parse(field.data);
-                        //         console.log(value)
-                        //         $("#find_dialog_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(value["title"])
-                        //         $("#find_dialog_id_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(value['id'])
-                        //         //提交 Ajax 成功后，关闭当前弹层并重载表格
-                        //         //$.ajax({});
-                        //         // layui.table.reload('LAY-app-forumreply-list'); //重载表格
-                        //         layer.close(index); //执行关闭
-                        //     });
-                        // });
-                        admin.popup({
-                            title: $(btn).data('title')
-                            ,area: [$(btn).data('width'), $(btn).data('height')]
-                            ,id: 'LAY-popup-workorder-add'
-                            ,success: function(layero, index){
-                                view(this.id).render(url).done(function(){
-                                    form.render(null, 'layuiadmin-form-workorder');
-                                    //监听提交
-                                    form.on('submit({$namespace})', function(data){
-                                        console.log(121);
-                                        var field = data.field; //获取提交的字段
-                                        //提交 Ajax 成功后，关闭当前弹层并重载表格
-                                        $.ajax({
-                                            url:url, //请求的url地址
-                                            dataType:"json", //返回格式为json
-                                            async:true,//请求是否异步，默认为异步，这也是ajax重要特性
-                                            type:"POST", //请求方式
-                                            data:field,
-                                            success:function(req){
-                                                //请求成功时处理
-                                                if ( 0 == req.code)
-                                                {
-                                                    layer.msg(req.message);
-                                                    layui.table.reload('{$namespace}-table'); //重载表格
-                                                    layer.close(index); //执行关闭
-                                                }else{
-                                                    layer.msg(req.message);
-                                                }
-                                            },
-                                            complete:function(){
-                                                //请求完成的处理
-                                            },
-                                            error:function(err){
-                                                //请求出错处理
-                                                layer.msg(JSON.stringify(err));
-                                                layer.alert(err.responseJSON.message || '未知错误', {
-                                                    icon: 5,
-                                                    skin: 'layer-ext-demo' //见：扩展说明
-                                                })
-                                            }
-                                        });
-
-                                        //$.ajax({});
-                                    });
-                                });
-                            }
-                        });
+                    for (let i = 0; i < data.length; i++) {
+                        ids.push(data[i]['id']);
                     }
-                    //监听行工具事件
-                    table.on('tool({$namespace}-table)', function(obj){
-                        var data = obj.data;
-                        if(obj.event === 'del'){
-                            layer.confirm('真的删除行么', function(index){
-                                obj.del();
-                                layer.close(index);
-                            });
-                        } else if(obj.event === 'edit'){
-                            element.tabAdd('layadmin-layout-tabs', {
-                                title: '新选项'+ (Math.random()*1000|0) //用于演示
-                                ,content: '内容'+ (Math.random()*1000|0)
-                                ,id: new Date().getTime() //实际使用一般是规定好的id，这里以时间戳模拟下
-                            })
-                            return;
-                        }else if(obj.event === 'dialog'){
-
-                            var url = $(this).data('url');
-                            url = url.replace('{namespace_filter}','{$namespace}');
-                            for(var key in obj.data){
-                                url = url.replace('{$'+key+'}',obj.data[key]);
-                            }
-
-
-                            admin.popup({
-                                title: $(this).data('title')
-                                ,area: [$(this).data('width')+'px', $(this).data('height')+'px']
-                                ,id: 'LAY-popup-{$namespace}-add'
-                                ,success: function(layero, index){
-
-                                    url = url+'&_dialog_index='+index;
-                                    view(this.id).render(url).done(function(){
-                                        form.render(null, 'layuiadmin-form-{$namespace}');
-                                        console.log(index);
-                                        //监听提交
-
-                                    });
+                    if (data.length)
+                    {
+                        url = url+'&'+id+'='+ids.join(',');
+                    }
+                    upload.render({
+                        elem: a
+                        ,accept: 'file' //普通文件
+                        ,exts: 'csv|xls|xlsx' //只允许上传压缩文件'csv', 'xls','xlsx'
+                        //   ,size: 60 //限制文件大小，单位 KB
+                        , auto: true
+                        , url: "<?php echo url('/file/Attachment/upload'); ?>"
+                        , size: 1024 * 5 //限制文件大小，单位 KB
+                        ,done: function(res){
+                            $.ajax({
+                                url:url, //请求的url地址
+                                dataType:"json", //返回格式为json
+                                async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                                type:"POST", //请求方式
+                                data: {
+                                    file_id:res.data.id
+                                },
+                                success:function(req){
+                                    //请求成功时处理
+                                    if ( 0 == req.code)
+                                    {
+                                        layer.msg(req.message);
+                                        layui.table.reload('{$namespace}-table'); //重载表格
+                                        layer.close(index); //执行关闭
+                                    }else{
+                                        layer.msg(req.message);
+                                    }
+                                },
+                                complete:function(){
+                                    //请求完成的处理
+                                },
+                                error:function(err){
+                                    //请求出错处理
+                                    layer.msg(JSON.stringify(err));
+                                    layer.alert(err.responseJSON.message || '未知错误', {
+                                        icon: 5,
+                                        skin: 'layer-ext-demo' //见：扩展说明
+                                    })
                                 }
-                            });
-
-                        } else if(obj.event === 'view'){
-                            var url = $(this).data('url');
-                            url = url.replace('{namespace_filter}','{$namespace}');
-                            for(var key in obj.data){
-                                url = url.replace('{$'+key+'}',obj.data[key]);
-                            }
-                            console.log(url);
-                            layer.open({
-                                type: 2,
-                                title: $(this).data('title')
-                                ,area: [$(this).data('width')+'px', $(this).data('height')+'px']
-                                ,id: 'LAY-popup-{$namespace}-add',
-                                content:  url
-                            });
-
-                        } else if(obj.event === 'ajax'){
-
-                            var url = $(this).data('url');
-                            url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
-                            for(var key in obj.data){
-                                url = url.replace('{$'+key+'}',obj.data[key]);
-                            }
-                            var obj = this;
-                            layer.confirm($(this).data('message'), {
-                                btn: ['确认','取消'] //按钮
-                            }, function(){
-                                eventAjax(url,{},obj);
-                            }, function(){
-
                             });
 
                         }
                     });
+                    a.click();
+                    break;
+                };
+                });
 
-                    //监听提交
-                    form.on('submit({$namespace}-table-reload-btn)', function(data) {
-                        table.reload('{$namespace}-table', {
-                            page: {
-                                curr: 1 //重新从第 1 页开始
-                            }
-                            , where: {
-                                field: data.field
+                //监听工具条
+                function popupFuc(url,obj,btn)
+                {
+                    // element.tabAdd('demo', {
+                    //     title: '新选项'+ (Math.random()*1000|0) //用于演示
+                    //     ,content: '内容'+ (Math.random()*1000|0)
+                    //     ,id: new Date().getTime() //实际使用一般是规定好的id，这里以时间戳模拟下
+                    // })
+                    console.log(url)
+                    // view(this.id).render('im/admin/Document/index?__selected_type=radio&selected_id='+$("#find_dialog_id_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(), obj).done(function(){
+                    // view(this.id).render('pos.admin.Pos/transfer?type=1&id=1996', obj).done(function(){
+                    //     form.render(null, 'layuiadmin-app-forum-reply');
+                    //
+                    //     //监听提交
+                    //     form.on('submit(layuiadmin-app-forumreply-submit)', function(obj){
+                    //         var field = data.field; //获取提交的字段
+                    //         var value = JSON.parse(field.data);
+                    //         console.log(value)
+                    //         $("#find_dialog_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(value["title"])
+                    //         $("#find_dialog_id_trigger_2d1e2cc94426c5f6340ee2c7a912b51c_e7fafc10e73085f37649681db8cd2af7").val(value['id'])
+                    //         //提交 Ajax 成功后，关闭当前弹层并重载表格
+                    //         //$.ajax({});
+                    //         // layui.table.reload('LAY-app-forumreply-list'); //重载表格
+                    //         layer.close(index); //执行关闭
+                    //     });
+                    // });
+                    admin.popup({
+                        title: $(btn).data('title')
+                        ,area: [$(btn).data('width'), $(btn).data('height')]
+                        ,id: 'LAY-popup-workorder-add'
+                        ,success: function(layero, index){
+                            view(this.id).render(url).done(function(){
+                                form.render(null, 'layuiadmin-form-workorder');
+                                //监听提交
+                                form.on('submit({$namespace})', function(data){
+                                    console.log(121);
+                                    var field = data.field; //获取提交的字段
+                                    //提交 Ajax 成功后，关闭当前弹层并重载表格
+                                    $.ajax({
+                                        url:url, //请求的url地址
+                                        dataType:"json", //返回格式为json
+                                        async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+                                        type:"POST", //请求方式
+                                        data:field,
+                                        success:function(req){
+                                            //请求成功时处理
+                                            if ( 0 == req.code)
+                                            {
+                                                layer.msg(req.message);
+                                                layui.table.reload('{$namespace}-table'); //重载表格
+                                                layer.close(index); //执行关闭
+                                            }else{
+                                                layer.msg(req.message);
+                                            }
+                                        },
+                                        complete:function(){
+                                            //请求完成的处理
+                                        },
+                                        error:function(err){
+                                            //请求出错处理
+                                            layer.msg(JSON.stringify(err));
+                                            layer.alert(err.responseJSON.message || '未知错误', {
+                                                icon: 5,
+                                                skin: 'layer-ext-demo' //见：扩展说明
+                                            })
+                                        }
+                                    });
+
+                                    //$.ajax({});
+                                });
+                            });
+                        }
+                    });
+                }
+                //监听行工具事件
+                table.on('tool({$namespace}-table)', function(obj){
+                    var data = obj.data;
+                    if(obj.event === 'del'){
+                        layer.confirm('真的删除行么', function(index){
+                            obj.del();
+                            layer.close(index);
+                        });
+                    } else if(obj.event === 'edit'){
+                        element.tabAdd('layadmin-layout-tabs', {
+                            title: '新选项'+ (Math.random()*1000|0) //用于演示
+                            ,content: '内容'+ (Math.random()*1000|0)
+                            ,id: new Date().getTime() //实际使用一般是规定好的id，这里以时间戳模拟下
+                        })
+                        return;
+                    }else if(obj.event === 'dialog'){
+
+                        var url = $(this).data('url');
+                        url = url.replace('{namespace_filter}','{$namespace}');
+                        for(var key in obj.data){
+                            url = url.replace('{$'+key+'}',obj.data[key]);
+                        }
+
+
+                        admin.popup({
+                            title: $(this).data('title')
+                            ,area: [$(this).data('width')+'px', $(this).data('height')+'px']
+                            ,id: 'LAY-popup-{$namespace}-add'
+                            ,success: function(layero, index){
+
+                                url = url+'&_dialog_index='+index;
+                                view(this.id).render(url).done(function(){
+                                    form.render(null, 'layuiadmin-form-{$namespace}');
+                                    console.log(index);
+                                    //监听提交
+
+                                });
                             }
                         });
-                        return false;
-                    });
 
-                }
-            )
-                ;
-    </script>
+                    } else if(obj.event === 'view'){
+                        var url = $(this).data('url');
+                        url = url.replace('{namespace_filter}','{$namespace}');
+                        for(var key in obj.data){
+                            url = url.replace('{$'+key+'}',obj.data[key]);
+                        }
+                        console.log(url);
+                        layer.open({
+                            type: 2,
+                            title: $(this).data('title')
+                            ,area: [$(this).data('width')+'px', $(this).data('height')+'px']
+                            ,id: 'LAY-popup-{$namespace}-add',
+                            content:  url
+                        });
+
+                    } else if(obj.event === 'ajax'){
+
+                        var url = $(this).data('url');
+                        url = url.replace('{literal}{$auto_builder}{/literal}','{$namespace}');
+                        for(var key in obj.data){
+                            url = url.replace('{$'+key+'}',obj.data[key]);
+                        }
+                        var obj = this;
+                        layer.confirm($(this).data('message'), {
+                            btn: ['确认','取消'] //按钮
+                        }, function(){
+                            eventAjax(url,{},obj);
+                        }, function(){
+
+                        });
+
+                    }
+                });
+
+                //监听提交
+                form.on('submit({$namespace}-table-reload-btn)', function(data){
+                    table.reload('{$namespace}-table', {
+                        page: {
+                            curr: 1 //重新从第 1 页开始
+                        }
+                        ,where: {
+                            field: data.field
+                        }
+                    });
+                    return false;
+                });
+
+            });
+</script>

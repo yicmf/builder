@@ -123,9 +123,10 @@ class Table extends Builder
             $this->_callback_field = trim($this->request->param('field'));
         }
         // 复选框
-        $this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
-            . '_' . $this->request->action() . '_'
-            . md5(json_encode($this->request->except(['v', 'user'])));
+//        $this->_namespace = $this->module . '_' . str_replace('.', '_', $this->request->controller())
+//            . '_' . $this->request->action() . '_'
+//            . md5(json_encode($this->request->except(['v', 'user'])));
+        $this->_namespace = uniqid();
         $this->_user = false;
         //                .implode('_',$this->request->except('v'));
     }
@@ -489,7 +490,7 @@ class Table extends Builder
     public function setSearchPostUrl($url, $param = [])
     {
         $get = $this->request->get();
-        $param = empty($param) ? $get : array_merge($param, $get);
+        $param = empty($param) ? $get : $param;
         $this->_searchPostUrl = url($url, $param);
         return $this;
     }
@@ -1165,6 +1166,7 @@ EOF;
                 $foreignKey = '';
             }
             $with = explode('.', $field);
+
             if (!isset($this->_with[$with[0]])) {
                 $this->_with[$with[0]] = [$with[1]];
             } else {
@@ -1809,7 +1811,7 @@ EOF;
      * @param string|null $style
      * @return $this
      */
-    public function keyUser($field, $title, $url = '/ucenter/admin/User/update', $width = 150, $style = '')
+    public function keyUser($field, $title, $url = '/ucenter/admin/User/view', $width = 150, $style = '')
     {
         if (strpos($field, '|')) {
             $temp = explode('|', $field);
@@ -1820,7 +1822,12 @@ EOF;
             unset($temp[count($temp) - 1]);
             $with_field = implode('_', $temp);
         }
-        $this->_with[$with_field] = ['id', 'avatar', 'nickname'];
+        if (isset($this->_with[$with_field]))
+        {
+            $this->_with[$with_field] = array_merge($this->_with[$with_field], ['id', 'avatar', 'nickname']);
+        }else{
+            $this->_with[$with_field] = ['id', 'avatar', 'nickname'];
+        }
         $templet_name = 'k'.uniqid();
         $common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
         $url = url($url) . '?id={{d.' . $with_field . '.id}}';
@@ -2507,7 +2514,7 @@ EOF;
                     $this->assign('templets', $this->_templets);
                     $this->assign('do_action', $this->_do_action);
                     $this->assign('toolbar', $this->_toolbar);
-                    $this->assign('namespace', $this->_namespace);
+                    $this->assign('namespace', $this->_namespace?:'');
                     $this->assign('suggest', $this->_suggest);
                     $this->assign('statistics', $this->_statistics);
                     $this->assign('warning', $this->_warning);
@@ -2676,7 +2683,7 @@ EOF;
                 $this->assign('p_menu_title', $menu['title']);
             }
         }
-        $this->assign('menu_title', $this->_title);
+        $this->assign('menu_title', $this->_title?:'');
     }
 
     protected function _formatAjaxData()
@@ -2816,7 +2823,7 @@ EOF;
                     } elseif ('search_user' == $search['condition']) {
                         $ids = Db::name('user')
                             ->where('status', '>', -2)
-                            ->where('id|account|email|nickname', 'like', '%' . $fields[$search['field']] . '%')
+                            ->where('id|username|email|nickname', 'like', '%' . $fields[$search['field']] . '%')
                             ->column('id');
                         $where[] = [$search['field'], 'in', $ids];
                     } elseif ('in' == $search['condition']) {
@@ -2847,7 +2854,9 @@ EOF;
             }
         }
         //
-        $filterSos = json_decode(htmlspecialchars_decode($this->request->param('filterSos/s')), true);
+
+        $filterSos = $this->request->param('filterSos/s')?json_decode(htmlspecialchars_decode($this->request->param('filterSos/s')), true):[];
+
 
         //筛选数据支持
         if (is_array($filterSos)) {
