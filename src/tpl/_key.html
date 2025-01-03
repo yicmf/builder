@@ -1410,17 +1410,51 @@ $checked = $field['value']==$key ? 'checked' : '';
     $images = $field['value'];
     }
 
+    $arr = [];
+    foreach ($images as $index=>$item) {
+    $arr[] = [
+    'id'=>$index,
+    'src'=>$item,
+    ];
+    };
     {/php}
     <div class="layui-upload-list">
         <div class="layui-upload-list" id="upload-MultipleImage-list-{$field.field}">
             {volist name='images' id='vo'}
-            <img class="layui-upload-img"  src="{$vo['url']}">
+            <img class="layui-upload-img"  src="{$vo}">
             {/volist}
         </div>
+        <script>
+            layui.use(function(){
+                var layer = layui.layer;
+                var util = layui.util;
+                var $ = layui.$;
+                var arr = {$arr|json_encode|raw};
+                $("#upload-MultipleImage-list-{$field.field}").click(function ()
+                {
 
+                    layer.photos({
+                        photos: { // 图片层的数据源
+                            "title": "", // 相册标题
+                            "id": 123, // 相册 id
+                            "start": 0, // 初始显示的图片序号，默认 0
+                            "data": arr
+                        },
+                        tab: function(data, layero){ // 图片层切换后的回调
+                            console.log(data); // 当前图片数据信息
+                            console.log(layero); // 图片层的容器对象
+                        }
+                    });
+
+                })
+
+            });
+        </script>
     </div>
 
-</div>{/case}
+</div>
+
+{/case}
 {case value="auth"}
 <div class="layui-input-block">
     <style>
