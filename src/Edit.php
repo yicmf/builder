@@ -1711,8 +1711,8 @@
 						$e['value'] = explode('|', $this->_data[$field_value]);
 					} else {
 						foreach ($e['field'] as $t_key => $t_value) {
-							$e['value'][$t_key] = isset($this->_data[$t_value]) ? $this->_data[$t_value] : (isset($e[$t_key]) ? $e[$t_key] : '');
-						}
+							$e['value'][$t_key] = isset($this->_data[$t_value]) ? $this->_data[$t_value] : (isset($e['default'][$t_key]) ? $e['default'][$t_key] : '');
+						} 
 					}
 				}  elseif (strpos($e['field'], '.')) { // 支持点语法
                     $temp = explode('.', $e['field']);
