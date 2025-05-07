@@ -316,16 +316,24 @@
                                 // $('div[lay-table-id="ID-Table-Current"] .layui-table-fixed-l .layui-table-body .layui-table').find("tr").eq(index).css("height", rh)//序号表身
                                 // $('div[lay-table-id="ID-Table-Current"] .layui-table-fixed-r .layui-table-body .layui-table').find("tr").eq(index).css("height", rh)//国定栏表身
 
-                        var row = $("[lay-id='{$namespace}-table']").find(".layui-table-body [data-index='" + index + "']");
+                        var row = $("[lay-table-id='{$namespace}-table']").find(".layui-table-box>.layui-table-body>table>tbody>tr:nth-child("+(index+1)+")");
+                        // var row = $("[lay-table-id='{$namespace}-table']").find(".layui-table-box>.layui-table-body>tbody>tr:nth-child("+index+")");
+
+                            console.log(d)
+                            // console.log($("[lay-id='{$namespace}-table']"))
+                            console.log(row)
+                            console.log(row.length)
                         if (row.length)
                         {
                             if (d._row_class)
                             {
+
+                            console.log(d)
                                 row.addClass(d._row_class);
                             }
                             if (d._row_style)
                             {
-                                row.css( d._row_style );
+                                row.attr('style', d._row_style);
                             }
                         }
                         layui.each(d,function(index_d,d_d){
