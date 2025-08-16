@@ -31,7 +31,7 @@
     {/case}
     {case value="inline"}
     <div class="layui-input-inline">
-        <input type="text" name="{$field.field}" value="{$field.value|htmlspecialchars}" lay-verify="{$field.verify}"
+        <input type="text" name="{$field.field}" value="{$field.value|htmlspecialchars}" lay-verify="{$field.verify?$field.verify:''}"
                class="layui-input" placeholder="{$field.placeholder|raw}"/>
     </div>
     {notempty name='field.tips'}
@@ -415,7 +415,7 @@
                     ,id: 'LAY-popup-forum-edit'
                     ,resize: false
                     ,success: function(layero, index){
-                        view(this.id).render('{$field.options.url}__selected_type=radio&selected_id='+$("#find_dialog_id_{$field['jquery_id']}").val(), data).done(function(){
+                        view(this.id).render('{$field.optio}__selected_type=radio&selected_id='+$("#find_dialog_id_{$field['jquery_id']}").val(), data).done(function(){
                             form.render(null, 'layuiadmin-app-forum-reply');
 
                             //监听提交
@@ -1300,6 +1300,9 @@ $checked = $field['value']==$key ? 'checked' : '';
                 //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
                 //   ,size: 60 //限制文件大小，单位 KB
                 , url: "{:url('/file/image/upload')}"
+                , data: {
+                    type: 'admin',
+                }
                 , multiple: true
                 , before: function (obj) {
 
@@ -1410,7 +1413,7 @@ $checked = $field['value']==$key ? 'checked' : '';
     $images = $field['value'];
     }
 
-    $arr = [];
+     $arr = [];
     foreach ($images as $index=>$item) {
     $arr[] = [
     'id'=>$index,
@@ -1446,15 +1449,13 @@ $checked = $field['value']==$key ? 'checked' : '';
                         }
                     });
 
-                })
+            })
 
             });
         </script>
     </div>
 
-</div>
-
-{/case}
+</div>{/case}
 {case value="auth"}
 <div class="layui-input-block">
     <style>
@@ -1707,6 +1708,9 @@ $field['url'] = $default_image_url;
                 //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
                 //   ,size: 60 //限制文件大小，单位 KB
                 , url: "{:url('/file/image/upload')}"
+                , data: {
+                    type: 'admin',
+                }
                 , before: function (obj) {
                     //预读本地文件示例，不支持ie8
                     obj.preview(function (index, file, result) {
@@ -1804,6 +1808,9 @@ $field['url'] = $default_image_url;
                 //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
                 //   ,size: 60 //限制文件大小，单位 KB
                 , url: "{:url('/file/image/upload')}"
+                , data: {
+                    from: 'admin',
+                }
                 , before: function (obj) {
                     //预读本地文件示例，不支持ie8
                     obj.preview(function (index, file, result) {
@@ -1977,7 +1984,7 @@ $field['url'] = $default_image_url;
 <div class="layui-input-inline">
     {php}
     if(is_numeric($field['value']) && $field['value']>0){
-    $attachment = \app\file\model\Attachment::where('id',$field['value'])->find();
+    $attachment = \app\model\file\Attachment::where('id',$field['value'])->find();
     }else{
     $attachment = [];
     }
