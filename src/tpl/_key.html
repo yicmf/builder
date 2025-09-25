@@ -1809,7 +1809,7 @@ $field['url'] = $default_image_url;
                 //   ,size: 60 //限制文件大小，单位 KB
                 , url: "{:url('/file/image/upload')}"
                 , data: {
-                    from: 'admin',
+                    for_use: 'admin',
                 }
                 , before: function (obj) {
                     //预读本地文件示例，不支持ie8
@@ -1875,6 +1875,7 @@ $field['url'] = $default_image_url;
                 var page = 1;
                 var status = 0;
                 var save_path = '';
+                var data = {};
                 //普通附件上传
                 var uploadAttachment = upload.render({
                     elem: '#button-upload-normal-file-{$field.field}'
@@ -1891,7 +1892,6 @@ $field['url'] = $default_image_url;
                         element.progress('uploadProgress', '0%');
                         $('.mask').show();
                         $('.loading').show();
-                        var data = this.data;
                         var files = obj.pushFile();
                         var LENGTH = 2*1024 * 1024; //每片文件大小
                         page = 1;
@@ -1921,7 +1921,10 @@ $field['url'] = $default_image_url;
                                             data.chunks = 1;
                                             data.save_path = save_path;
                                             obj.upload(key, file.slice((page - 1) * LENGTH, page * LENGTH));
+                                        }else{
+                                            data.fileExt = '';
                                         }
+
                                     }
                                 }, 100);
                             }
@@ -2037,12 +2040,19 @@ $field['url'] = $default_image_url;
                         $('.loading').show();
                         var data = this.data;
                         var files = obj.pushFile();
+                        console.log(files);
                         var LENGTH = 2*1024 * 1024; //每片文件大小
                         page = 1;
                         status = 1;
+                        var last_key = '';
                         for (var key in files) {
-                            var file = files[key];
+                            last_key = key;
+                        }
+                       // for (var key in files) {
+                            var file = files[last_key];
                             var totalSize = file.size;
+                            var fileType = file.type;
+                            console.log(file);
                             totalPage = Math.ceil(totalSize / LENGTH);
                             if(totalPage == 1)
                             {
@@ -2060,16 +2070,20 @@ $field['url'] = $default_image_url;
                                             status = 0;
                                             data.fileName = fileName;
                                             data.page = page;
+                                            data.type = fileType;
                                             data.totalPage = totalPage;
                                             data.fileExt = fileExt;
                                             data.chunks = 1;
                                             data.save_path = save_path;
                                             obj.upload(key, file.slice((page - 1) * LENGTH, page * LENGTH));
+                                        }else{
+                                            data.fileExt = '';
                                         }
+
                                     }
                                 }, 100);
                             }
-                        }
+                       // }
                     }
                     , done: function (res) {
                         if (res.code == 60001) { //分片上传
@@ -2080,6 +2094,7 @@ $field['url'] = $default_image_url;
                             console.log(page);
                         } else if (res.code == 0) { //上传完成
                             status = 2;
+                            save_path = '';
                             element.progress('uploadProgress', '100%');
                             //上传成功
                             $("#show-upload-normal-file-{$field.field}").html('' +
