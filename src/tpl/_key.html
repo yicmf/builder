@@ -2022,6 +2022,7 @@ $field['url'] = $default_image_url;
                 var page = 1;
                 var status = 0;
                 var save_path = '';
+                var chunkid = '';
                 //普通附件上传
                 var uploadAttachment = upload.render({
                     elem: '#button-upload-normal-file-{$field.field}'
@@ -2031,7 +2032,7 @@ $field['url'] = $default_image_url;
                     , auto: false
                     , url: "{:url('/file/Attachment/upload')}"
                     // , before: function (obj) {
-                    //     //预读本地文件示例，不支持ie8
+                    //     //预读本地文件示例，不支持ie28
                     // }
                     ,
                     choose: function (obj) {
@@ -2048,42 +2049,42 @@ $field['url'] = $default_image_url;
                         for (var key in files) {
                             last_key = key;
                         }
-                       // for (var key in files) {
-                            var file = files[last_key];
-                            var totalSize = file.size;
-                            var fileType = file.type;
-                            console.log(file);
-                            totalPage = Math.ceil(totalSize / LENGTH);
-                            if(totalPage == 1)
-                            {
-                                uploadAttachment.upload();
-                            }else {
-                                var fileName = file.name;
-                                var fileExt = fileName.substr(fileName.lastIndexOf('.') + 1);
-                                fileName = fileName.substr(0, fileName.lastIndexOf('.'));
-                                var progressTimer = setInterval(function () {
-                                    console.log(status)
-                                    if (parseInt(totalPage) == parseInt(page) && (parseInt(status) == 2 || parseInt(status) == -1)) {
-                                        clearInterval(progressTimer);
-                                    } else {
-                                        if (status == 1) {
-                                            status = 0;
-                                            data.fileName = fileName;
-                                            data.page = page;
-                                            data.type = fileType;
-                                            data.totalPage = totalPage;
-                                            data.fileExt = fileExt;
-                                            data.chunks = 1;
-                                            data.save_path = save_path;
-                                            obj.upload(key, file.slice((page - 1) * LENGTH, page * LENGTH));
-                                        }else{
-                                            data.fileExt = '';
-                                        }
-
+                        // for (var key in files) {
+                        var file = files[last_key];
+                        var totalSize = file.size;
+                        var fileType = file.type;
+                        console.log(file);
+                        totalPage = Math.ceil(totalSize / LENGTH);
+                        if(totalPage == 1)
+                        {
+                            uploadAttachment.upload();
+                        }else {
+                            var fileName = file.name;
+                            var fileExt = fileName.substr(fileName.lastIndexOf('.') + 1);
+                            fileName = fileName.substr(0, fileName.lastIndexOf('.'));
+                            var progressTimer = setInterval(function () {
+                                console.log(status)
+                                if (parseInt(totalPage) == parseInt(page) && (parseInt(status) == 2 || parseInt(status) == -1)) {
+                                    clearInterval(progressTimer);
+                                } else {
+                                    if (status == 1) {
+                                        status = 0;
+                                        data.fileName = fileName;
+                                        data.page = page;
+                                        data.type = fileType;
+                                        data.totalPage = totalPage;
+                                        data.fileExt = fileExt;
+                                        data.chunks = 1;
+                                        data.chunkid = chunkid;
+                                        obj.upload(key, file.slice((page - 1) * LENGTH, page * LENGTH));
+                                    }else{
+                                        data.fileExt = '';
                                     }
-                                }, 100);
-                            }
-                       // }
+
+                                }
+                            }, 100);
+                        }
+                        // }
                     }
                     , done: function (res) {
                         if (res.code == 60001) { //分片上传
@@ -2091,6 +2092,7 @@ $field['url'] = $default_image_url;
                             page = page + 1;
                             status = 1;
                             save_path = res.message;
+                            chunkid = res.message;
                             console.log(page);
                         } else if (res.code == 0) { //上传完成
                             status = 2;
