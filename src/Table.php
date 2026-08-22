@@ -3,7 +3,7 @@
 // +----------------------------------------------------------------------
 // | builder
 // +----------------------------------------------------------------------
-// | Copyright (c) 2015-2022 http://www.yicmf.com, All rights reserved.
+// | Copyright (c) 2015-2026 http://www.yicmf.com, All rights reserved.
 // +----------------------------------------------------------------------
 // | Author: 微尘 <yicmf@qq.com>
 // +----------------------------------------------------------------------
@@ -11,8 +11,8 @@
 namespace yicmf\builder;
 
 use app\ucenter\event\AuthGroup as AuthGroupEvent;
-use Overtrue\Pinyin\Pinyin;
 use think\exception\HttpException;
+use yicmf\tools\ChinesePinyin;
 use think\Model;
 use think\facade\Db;
 use think\db\Where;
@@ -885,6 +885,29 @@ class Table extends Builder
     }
 
     /**
+     * 模糊搜索text文本信息.
+     * @param string $title
+     * @param string $field
+     * @param string $placeholder
+     * @param string $default
+     * @param array $attr
+     * @return $this
+     */
+    public function searchTextIn($field, $title, $placeholder = '多个值用英文逗号","隔开', $default = '', $attr = [])
+    {
+        $this->_search[] = [
+            'title' => $title,
+            'field' => $field,
+            'type' => 'text',
+            'condition' => 'in',
+            'value' => $default,
+            'placeholder' => $placeholder,
+            'attr' => $attr,
+        ];
+        return $this;
+    }
+
+    /**
      * 搜索用户
      * @param string $title
      * @param string $field
@@ -935,7 +958,7 @@ class Table extends Builder
 
         if (is_string($default)) {
             if (!strpos($default, ' - ')) {
-                if (time_format($default) < time_format('now')) {
+                if (strtotime($default) < time()) {
                     $default = time_format($default, $format[$type]) . ' - ' . time_format('now', $format[$type]);
                 } else {
                     $default = time_format('now', $format[$type]) . ' - ' . time_format($default, $format[$type]);
@@ -946,8 +969,8 @@ class Table extends Builder
             'elem' => '#j_table_builder_' . (strpos($field, '|') ? md5($field) : $field),
             'type' => $type,
             'range' => $range,
-            'format ' => $formats[$type],
-            'mark ' => [],
+            'format' => $formats[$type],
+            'mark' => [],
             'min' => $min,
             'max' => $max,
             'value' => $default,
@@ -1889,8 +1912,8 @@ EOF;
      */
     public function keyClosure($title, $closure, $width = '', $style = '')
     {
-        $pinyin = new Pinyin();
-        return $this->key($pinyin->permalink($title, '_'), text($title), false, $width, $closure, $style);
+        $pinyin = new ChinesePinyin();
+        return $this->key($pinyin->transformWithoutTone($title, '_'), text($title), false, $width, $closure, $style);
     }
 
     /**
@@ -2030,8 +2053,8 @@ EOF;
         $templet = 'k'.uniqid();
         $this->_templets[] = <<<EOF
   <script type="text/html" id="$templet">
-        <div class="layui-progress layuiadmin-order-progress" lay-filter="progress-"+ {{ d.id }} +"">
-          <div class="layui-progress-bar layui-bg-blue" lay-percent= {{ d.$field }}></div>
+        <div class="layui-progress layuiadmin-order-progress" lay-filter="progress-{{ d.id }}" lay-showPercent="true">
+          <div class="layui-progress-bar layui-bg-blue" style="width: {{ d.$field }}%;"></div>
         </div>
       </script>
 
@@ -2075,12 +2098,13 @@ EOF;
         if (false === strpos($url, '/')) {
             if (false !== strpos($this->request->controller(), 'Admin.')) {
                 // 补充
-                $url = ($this->module?($this->module.'/'):'') . lcfirst($this->request->controller()) . '/' . $url;
+                $url = ($this->module?($this->module.'/'):'') . lcfirst(str_replace('.','/',$this->request->controller()) ) . '/' . $url;
             } else {
                 // 补充
-                $url =  ($this->module?($this->module.'/'):'')  . $this->request->controller() . '/' . $url;
+                $url =  ($this->module?($this->module.'/'):'')  . str_replace('.','/',$this->request->controller()) . '/' . $url;
             }
         }
+//        dump($this->request->controller());
         if (false !== strpos($url, '{$')) {
             // 补充
             $url = str_replace('{$', '{{d.', $url);
@@ -2384,7 +2408,12 @@ EOF;
                                 // 闭包
                                 $qucikEdit($update,$update['__field'],$update['__value'], $this->_where, $searchWhere);
                             } else {
-                                $this->_model::where('id', $update['id'])->where($this->_where)->update([$update['__field'] => $update['__value']]);
+//                                $this->_model::where('id', $update['id'])->where($this->_where)->update([$update['__field'] => $update['__value']]);
+                                $qucikEditData = $this->_model::where($this->_where)->where('id', $update['id'])->find();
+                                if ($qucikEditData) {
+                                    $qucikEditData[$update['__field']] = $update['__value'];
+                                    $qucikEditData->save();
+                                }
                             }
                         }
                         $result = ['code' => 0, 'message' => ''];
@@ -2508,7 +2537,7 @@ EOF;
                     } else {
                         $name = 'table';
                     }
-                    $this->_formantKeyList();
+                    $this->_formatKeyList();
                     $this->_setMenu();
                     // 显示页面
                     $this->assign('templets', $this->_templets);
@@ -2575,7 +2604,7 @@ EOF;
         }
     }
 
-    protected function _formantKeyList()
+    protected function _formatKeyList()
     {
         foreach ($this->_keyList as $index => $item) {
             foreach ($this->_quick_update as $index2 => $item2) {
@@ -2975,11 +3004,11 @@ EOF;
         }
         if ($this->_row_style instanceof \Closure) {
             $closure = $this->_row_style;
-            $conver_data['_row_style'] = $closure($data, $item);
+            $conver_data['_row_style'] = $closure($data);
         }
         if ($this->_row_class instanceof \Closure) {
             $closure = $this->_row_class;
-            $conver_data['_row_class'] = $closure($data, $item);
+            $conver_data['_row_class'] = $closure($data);
         }
         //            if ($excel)
         //            {
