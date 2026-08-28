@@ -106,7 +106,7 @@ class Table extends Builder
     protected $_cssl;
     protected $_jsl;
     protected $_with = [];
-    protected $_where;
+    protected $_where = [];
     protected $_order;
     protected $_field = ['id', 'status'];
     protected $_count = [];
@@ -320,15 +320,35 @@ class Table extends Builder
     }
 
     /**
-     * 模型的where条件
-     * @param $where
+     * 模型的where条件，用法与模型where一致，支持链式多次调用（条件之间为AND关系）
+     * where('id', 1) 等于 where('id', '=', 1)
+     * where('id', '>', 1) / where('status', 1) / where(['status' => 1]) / where([['id', '>', 1]])
+     * where('status=1') 字符串原生条件 / where(function($q){...}) 闭包子查询
+     * 多次调用会累积为 AND 条件（与模型链式 where 一致）
+     * @param mixed ...$args 透传给模型 where 的参数（1/2/3 个，或数组/字符串/闭包）
      * @return $this
+     * [Buddy 2026-08-28] 调整：改为条件包数组累积，兼容模型一致的 1/2/3 参数及闭包/字符串，支持链式
      * @author  : 微尘 <yicmf@qq.com>
      */
-    public function where($where)
+    public function where(...$args)
     {
-        $this->_where = $where;
+        $this->_where[] = $args;
         return $this;
+    }
+
+    /**
+     * 将 Table 上累积的 where 条件包应用到查询对象
+     * 每个条件包是一组传给模型 where 的参数（支持数组/字符串/闭包/2参/3参）
+     * [Buddy 2026-08-28] 新增：统一消费 _where 条件包，兼容链式多次调用
+     * @param \think\db\Query|\think\Model $query
+     * @return mixed
+     */
+    protected function _applyWhere($query)
+    {
+        foreach ($this->_where as $pack) {
+            $query = $query->where(...$pack);
+        }
+        return $query;
     }
 
     /**
@@ -2422,7 +2442,8 @@ EOF;
                                 $qucikEdit($update,$update['__field'],$update['__value'], $this->_where, $searchWhere);
                             } else {
 //                                $this->_model::where('id', $update['id'])->where($this->_where)->update([$update['__field'] => $update['__value']]);
-                                $qucikEditData = $this->_model::where($this->_where)->where('id', $update['id'])->find();
+                                $whereModel = $this->_applyWhere($this->_model::where([]));
+                                $qucikEditData = $whereModel->where('id', $update['id'])->find();
                                 if ($qucikEditData) {
                                     $qucikEditData[$update['__field']] = $update['__value'];
                                     $qucikEditData->save();
@@ -2448,9 +2469,9 @@ EOF;
                             $result = [];
                         } elseif (empty($this->_data)) {
                             if (is_string($model)) {
-                                $whereModel = $model::where($searchWhere)->where($this->_where);
+                                $whereModel = $this->_applyWhere($model::where($searchWhere));
                             } else {
-                                $whereModel = $model->where($searchWhere)->where($this->_where);
+                                $whereModel = $this->_applyWhere($model->where($searchWhere));
                             }
                             if (count($this->_count)) {
                                 $result = [];
@@ -2484,7 +2505,7 @@ EOF;
                             // 闭包
                             $result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
                         } elseif (empty($this->_data)) {
-                            $whereModel = $model::where($searchWhere)->where($this->_where);
+                            $whereModel = $this->_applyWhere($model::where($searchWhere));
                             $result['code'] = 0;
                             if (count($this->_count)) {
                                 $lists = $whereModel->withCount($this->_count)->order($searchOrder)->limit($list_rows * ($page - 1), $list_rows)->select();
@@ -2745,13 +2766,11 @@ EOF;
                 $result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
             } elseif (!is_null($model)) {
                 if (is_string($model)) {
-                    $whereModel = $model::where($searchWhere)
+                    $whereModel = $this->_applyWhere($model::where($searchWhere));
 //							->field(implode($this->_field, ','))
-                        ->where($this->_where);
                 } else {
-                    $whereModel = $model->where($searchWhere)
+                    $whereModel = $this->_applyWhere($model->where($searchWhere));
 //							->field(implode($this->_field, ','))
-                        ->where($this->_where);
                 }
 
                 // 列表仅查询展示字段白名单，避免 SELECT * 把 longblob 等二进制大字段带出导致 JSON 编码失败（Malformed UTF-8）
