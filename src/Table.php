@@ -110,6 +110,7 @@ class Table extends Builder
     protected $_order;
     protected $_field = ['id', 'status'];
     protected $_count = [];
+    protected $_hidden_field = [];
     protected $_sum = [];
     protected $_avg = [];
     protected $_max = [];
@@ -351,6 +352,18 @@ class Table extends Builder
     public function field($field)
     {
         $this->_field = array_merge($this->_field, is_array($field) ? $field : [$field]);
+        return $this;
+    }
+
+    /**
+     * 模型指定字段
+     * @param string $field
+     * @return $this
+     * @author  : 微尘 <yicmf@qq.com>
+     */
+    public function hiddenField($field)
+    {
+        $this->_hidden_field = array_merge($this->_hidden_field, is_array($field) ? $field : [$field]);
         return $this;
     }
 
@@ -2739,6 +2752,15 @@ EOF;
                     $whereModel = $model->where($searchWhere)
 //							->field(implode($this->_field, ','))
                         ->where($this->_where);
+                }
+
+                // 列表仅查询展示字段白名单，避免 SELECT * 把 longblob 等二进制大字段带出导致 JSON 编码失败（Malformed UTF-8）
+                // 未显式 ->field() 的页面 _field 为空，行为不变（仍 SELECT *）
+                if (!empty($this->_field)) {
+                    //   $whereModel->field($this->_field);
+                }
+                if (!empty($this->_hidden_field)) {
+                    $whereModel->hidden($this->_hidden_field);
                 }
 
                 $result['code'] = 0;
