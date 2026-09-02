@@ -134,8 +134,9 @@
 			if (is_array($trigger)) {
 				$this->_triggers = array_merge($this->_triggers, $trigger);
 			} else {
-				if (!is_array($value) && strpos($value, ',')) {
-					$value = explode(',', $value);
+			// [Buddy 2026-09-02] 调整：null/int 安全 + 修正 strpos 位置 0 被判为 falsy 的逻辑缺陷
+			if (is_string($value) && strpos($value, ',') !== false) {
+				$value = explode(',', $value);
 				} elseif (!is_array($value) && (is_numeric($value) || is_string($value))) {
 					$value = [$value];
 				} elseif (is_array($value) && empty($value)) {
@@ -1160,7 +1161,24 @@
 			return $this->key($field, $title, $tips, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions], $default, $verify);
 		}
 
-		/**
+        /**
+         * 上传单个附件
+         * @param string $field
+         * @param string $title
+         * @param string|null $tips
+         * @param int $default
+         * @param string|null $verify
+         * @return $this
+         * @author  : 微尘 <yicmf@qq.com>
+         */
+        public function keyAttachmentModel($field, $title, $tips = null, $default = 0, $verify = null)
+        {
+            $extensions = '*';
+            $remark = '';
+            return $this->key($field, $title, $tips, 'attachment_model', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions], $default, $verify);
+        }
+
+        /**
 		 * 上传多个附件
 		 * @param      $field
 		 * @param      $title
@@ -1220,13 +1238,14 @@
 		 */
 		protected function key($field, $title, $tips, $type, $options = null, $default = '', $verify = null, $size = null, $disabled = null, $placeholder = '')
 		{
-			if (is_array($verify)) {
-				$verify = implode('|', $verify);
-			}
-			if (strpos($verify, ',')) {
-				$verify = str_replace(',', '|', $verify);
-			}
-			if (false !== strpos($verify, 'require')) {
+		if (is_array($verify)) {
+			$verify = implode('|', $verify);
+		}
+		// [Buddy 2026-09-02] 调整：null 安全 + 修正 strpos 位置 0 被判为 falsy 的逻辑缺陷
+		if (is_string($verify) && strpos($verify, ',') !== false) {
+			$verify = str_replace(',', '|', $verify);
+		}
+		if (is_string($verify) && false !== strpos($verify, 'require')) {
 				$verify = str_replace('require', 'required', $verify);
 			}
 			$key = [
