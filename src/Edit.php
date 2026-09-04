@@ -866,6 +866,50 @@
 		}
 
 		/**
+		 * Markdown 所见即所得编辑器（Vditor）
+		 * 普通用户友好：左侧所见即所得编辑，底层存储 Markdown，与 keyEditor 体验接近但更现代
+		 * 图片批量/在线管理后续处理，此处仅引入编辑器本体
+		 * http://b3log.org/vditor/
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string $default
+		 * @param array $config
+		 * @param array $style
+		 * @return $this
+		 */
+		// [Buddy 2026-09-03] 新增：keyVditor —— 引入 Vditor 所见即所得 Markdown 编辑器
+		public function keyVditor($field, $title, $tips = null, $default = '', $config = [], $style = ['width' => '900', 'height' => '400'])
+		{
+			$default_config = [
+				'mode'   => 'wysiwyg', // 所见即所得，普通用户友好
+				'cdn'    => '/static/vditor',
+				'upload' => [
+					'url'          => '/file/vditor/upload',
+					'fieldName'    => 'file',
+					'linkToImgUrl' => '/file/vditor/link',
+					'accept'       => 'image/*',
+					'max'          => 10485760,
+					'multiple'     => true,
+					'handler'      => 'form-data',
+				],
+			];
+			$config = array_merge($default_config, $config);
+			$key = [
+				'id_name' => uniqid(),
+				'field'   => $field,
+				'title'   => $title,
+				'tips'    => $tips,
+				'type'    => 'vditor',
+				'config'  => $config,
+				'style'   => $style,
+				'default' => $default,
+			];
+			$this->_keyList[] = $key;
+			return $this;
+		}
+
+		/**
 		 * 时间选择器
 		 * @param string $field
 		 * @param string $title
