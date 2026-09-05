@@ -881,9 +881,14 @@
 		// [Buddy 2026-09-03] 新增：keyVditor —— 引入 Vditor 所见即所得 Markdown 编辑器
 		public function keyVditor($field, $title, $tips = null, $default = '', $config = [], $style = ['width' => '900', 'height' => '400'])
 		{
-			$default_config = [
-				'mode'   => 'wysiwyg', // 所见即所得，普通用户友好
-				'cdn'    => '/static/vditor',
+		// [Buddy 2026-09-04] 调整：默认 mode 改回 wysiwyg（所见即所得，点哪改哪）。
+		// 说明：此前为保留图片宽高/浮动/边框等 inline style 改过 ir（即时渲染），但 ir 点击段落会切到 markdown 源码态、
+		// 光标跳段首，不符合"点鼠标直接修改"的诉求；按业务优先级回归 wysiwyg。少数需保留图片 style 的字段可在调用处
+		// 显式传 config.mode='ir' 覆盖本默认。
+	$default_config = [
+		'mode'   => 'wysiwyg',
+			'format' => 'md', // [Buddy 2026-09-04] 提交格式：md（默认，内含 HTML 片段）/ html（纯 HTML，便于 APP 端 v-html / 后端渲染）
+			'cdn'    => '/static/vditor',
 				'upload' => [
 					'url'          => '/file/vditor/upload',
 					'fieldName'    => 'file',

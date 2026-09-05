@@ -1038,9 +1038,9 @@
 <div style="background:#fff;padding:15px;">
     <div class="layui-tab" lay-filter="vditor_mgr_tab_{$field.field}">
         <ul class="layui-tab-title">
-            <li class="layui-this">图片管理</li>
-            <li>本地上传</li>
-            <li>网络图片</li>
+            <li class="layui-this" lay-id="mgr">图片管理</li>
+            <li lay-id="upload">本地上传</li>
+            <li lay-id="insert">插入图片</li>
         </ul>
         <div class="layui-tab-content">
             <div class="layui-tab-item layui-show">
@@ -1052,16 +1052,81 @@
                 <table id="vditor_table_{$field.field}" lay-filter="vditor_table_{$field.field}"></table>
             </div>
             <div class="layui-tab-item">
-                <input type="file" id="vditor_local_{$field.field}" multiple accept="image/*">
-                <div class="layui-word-aux" style="margin-top:8px;">选择图片后自动上传并插入到编辑器</div>
+                <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+                    <button type="button" class="layui-btn layui-btn-normal" id="vditor_upload_btn_{$field.field}">
+                        <i class="layui-icon">&#xe67c;</i>选择图片（可多选）
+                    </button>
+                    <span id="vditor_upload_hint_{$field.field}" style="color:#999;">支持 jpg/png/gif，可一次选多张</span>
+                </div>
+                <div id="vditor_progress_box_{$field.field}" class="layui-progress layui-progress-big" lay-showpercent="true" lay-filter="vditor_progress_{$field.field}" style="margin-bottom:14px;display:none;">
+                    <div class="layui-progress-bar" lay-percent="0%"></div>
+                </div>
+                <div id="vditor_upload_list_{$field.field}" class="vditor-upload-list"></div>
+                <div class="vditor-upload-toolbar">
+                    <span class="l">点击缩略图选中／取消（已上传图片默认全选）</span>
+                    <div class="r">
+                        <button type="button" class="layui-btn layui-btn-xs layui-btn-primary" id="vditor_select_all_{$field.field}">全选</button>
+                        <button type="button" class="layui-btn layui-btn-xs layui-btn-primary" id="vditor_select_none_{$field.field}">取消</button>
+                        <button type="button" class="layui-btn layui-btn-xs layui-btn-normal" id="vditor_insert_selected_{$field.field}">插入所选(0)</button>
+                    </div>
+                </div>
             </div>
             <div class="layui-tab-item">
-                <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
-                    <input type="text" id="vditor_url_{$field.field}" placeholder="输入图片地址，如 https://example.com/a.jpg" class="layui-input" style="width:460px;">
-                    <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="vditor_url_insert_{$field.field}">插入</button>
+                <div style="display:flex;gap:18px;">
+                    <div style="flex:1;min-width:380px;">
+                        <div class="layui-form" style="padding:6px 0;">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label" style="width:70px;">地&emsp;址：</label>
+                                <div class="layui-input-block" style="margin-left:100px;">
+                                    <input type="text" id="vditor_url_{$field.field}" placeholder="https://example.com/a.jpg" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label" style="width:70px;">大&emsp;小：</label>
+                                <div class="layui-input-block" style="margin-left:100px;">
+                                    宽度 <input type="number" id="vditor_w_{$field.field}" min="1" class="layui-input" style="width:80px;display:inline-block;"> px
+                                    &emsp;高度 <input type="number" id="vditor_h_{$field.field}" min="1" class="layui-input" style="width:80px;display:inline-block;"> px
+                                    <i class="layui-icon layui-icon-link" id="vditor_lock_{$field.field}" title="锁定宽高比" style="cursor:pointer;font-size:18px;color:#16baaa;margin-left:8px;vertical-align:middle;"></i>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label" style="width:70px;">边&emsp;框：</label>
+                                <div class="layui-input-block" style="margin-left:100px;">
+                                    <input type="number" id="vditor_border_{$field.field}" min="0" class="layui-input" style="width:120px;display:inline-block;"> px
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label" style="width:70px;">边&emsp;距：</label>
+                                <div class="layui-input-block" style="margin-left:100px;">
+                                    <input type="number" id="vditor_margin_{$field.field}" min="0" class="layui-input" style="width:120px;display:inline-block;"> px
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label" style="width:70px;">描&emsp;述：</label>
+                                <div class="layui-input-block" style="margin-left:100px;">
+                                    <input type="text" id="vditor_alt_{$field.field}" placeholder="图片说明（alt 文本）" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label" style="width:70px;">浮动方式：</label>
+                                <div class="layui-input-block" style="margin-left:100px;">
+                                    <button type="button" class="layui-btn layui-btn-xs vditor-float" data-float="" title="默认"><i class="layui-icon layui-icon-template-one"></i> 默认</button>
+                                    <button type="button" class="layui-btn layui-btn-xs layui-btn-primary vditor-float" data-float="left" title="左浮动"><i class="layui-icon layui-icon-align-left"></i> 左</button>
+                                    <button type="button" class="layui-btn layui-btn-xs layui-btn-primary vditor-float" data-float="right" title="右浮动"><i class="layui-icon layui-icon-align-right"></i> 右</button>
+                                    <button type="button" class="layui-btn layui-btn-xs layui-btn-primary vditor-float" data-float="center" title="居中"><i class="layui-icon layui-icon-align-center"></i> 居中</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="width:280px;flex-shrink:0;">
+                        <div id="vditor_url_preview_{$field.field}" style="width:100%;height:280px;border:1px dashed #e6e6e6;background:#fafafa;display:flex;align-items:center;justify-content:center;color:#999;overflow:auto;text-align:center;">
+                            <span>图片预览</span>
+                        </div>
+                    </div>
                 </div>
-                <div id="vditor_url_preview_{$field.field}" style="min-height:140px;border:1px dashed #e6e6e6;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999;background:#fafafa;">
-                    <span>图片预览区</span>
+                <div style="text-align:right;margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0;">
+                    <button type="button" class="layui-btn layui-btn-normal" id="vditor_url_insert_{$field.field}">确认</button>
+                    <button type="button" class="layui-btn layui-btn-primary" id="vditor_url_cancel_{$field.field}">取消</button>
                 </div>
             </div>
         </div>
@@ -1069,31 +1134,196 @@
 </div>
 </script>
 
+<style>
+    .vditor-upload-list { display:flex; flex-wrap:wrap; gap:10px; }
+    .vditor-upload-list .item { position:relative; width:110px; border:2px solid transparent; border-radius:4px; overflow:hidden; background:#fff; cursor:pointer; transition:border-color .15s; }
+    .vditor-upload-list .item:hover { border-color:#cfece8; }
+    .vditor-upload-list .item.selected { border-color:#16baaa; box-shadow:0 0 6px rgba(22,186,170,.35); }
+    .vditor-upload-list .item img { width:100%; height:90px; object-fit:cover; display:block; }
+    .vditor-upload-list .item .nm { padding:3px 6px; font-size:12px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .vditor-upload-list .item .vditor-tick { position:absolute; top:4px; right:4px; width:18px; height:18px; border-radius:50%; background:rgba(22,186,170,.9); color:#fff; font-size:12px; line-height:18px; text-align:center; display:none; }
+    .vditor-upload-list .item.selected .vditor-tick { display:block; }
+    .vditor-upload-toolbar { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid #eee; }
+    .vditor-upload-toolbar .l { color:#666; font-size:12px; }
+    .vditor-upload-toolbar .r { display:flex; gap:8px; }
+    .vditor-reset img { cursor:pointer; }
+    .vditor-reset img:hover { outline:2px solid #16baaa; outline-offset:1px; }
+    .vditor-img-edit-btn { position:fixed; z-index:99999; display:none; padding:2px 10px; font-size:12px; line-height:20px; background:#16baaa; color:#fff; border-radius:3px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.25); user-select:none; }
+</style>
+
 <script type="text/javascript">
-    layui.use(['vditor', 'layer', 'element', 'jquery', 'table'], function () {
+    layui.use(['vditor', 'layer', 'element', 'jquery', 'table', 'upload'], function () {
         var Vditor = layui.vditor;
         var layer = layui.layer;
         var element = layui.element;
         var $ = layui.$;
         var table = layui.table;
+        var upload = layui.upload;
         var field = '{$field.field}';
         var md = document.getElementById('vditor_md_' + field);
+        // [Buddy 2026-09-04] 调整：有默认数据时不读取 Vditor 缓存——cache 仅在初始内容为空（新建）时开启，
+        // 避免编辑已有记录时 localStorage 缓存覆盖数据库默认内容；编辑态（有默认值）一并关闭写缓存。
+        var hasDefault = (md.value || '').trim() !== '';
+        // [Buddy 2026-09-04] 调整：编辑已有记录（有默认数据）时，主动清除可能残留的 Vditor localStorage 草稿键，
+        // 仅关闭 cache:false 只是「不读」，旧键仍在，刷新后历史缓存仍会覆盖数据库默认内容；此处彻底清掉。
+        if (hasDefault) {
+            try {
+                Object.keys(localStorage).forEach(function (k) {
+                    if (k.indexOf('vditor') === 0) {
+                        localStorage.removeItem(k);
+                    }
+                });
+            } catch (e) {}
+        }
         var vditor = new Vditor('vditor_' + field, {
-            cache: false,
+            cache: !hasDefault,
             cdn: '/static/vditor',
-            mode: '{$field.config.mode|default="wysiwyg"}',
+            // [Buddy 2026-09-04] 强制所见即所得：点哪改哪，不跳源码/段首。
+            // 此前改为 ir 虽能保留图片 style，但点击段落会切到 markdown 源码态、光标跳段首，编辑体验不可接受。
+            // 如需个别字段保留图片 style，可在此改回 'ir'（或后续改为按 $field.config.mode 读取）。
+            mode: 'wysiwyg',
             height: {$field.style.height|default=400},
             value: md.value,
             upload: {$field.config.upload|json_encode|raw},
             input: function (val) {
-                md.value = val;
+                // [Buddy 2026-09-04] format=html 时提交纯 HTML（vditor.getHTML()），默认 md（含 HTML 片段）
+                md.value = ('{$field.config.format|default="md"}' === 'html') ? vditor.getHTML() : val;
             }
         });
         window['vditor_' + field] = vditor;
 
+        // [Buddy 2026-09-04] 提交前兜底同步 + 初始化保护
+        // 根因：Vditor 初始化完成/内部操作会触发一次 input(val)，val 在渲染未完成时可能为空，
+        // 会把隐藏 textarea(md) 的初始内容清空；而 layuiAdmin 的 form.on('submit') 在原生 submit
+        // 事件中收集 data.field（读取 md.value）。为保证「提交内容不为空」，在 form 的 submit 捕获
+        // 阶段强制把 vditor 当前值写回 md——此时 Vditor 已稳定，getValue/getHTML 返回真实内容，
+        // 与 layui 收集时机解耦，100% 兜底，同时抵消初始化 input 清空初始值的影响。
+        function syncVditorToField() {
+            try {
+                var fmt = '{$field.config.format|default="md"}';
+                md.value = (fmt === 'html') ? vditor.getHTML() : vditor.getValue();
+            } catch (e) {
+                console.error('[vditor] syncVditorToField error', e);
+            }
+        }
+        var $vdForm = $('#vditor_' + field).closest('form');
+        if ($vdForm.length) {
+            // 捕获阶段：早于 layui 的 submit 冒泡处理，确保 data.field 收集到最新内容
+            $vdForm[0].addEventListener('submit', syncVditorToField, true);
+        }
+        // 失焦兜底：覆盖部分业务不经 submit 事件、而是直接 serialize() 读取的场景
+        var $vdEditable = document.querySelector('#vditor_' + field + ' [contenteditable="true"]');
+        if ($vdEditable) {
+            $vdEditable.addEventListener('blur', syncVditorToField);
+        }
+
+        // [Buddy 2026-09-04] 插入图片（HTML 片段）到编辑器。
+        // 根因：本版本 Vditor 的 insertValue 依赖 RN() 选区助手，而 RN 优先返回 e.ir.range（IR 重渲染后旧 DOM 节点引用已失效），
+        // 导致 insertNode 静默失败、不抛错（即"控制台没信息但插不进"）。修复：插入前强制把选区放到编辑区末尾的当前有效 DOM 节点，
+        // 让 RN 走"真实选区"分支；校验失败再用 setValue 整体重渲染兜底（绝对可靠）。
+        function insertImageHTML(html) {
+            if (!html) { return; }
+            var urlMatch = html.match(/src="([^"]+)"/);
+            var url = urlMatch ? urlMatch[1] : '';
+            console.log('[vditor] insertImageHTML start, field=' + field + ', url=' + url);
+            // 把选区强制放到本字段编辑区（contenteditable）末尾的有效节点，绕过 RN 失效的 ir.range
+            function forceSelEnd() {
+                try {
+                    var ed = document.querySelector('#vditor_' + field + ' [contenteditable="true"]');
+                    if (!ed) { return; }
+                    ed.focus();
+                    var sel = window.getSelection();
+                    var rg = document.createRange();
+                    rg.selectNodeContents(ed);
+                    rg.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(rg);
+                } catch (e) { console.error('[vditor] forceSelEnd error', e); }
+            }
+            // [Buddy 2026-09-04] 插入成功后把光标同步到内容末尾，并同步 Vditor 内部 ir.range。
+            // IR 模式只在 blur 时把当前选区存进 ir.range；原生改了光标后不同步，下次输入重渲染时光标就跳走。
+            // 这里主动把原生光标与 ir.range 都置为内容末尾，确保"插入后继续输入"光标在图片之后。
+            function placeCursorEnd() {
+                try {
+                    var ed = document.querySelector('#vditor_' + field + ' [contenteditable="true"]');
+                    if (!ed) { return; }
+                    ed.focus();
+                    var sel = window.getSelection();
+                    var rg = document.createRange();
+                    rg.selectNodeContents(ed);
+                    rg.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(rg);
+                    try { if (vditor.ir && 'range' in vditor.ir) { vditor.ir.range = rg.cloneRange(); } } catch (e) {}
+                    console.log('[vditor] placeCursorEnd ok');
+                } catch (e) { console.error('[vditor] placeCursorEnd error', e); }
+            }
+            function insertedOk() {
+                try {
+                    return url && typeof vditor.getValue === 'function' && vditor.getValue().indexOf(url) !== -1;
+                } catch (e) { return false; }
+            }
+            var done = false;
+            // 方案1：RN 真实选区 + 官方 insertValue（光标处插入，优先保留位置语义）
+            try {
+                vditor.focus();   // 让编辑区获焦，恢复浏览器对编辑区的选区记忆
+                forceSelEnd();    // focus 后再强制把选区放到编辑区末尾有效节点，确保 RN 拿到真实有效 range
+                if (typeof vditor.insertValue === 'function') {
+                    vditor.insertValue(html);
+                    console.log('[vditor] insertValue called, insertedOk=' + insertedOk());
+                    if (insertedOk()) { done = true; }
+                }
+            } catch (e) { console.error('[vditor] insertValue 异常', e); }
+            // 方案2（兜底）：setValue 整体重渲染，绝对可靠地把图片放进内容
+            if (!done) {
+                try {
+                    var cur = (typeof vditor.getValue === 'function') ? vditor.getValue() : '';
+                    if (url && cur.indexOf(url) === -1) {
+                        vditor.setValue(cur + '\n' + html, true);
+                        console.log('[vditor] setValue 兜底, insertedOk=' + insertedOk());
+                        if (insertedOk()) { done = true; }
+                    }
+                } catch (e) { console.error('[vditor] setValue 异常', e); }
+            }
+            if (done) {
+                placeCursorEnd();   // 关键：同步光标到内容末尾，避免下次输入跳走
+                console.log('[vditor] 图片插入成功');
+            } else {
+                console.warn('[vditor] 图片插入失败');
+                layer.msg('图片插入失败，请刷新页面后重试');
+            }
+        }
+
         function insertImage(url) {
             if (!url) { return; }
-            vditor.insertValue('<img src="' + url + '" />');
+            insertImageHTML('<img src="' + url + '" />');
+        }
+
+        // [Buddy 2026-09-04] 编辑已有图片：在源码中就地替换原图（IR 模式 getValue/setValue 走 markdown+HTML 混合，可靠）
+        function replaceImageInSource(oldImg, newHtml) {
+            try {
+                var val = (typeof vditor.getValue === 'function') ? vditor.getValue() : '';
+                var src = oldImg.getAttribute('src') || '';
+                if (!src) { insertImageHTML(newHtml); return; }
+                var esc = src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                var reImg = new RegExp('<img\\b[^>]*\\bsrc=["\']' + esc + '["\'][^>]*>', 'i');
+                var reMd = new RegExp('!\\[[^\\]]*\\]\\(' + esc + '[^)]*\\)', 'i');
+                if (reImg.test(val)) {
+                    val = val.replace(reImg, function () { return newHtml; });
+                } else if (reMd.test(val)) {
+                    val = val.replace(reMd, function () { return newHtml; });
+                } else {
+                    // 源码中未定位到原图（如相对路径被规范化），降级为追加插入
+                    console.warn('[vditor] 未定位到原图，降级为追加插入');
+                    vditor.setValue((val ? val + '\n' : '') + newHtml, true);
+                    return;
+                }
+                vditor.setValue(val, true);
+                console.log('[vditor] 图片已就地替换');
+            } catch (e) {
+                console.error('[vditor] replaceImageInSource 异常', e);
+                insertImageHTML(newHtml);
+            }
         }
 
         function formatSize(bytes) {
@@ -1103,12 +1333,53 @@
             return (bytes / 1048576).toFixed(1) + ' MB';
         }
 
-        $('#vditor_mgr_btn_' + field).off('click').on('click', function () {
+        // [Buddy 2026-09-04] 点图片出悬浮编辑按钮 → 打开图片管理并定位"插入图片"选项卡、预填参数
+        var pendingEditImg = null;
+        var $editBtn = $('#vditor_img_edit_btn_' + field);
+        if (!$editBtn.length) {
+            $editBtn = $('<div id="vditor_img_edit_btn_' + field + '" class="vditor-img-edit-btn">编辑</div>').appendTo('body');
+        }
+        function hideEditBtn() { $editBtn.hide().removeData('img'); }
+        function showEditBtn(img) {
+            var rect = img.getBoundingClientRect();
+            $editBtn.data('img', img).css({
+                left: Math.max(4, rect.left + rect.width - 44) + 'px',
+                top: (rect.top + 2) + 'px'
+            }).show();
+        }
+        // 编辑区点击图片 → 显示悬浮"编辑"按钮
+        $('#vditor_' + field).off('click.vditorimg').on('click.vditorimg', function (e) {
+            var img = (e.target && e.target.closest) ? e.target.closest('img') : null;
+            if (img && $(img).closest('#vditor_' + field).length) {
+                showEditBtn(img);
+            } else {
+                hideEditBtn();
+            }
+        });
+        // 点悬浮按钮 → 打开图片管理（编辑模式）
+        $editBtn.off('click.vditorimg').on('click.vditorimg', function (e) {
+            e.stopPropagation();
+            var img = $editBtn.data('img');
+            hideEditBtn();
+            if (img) { openImageManager(img); }
+        });
+        // 点编辑器其它地方 / 滚动 / 缩放 → 隐藏悬浮按钮
+        $(document).off('mousedown.vditorimg').on('mousedown.vditorimg', function (e) {
+            if ($editBtn.is(e.target) || $editBtn.has(e.target).length) { return; }
+            hideEditBtn();
+        });
+        document.removeEventListener('scroll', hideEditBtn, true);
+        document.addEventListener('scroll', hideEditBtn, true);
+        $(window).off('resize.vditorimg').on('resize.vditorimg', hideEditBtn);
+
+        function openImageManager(editImg) {
+            pendingEditImg = editImg || null;
             layer.open({
                 type: 1,
                 title: '图片管理',
                 area: ['920px', '640px'],
                 content: $('#vditor_mgr_tpl_' + field).html(),
+                end: function () { pendingEditImg = null; },
                 success: function (layero) {
                     var $c = layero.find('.layui-layer-content');
                     $c.css('background', '#fff');
@@ -1155,59 +1426,217 @@
                         insertImage($(this).data('url'));
                         layer.closeAll();
                     });
-                    // 本地上传
-                    $c.find('#vditor_local_' + field).off('change').on('change', function () {
-                        var files = this.files;
-                        if (!files || !files.length) { return; }
-                        var fd = new FormData();
-                        for (var i = 0; i < files.length; i++) {
-                            fd.append('file[]', files[i]);
-                        }
-                        var loadIndex = layer.msg('上传中...', { icon: 16, time: false });
-                        $.ajax({
-                            url: '/file/vditor/upload',
-                            type: 'POST',
-                            data: fd,
-                            processData: false,
-                            contentType: false,
-                            success: function (res) {
-                                layer.close(loadIndex);
-                                if (res.code === 0) {
-                                    var map = res.data.succMap || {};
-                                    Object.keys(map).forEach(function (k) { insertImage(map[k]); });
-                                    if (res.data.errFiles && res.data.errFiles.length) {
-                                        layer.msg('部分失败：' + res.data.errFiles.join(','));
-                                    } else {
-                                        layer.msg('上传成功');
-                                    }
-                                    ins.reload();
-                                } else {
-                                    layer.msg(res.msg || '上传失败');
+                    // 本地上传（layui upload 组件：自带按钮 / 多选 / 进度条）
+                    // 选中计数与「插入所选」按钮联动
+                    var $list = $c.find('#vditor_upload_list_' + field);
+                    var $btnInsertSel = $c.find('#vditor_insert_selected_' + field);
+                    function refreshInsertSelCount() {
+                        var n = $list.find('.item.selected').length;
+                        $btnInsertSel.text('插入所选(' + n + ')');
+                    }
+                    // 点击缩略图切换选中（事件委托，缩略图是动态生成的）
+                    $list.off('click.vdsel').on('click.vdsel', '.item', function (e) {
+                        // 点击右上角对勾不算（其实对勾在元素内，这里简化：任何点击都切换）
+                        $(this).toggleClass('selected');
+                        refreshInsertSelCount();
+                    });
+                    // 全选 / 取消
+                    $c.find('#vditor_select_all_' + field).off('click').on('click', function () {
+                        $list.find('.item').addClass('selected');
+                        refreshInsertSelCount();
+                    });
+                    $c.find('#vditor_select_none_' + field).off('click').on('click', function () {
+                        $list.find('.item').removeClass('selected');
+                        refreshInsertSelCount();
+                    });
+                    // 插入所选：按缩略图顺序插入选中图片，插入完关闭弹窗
+                    $btnInsertSel.off('click').on('click', function () {
+                        var $picked = $list.find('.item.selected');
+                        if (!$picked.length) { layer.msg('请先选中要插入的图片'); return; }
+                        $picked.each(function () { insertImage($(this).data('url')); });
+                        layer.closeAll();
+                    });
+                    upload.render({
+                        elem: '#vditor_upload_btn_' + field,
+                        url: '/file/vditor/upload',
+                        field: 'file',
+                        multiple: true,
+                        accept: 'images',
+                        acceptMime: 'image/*',
+                        before: function () {
+                            layer.load(1, { shade: [0.15, '#fff'] });
+                            $('#vditor_upload_hint_' + field).text('上传中...');
+                            $('#vditor_progress_box_' + field).show();
+                            element.progress('vditor_progress_' + field, '0%');
+                        },
+                        progress: function (n) {
+                            element.progress('vditor_progress_' + field, n + '%');
+                        },
+                        done: function (res) {
+                            if (res.code === 0 && res.data && res.data.succMap) {
+                                var map = res.data.succMap;
+                                // 上传成功的图片默认全部选中
+                                Object.keys(map).forEach(function (k) {
+                                    var url = map[k];
+                                    var safeName = $('<div>').text(k || '').html();
+                                    var $it = $(
+                                        '<div class="item selected" data-url="' + url + '">'
+                                        + '<img src="' + url + '" alt="' + safeName + '" onerror="this.style.display=\'none\'">'
+                                        + '<span class="vditor-tick">&#10003;</span>'
+                                        + '<div class="nm">' + safeName + '</div>'
+                                        + '</div>'
+                                    );
+                                    $list.append($it);
+                                });
+                                if (res.data.errFiles && res.data.errFiles.length) {
+                                    layer.msg('部分失败：' + res.data.errFiles.join(','));
                                 }
-                            },
-                            error: function () { layer.close(loadIndex); layer.msg('上传异常'); }
-                        });
+                                refreshInsertSelCount();
+                                ins.reload();
+                            } else {
+                                layer.msg(res.msg || '上传失败');
+                            }
+                        },
+                        allDone: function () {
+                            layer.closeAll('loading');
+                            $('#vditor_upload_hint_' + field).text('支持 jpg/png/gif，可一次选多张');
+                            $('#vditor_progress_box_' + field).hide();
+                        },
+                        error: function () {
+                            layer.closeAll('loading');
+                            layer.msg('上传异常');
+                            $('#vditor_upload_hint_' + field).text('支持 jpg/png/gif，可一次选多张');
+                            $('#vditor_progress_box_' + field).hide();
+                        }
                     });
-                    // 网络图片：实时预览 + 直接插入（不转存，与 ueditor「通过图片地址」一致）
+                    // 插入图片（ueditor 风格：地址/大小/边框/边距/描述/浮动/预览/确认取消）
                     var $urlInput = $c.find('#vditor_url_' + field);
+                    var $urlW = $c.find('#vditor_w_' + field);
+                    var $urlH = $c.find('#vditor_h_' + field);
+                    var $urlBorder = $c.find('#vditor_border_' + field);
+                    var $urlMargin = $c.find('#vditor_margin_' + field);
+                    var $urlAlt = $c.find('#vditor_alt_' + field);
                     var $urlPreview = $c.find('#vditor_url_preview_' + field);
-                    $urlInput.off('input').on('input', function () {
-                        var u = $.trim($(this).val());
-                        if (!u) { $urlPreview.html('<span>图片预览区</span>'); return; }
-                        var img = new Image();
-                        img.onload = function () { $urlPreview.html('<img src="' + u + '" style="max-width:100%;max-height:300px;">'); };
-                        img.onerror = function () { $urlPreview.html('<span style="color:#c00;">图片加载失败，请检查地址</span>'); };
-                        img.src = u;
+                    var $urlLock = $c.find('#vditor_lock_' + field);
+                    var currentFloat = '';
+                    var locked = false;
+                    var naturalW = 0, naturalH = 0;
+
+                    function buildImgStyle(includeFloat) {
+                        var w = parseInt($urlW.val(), 10) || 0;
+                        var h = parseInt($urlH.val(), 10) || 0;
+                        var b = parseInt($urlBorder.val(), 10) || 0;
+                        var m = parseInt($urlMargin.val(), 10) || 0;
+                        var s = '';
+                        if (w) s += 'width:' + w + 'px;';
+                        if (h) s += 'height:' + h + 'px;';
+                        if (b) s += 'border:' + b + 'px solid #000;';
+                        if (m) s += 'margin:' + m + 'px;';
+                        if (includeFloat) {
+                            if (currentFloat === 'left') s += 'float:left;';
+                            else if (currentFloat === 'right') s += 'float:right;';
+                        } else {
+                            // 居中：改用图片自身 display:block + margin 居中（IR 模式比 <p> 包裹更持久）
+                            s += 'display:block;margin:0 auto;';
+                        }
+                        return s;
+                    }
+
+                    function refreshPreview() {
+                        var u = $.trim($urlInput.val());
+                        if (!u) { $urlPreview.html('<span>图片预览</span>'); return; }
+                        var alt = $.trim($urlAlt.val());
+                        var style = buildImgStyle(true);
+                        $urlPreview.html('<img src="' + u + '" alt="' + alt + '" style="' + style + 'max-width:100%;max-height:100%;">');
+                        var probe = new Image();
+                        probe.onload = function () { naturalW = probe.naturalWidth; naturalH = probe.naturalHeight; };
+                        probe.onerror = function () { $urlPreview.html('<span style="color:#c00;">图片加载失败</span>'); };
+                        probe.src = u;
+                    }
+
+                    function syncDim(fromW) {
+                        if (!locked || !naturalW || !naturalH) return;
+                        if (fromW) {
+                            var w = parseInt($urlW.val(), 10);
+                            if (w > 0) $urlH.val(Math.round(w * naturalH / naturalW));
+                        } else {
+                            var h = parseInt($urlH.val(), 10);
+                            if (h > 0) $urlW.val(Math.round(h * naturalW / naturalH));
+                        }
+                    }
+
+                    $urlInput.off('input').on('input', refreshPreview);
+                    $urlAlt.off('input').on('input', refreshPreview);
+                    $urlBorder.off('input').on('input', refreshPreview);
+                    $urlMargin.off('input').on('input', refreshPreview);
+                    $urlW.off('input').on('input', function () { syncDim(true); refreshPreview(); });
+                    $urlH.off('input').on('input', function () { syncDim(false); refreshPreview(); });
+
+                    $urlLock.off('click').on('click', function () {
+                        locked = !locked;
+                        $urlLock.css('color', locked ? '#ff5722' : '#16baaa');
                     });
+
+                    $c.on('click', '.vditor-float', function () {
+                        $c.find('.vditor-float').removeClass('layui-btn-normal').addClass('layui-btn-primary');
+                        $(this).removeClass('layui-btn-primary').addClass('layui-btn-normal');
+                        currentFloat = $(this).data('float');
+                        refreshPreview();
+                    });
+
                     $c.find('#vditor_url_insert_' + field).off('click').on('click', function () {
                         var u = $.trim($urlInput.val());
                         if (!u) { layer.msg('请输入图片地址'); return; }
-                        insertImage(u);
+                        var alt = $.trim($urlAlt.val());
+                        var html;
+                        if (currentFloat === 'center') {
+                            var s = buildImgStyle(false);
+                            html = '<img src="' + u + '" alt="' + alt + '"' + (s ? ' style="' + s + '"' : '') + '>';
+                        } else {
+                            var s2 = buildImgStyle(true);
+                            html = '<img src="' + u + '" alt="' + alt + '"' + (s2 ? ' style="' + s2 + '"' : '') + '>';
+                        }
+                        // 编辑已有图片则就地替换；否则追加插入
+                        if (pendingEditImg) {
+                            replaceImageInSource(pendingEditImg, html);
+                            pendingEditImg = null;
+                        } else {
+                            insertImageHTML(html);
+                        }
                         layer.closeAll();
                     });
+
+                    $c.find('#vditor_url_cancel_' + field).off('click').on('click', function () {
+                        layer.closeAll();
+                    });
+                    // [Buddy 2026-09-04] 编辑已有图片：默认切到"插入图片"选项卡并预填原图参数
+                    function prefillInsertTab(img) {
+                        function pxVal(v) { if (!v) return ''; var m = String(v).match(/^\s*(\d+(?:\.\d+)?)px/i); return m ? m[1] : ''; }
+                        var src = img.getAttribute('src') || '';
+                        var alt = img.getAttribute('alt') || '';
+                        var st = img.style || {};
+                        $urlInput.val(src);
+                        $urlW.val(pxVal(st.width) || img.getAttribute('width') || '');
+                        $urlH.val(pxVal(st.height) || img.getAttribute('height') || '');
+                        $urlBorder.val(pxVal(st.borderWidth) || (img.getAttribute('border') || ''));
+                        $urlMargin.val(pxVal(st.margin) || '');
+                        $urlAlt.val(alt);
+                        var floatVal = st.cssFloat || st.float || '';
+                        var isCenter = (st.display === 'block') && /auto/.test(st.margin || '');
+                        currentFloat = isCenter ? 'center' : (floatVal === 'left' ? 'left' : (floatVal === 'right' ? 'right' : ''));
+                        $c.find('.vditor-float').removeClass('layui-btn-normal').addClass('layui-btn-primary');
+                        if (currentFloat) {
+                            $c.find('.vditor-float[data-float="' + currentFloat + '"]').removeClass('layui-btn-primary').addClass('layui-btn-normal');
+                        }
+                        refreshPreview();
+                    }
+                    if (pendingEditImg) {
+                        element.tabChange('vditor_mgr_tab_' + field, 'insert');
+                        prefillInsertTab(pendingEditImg);
+                    }
                 }
             });
-        });
+        }
     });
 </script>
 {/case}
