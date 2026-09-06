@@ -1,0 +1,31 @@
+
+    <div class="layui-input-inline" style="width:{$field.size}px">
+        <div id="slideTest3" class="demo-slider"></div>
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}
+    <script>
+        layui.use('slider', function(){
+            var $ = layui.$
+                ,slider = layui.slider;
+            //默认滑块
+
+            //设置最大最小值
+            slider.render({
+                elem: '#slideTest3'
+                ,min: 20 //最小值
+                ,max: 50 //最大值
+                ,tips: true //关闭默认提示层
+                // ,disabled: true //禁用滑块
+                // ,value: [30, 60] //初始值
+                ,value: 40 //初始值
+                // ,range: true //范围选择
+                ,change: function(value){
+                    $('#test-slider-tips1').html('当前数值：'+ value);
+                    // $('#test-slider-tips2').html('开始值：'+ vals[0] + '、结尾值：'+ vals[1]);
+                }
+            });
+
+        });
+    </script>

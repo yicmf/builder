@@ -1,0 +1,28 @@
+
+
+    <div class="layui-input-inline">
+        <input type="checkbox" lay-verify="{$field['verify']"  lay-filter="filter_{$name_space}_{$field.field}"  {php}
+               if($field['value']){ echo 'checked=""';}{/php} value="{$field['value']}" lay-skin="switch"
+        lay-text="{php}echo implode('|',$field['options']);{/php}">
+
+        <input type="hidden"  name="{$field.field}"  id="builder_switch_{$field.field}" value="{$field['value']}">
+
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}
+    <script type="text/javascript">
+        layui.use(['form'], function () {
+            var form = layui.form,
+                $ = layui.$;
+            //监听指定开关
+            form.on('switch(filter_{$name_space}_{$field.field})', function (data) {
+                if (this.checked) {
+                    $("#builder_switch_{$field.field}").val(1);
+                } else {
+                    $("#builder_switch_{$field.field}").val(0);
+                }
+            });
+        })
+
+    </script>

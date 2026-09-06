@@ -917,6 +917,27 @@ EOF;
     }
 
     /**
+     * 可点击复制的文本列（2026-09-06 新增）
+     * 单元格内容点击即复制到剪贴板（点击处理器与复制函数见 tpl/table.html 的 .builder-copy-text 委托）
+     * 值经 encodeURIComponent 写入 data 属性，防引号/尖括号破坏属性与注入
+     * @param string $field 字段名
+     * @param string $title 列标题
+     * @param string $width 列宽
+     * @param string $style 单元格样式
+     * @return $this
+     */
+    public function keyCopy($field, $title, $width = '', $style = '')
+    {
+        $templet = 'k'.uniqid();
+        $this->templets[] = <<<EOF
+<script type="text/html" id="$templet">
+   <span class="builder-copy-text" title="点击复制" style="cursor:pointer;" data-builder-copy="{{ encodeURIComponent(d.$field || '') }}">{{ d.$field }} <i class="layui-icon layui-icon-file-copy layui-font-gray"></i></span>
+</script>
+EOF;
+        return $this->key($field, $title, false, $width, 'normal', $style, '#' . $templet);
+    }
+
+    /**
      * 新的tab窗口
      * @param string $field
      * @param string $title

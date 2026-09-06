@@ -1,0 +1,42 @@
+
+<script src="/static/admin/lib/extend/city-picker/city-picker.data.js"></script>
+<script src="/static/admin/lib/extend/city-picker/city-picker.js"></script>
+<link href="/static/admin/lib/extend/city-picker/city-picker.css?v=1" rel="stylesheet"/>
+
+{php}
+
+$show = '';
+$value = \think\facade\Db::name('district')->where('id',$field['value'])->find();
+if($value){
+
+$show = $value['name'];
+
+if($value['upid']){
+$value = \think\facade\Db::name('district')->where('id',$value['upid'])->find();
+$show = $value['name'].'/'.$show;
+if($value['upid']){
+$value = \think\facade\Db::name('district')->where('id',$value['upid'])->find();
+$show = $value['name'].'/'.$show;
+
+}
+}
+}
+{/php}
+<div class="layui-inline" style="width: 260px">
+    <input type="text" autocomplete="on" class="layui-input" id="city-picker" readonly="readonly" data-toggle="city-picker" placeholder="请选择">
+</div>
+
+<script>
+
+    layui.use([], function () {
+        var $ = layui.$, cityPicker = layui.citypicker;
+        var currentPicker = new cityPicker("#city-picker", {
+            provincename: "province_id",
+            cityname: "city_id",
+            districtname: "district_id",
+            level: "{$field['field']}",// 级别
+        });
+        currentPicker.setValue("{$show}");
+    });
+
+</script>

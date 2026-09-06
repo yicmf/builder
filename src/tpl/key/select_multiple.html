@@ -1,0 +1,150 @@
+
+    <style>
+        xm-select .scroll-body{
+            padding-left: 10px;
+            overflow: hidden;
+        }
+    </style>
+    <div class="layui-input-block">
+        <!-- 多选菜单 -->
+
+        <!-- 多选菜单end -->
+
+        {php}
+        $ajax = 0;
+        $select_ids = [];
+        if($field['value'])
+        {
+        $select_ids = explode(',',$field['value']);
+        }
+        if (is_array($field['options'])) {
+        $fields = [];
+        foreach ($field['options'] as $key => $item) {
+        $fields[] = [
+        'name' => $item,
+        'selected' => in_array($key,$select_ids),
+        'value' => $key
+        ];
+        }
+        }elseif($field['options'] instanceof \Closure)
+        {
+        $ajax = 1;
+        $fields = [];
+        } else {
+        $fields = [];
+        }
+
+        {/php}
+
+        <div id="xm-select-{$field.field}-{$uniqid}" class="xm-select-demo"></div>
+        <script type="text/javascript">
+
+            //加载组件
+            layui.use(['jquery','xmSelect'], function(){
+                var xmSelect = layui.xmSelect;
+                var $ = layui.jquery;
+                //渲染多选
+                if({$ajax})
+                {
+
+                    var demo1 = xmSelect.render({
+                        el: '#xm-select-{$field.field}-{$uniqid}',
+                        size: 'large',
+                        toolbar:{
+                            show: true,
+                        },
+                        autoRow: true,
+                        height: '500px',
+                        //  name: "{$field.field}",
+                        filterable: true,
+                        remoteSearch: true,
+                        remoteMethod: function(val, cb, show){
+                            //这里如果val为空, 则不触发搜索
+                            if(!val){
+                                return cb([]);
+                            }
+
+                            $.ajax({
+                                url: "{:url('')}", //请求的url地址
+                                //  url: 'https://www.fastmock.site/mock/98228b1f16b7e5112d6c0c87921eabc1/xmSelect/search',
+                                dataType: "json", //返回格式为json
+                                type: "GET", //请求方式
+                                data: {
+                                    ajax: '{$field.field}',
+                                    keyword: val,
+                                }, //请求方式
+                                success: function (req) {
+                                    cb(req.data)
+                                },
+                                complete: function () {
+                                    //请求完成的处理
+                                    // layer.close(loading);
+                                },
+                                error: function (err) {
+                                    //请求出错处理
+                                    layer.close(loading);
+                                    layer.msg(JSON.stringify(err));
+                                }
+                            });
+
+
+                        },
+                    })
+
+
+                }else{
+
+
+                    var demo1 = xmSelect.render({
+                        el: '#xm-select-{$field.field}-{$uniqid}',
+                        size: 'large',
+                        toolbar:{
+                            show: true,
+                        },
+                        autoRow: true,
+                        height: '500px',
+                        name: "{$field.field}",
+                        // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+                        data: {$fields|json_encode=271|raw}
+                });
+
+
+                }
+                /*var demo1 = xmSelect.render({
+                     el: '#xm-select-{$field.field}-{$uniqid}',
+                    data: [
+                        {name: '张三', value: 1, selected: true},
+                        {name: '李四', value: 2, selected: true},
+                        {name: '王五', value: 3, disabled: true},
+                    ],
+                    autoRow: true,
+                    toolbar: { show: true },
+                    filterable: true,
+                    remoteSearch: true,
+                    remoteMethod: function(val, cb, show){
+                        //这里如果val为空, 则不触发搜索
+                        if(!val){
+                            return cb([]);
+                        }
+                        //这里引入了一个第三方插件axios, 相当于$.ajax
+                        $.ajax({
+                            method: 'get',
+                            url: 'https://www.fastmock.site/mock/98228b1f16b7e5112d6c0c87921eabc1/xmSelect/search',
+                            params: {
+                                keyword: val,
+                            }
+                        }).then(response => {
+                            var res = response.data;
+                            cb(res.data)
+                        }).catch(err => {
+                            cb([]);
+                        });
+                    },
+                })
+    */
+
+            })
+
+        </script>
+
+    </div>

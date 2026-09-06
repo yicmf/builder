@@ -1,0 +1,42 @@
+
+<div class="layui-input-inline">
+    <script src="__COMMON__/dragsort/jquery.dragsort-0.5.2.min.js"></script>
+    <input type="hidden" name="{$field.field}" value="{$field['value']}">
+    {empty name="field.value"}
+    空
+    {else /}<br>
+    <ul id="sortUl" class="dragsort">
+        {volist name=":explode(',',$field['value'])" id="addons_vo"}
+        <li>{$key+1}--<span>{$addons_vo}</span></li>
+        <br>
+        {/volist}
+    </ul>
+    <script type="text/javascript">
+        $(function () {
+            $("#sortUl").dragsort({
+                dragSelector: 'li',
+                placeHolderTemplate: '<li class="draging-place">&nbsp;</li>',
+                dragEnd: function () {
+                    updateVal();
+                }
+            });
+
+            $('#sortUl li b').click(function () {
+                $(this).parent().remove();
+                updateVal();
+            });
+
+            // 更新排序后的隐藏域的值
+            function updateVal() {
+                var sortVal = [];
+                $('#sortUl li').each(function () {
+                    alert($('em', this).text());
+                    sortVal.push($('em', this).text());
+                });
+                $("input[name='{$field.field}']").val(sortVal.join(','));
+            }
+        })
+    </script>
+    {/empty}
+
+</div>

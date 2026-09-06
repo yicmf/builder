@@ -210,9 +210,39 @@
     {volist name='templets' id='vo'}
     {$vo|raw}
     {/volist}
+    <!-- 2026-09-06 新增：keyCopy 可点击复制列的委托处理器（配合 ColumnBuilder::keyCopy 生成的 .builder-copy-text） -->
+    <script>
+        layui.use(['jquery', 'layer'], function () {
+            var $ = layui.jquery, layer = layui.layer;
+            // 复制函数：优先剪贴板 API（https/localhost），http 环境降级 execCommand
+            window.builderCopyText = function (text) {
+                text = String(text == null ? '' : text);
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text);
+                } else {
+                    var ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); } catch (e) {}
+                    document.body.removeChild(ta);
+                }
+            };
+            // 事件委托：兼容表格重载后动态生成的单元格
+            $(document).on('click', '.builder-copy-text', function () {
+                var val = decodeURIComponent($(this).attr('data-builder-copy') || '');
+                window.builderCopyText(val);
+                layer.msg('已复制', {icon: 1, time: 1000});
+                return false;
+            });
+        });
+    </script>
+    <!-- 2026-09-06 方案A死资源清理：遗留调试模板（写死d.price且无任何JS引用），原块注释保留
     <script type="text/html" id="62271a4aaa0f8">
         <i class="layui-icon layui-icon-rmb"></i> {{d.price}}
-    </script>
+    </script>-->
 <!--    <style>-->
 
 <!--        .layui-table-cell {-->
@@ -243,7 +273,8 @@
                 if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
             return fmt;
         }
-        var tab_values = {$tabs|json_encode|raw};
+        // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+        var tab_values = {$tabs|json_encode=271|raw};
         layui.use(['admin','forum','table',"element",'upload','soulTable'], function(){
             var $ = layui.$
                 ,admin = layui.admin
@@ -386,7 +417,8 @@
             // 渲染
             tree.render({
                 elem: '#ID-tree-{$namespace}-showLine',
-                data: {$tag_tree.data|json_encode|raw},
+                // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+                data: {$tag_tree.data|json_encode=271|raw},
                 showCheckbox : true,
                 id: 'ID-{$namespace}-data',
                 showLine: false,  // 是否开启连接线

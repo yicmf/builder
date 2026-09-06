@@ -1907,9 +1907,13 @@
 				$dialog_index = $this->request->get('_dialog_index', 0);
 				$this->assign('dialog_index', $dialog_index);
 				$this->assign('name_space', $this->_namespace);
+				// 2026-09-06 方案D：edit/dialog 合并后，_form.html 内的 JS 行为差异（req.reload 重载父表格）
+				// 由 form_mode 区分：dialog=弹窗模式（激活），page=页面模式（与原 edit.html 注释态一致）
 				if (!empty($template) || (empty($template) && $dialog_index != 0)) {
+					$this->assign('form_mode', 'dialog');
 					return parent::_fetch('dialog', $vars);
 				} else {
+					$this->assign('form_mode', 'page');
 					return parent::_fetch('edit', $vars);
 				}
 			}

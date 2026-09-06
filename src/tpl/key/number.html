@@ -1,0 +1,8 @@
+
+    <div class="layui-input-inline" style="width:{$field.size}px">
+        <input type="number" name="{$field.field}" value="{$field['value']}" class="layui-input" placeholder="{$field.placeholder}"   lay-verify="{$field['verify']">
+    </div>
+
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}

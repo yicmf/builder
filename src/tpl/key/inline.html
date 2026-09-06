@@ -1,0 +1,8 @@
+
+    <div class="layui-input-inline">
+        <input type="text" name="{$field.field}" value="{$field.value|htmlspecialchars}" lay-verify="{$field.verify?$field.verify:''}"
+               class="layui-input" placeholder="{$field.placeholder|raw}"/>
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}

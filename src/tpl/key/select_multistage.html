@@ -1,0 +1,29 @@
+
+    <div class="layui-input-inline" style="width: 230px">
+        <!-- 多选菜单 -->
+        <input type="text"  name="{$field.field}" id="key_{$name_space}_{$field.field}" value="{$field.value}"  style="display: none;" />
+        <!-- 多选菜单end -->
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}
+
+    <script type="text/javascript">
+        var select_1d;
+        layui.use(['jquery', 'layCascader'], function () {
+            var $ = layui.jquery, layCascader = layui.layCascader;
+            select_1d = layCascader({
+                elem: $("#key_{$name_space}_{$field.field}"),
+                value:parseInt("{$field.value}"),
+                props: {
+                    label: 'title',
+                    value: 'id',
+                    children: 'children'
+                },
+                // options: JSON.parse('{$field.options|json_encode}'),
+                // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+                options: {$field.options|json_encode=271|raw}
+            });
+
+        });
+    </script>

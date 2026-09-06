@@ -1,0 +1,7 @@
+
+    <div class="layui-input-block">
+        {$field.value|raw}
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+        {/notempty}
+    </div>

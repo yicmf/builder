@@ -1,0 +1,22 @@
+
+    <div class="layui-input-inline">
+        <div id="key_s_{$field.field}"></div>
+        <input type="hidden" name="{$field.field}" value="{$field['value']}" id="key_{$field['field']}">
+    </div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}
+    <script>
+        layui.use(['rate'], function () {
+            var $ = layui.jquery, rate = layui.rate;
+
+            rate.render({
+                elem: '#key_s_{$field.field}'
+                , value: "{$field['value']}"
+                , setText: function (value) {
+                    $("#key_{$field['field']}").val(value);
+                }
+            })
+
+        });
+    </script>

@@ -1,0 +1,189 @@
+
+<div class="layui-input-block" style="width:{$field.style.width}px;max-width:100%">
+    <textarea id="vditor_md_{$field.field}" name="{$field.field}" style="display:none">{$field.value|raw}</textarea>
+    <div style="margin-bottom:6px;">
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="vditor_mgr_btn_{$field.field}">图片管理</button>
+    </div>
+    <div id="vditor_{$field.field}"></div>
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}
+</div>
+
+<script type="text/html" id="vditor_mgr_tpl_{$field.field}">
+<div style="background:#fff;padding:15px;">
+    <div class="layui-tab" lay-filter="vditor_mgr_tab_{$field.field}">
+        <ul class="layui-tab-title">
+            <li class="layui-this">图片管理</li>
+            <li>本地上传</li>
+            <li>网络图片</li>
+        </ul>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="vditor_search_{$field.field}" placeholder="输入文件名关键字" class="layui-input" style="width:240px;">
+                    <button type="button" class="layui-btn layui-btn-sm" id="vditor_search_btn_{$field.field}">搜索</button>
+                    <button type="button" class="layui-btn layui-btn-sm layui-btn-primary" id="vditor_reset_btn_{$field.field}">重置</button>
+                </div>
+                <table id="vditor_table_{$field.field}" lay-filter="vditor_table_{$field.field}"></table>
+            </div>
+            <div class="layui-tab-item">
+                <input type="file" id="vditor_local_{$field.field}" multiple accept="image/*">
+                <div class="layui-word-aux" style="margin-top:8px;">选择图片后自动上传并插入到编辑器</div>
+            </div>
+            <div class="layui-tab-item">
+                <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="vditor_url_{$field.field}" placeholder="输入图片地址，如 https://example.com/a.jpg" class="layui-input" style="width:460px;">
+                    <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="vditor_url_insert_{$field.field}">插入</button>
+                </div>
+                <div id="vditor_url_preview_{$field.field}" style="min-height:140px;border:1px dashed #e6e6e6;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999;background:#fafafa;">
+                    <span>图片预览区</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/javascript">
+    layui.use(['vditor', 'layer', 'element', 'jquery', 'table'], function () {
+        var Vditor = layui.vditor;
+        var layer = layui.layer;
+        var element = layui.element;
+        var $ = layui.$;
+        var table = layui.table;
+        var field = '{$field.field}';
+        var md = document.getElementById('vditor_md_' + field);
+        var vditor = new Vditor('vditor_' + field, {
+            cache: false,
+            cdn: '/static/vditor',
+            mode: '{$field.config.mode|default="wysiwyg"}',
+            height: {$field.style.height|default=400},
+            value: md.value,
+            // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+            upload: {$field.config.upload|json_encode=271|raw},
+            input: function (val) {
+                md.value = val;
+            }
+        });
+        window['vditor_' + field] = vditor;
+
+        function insertImage(url) {
+            if (!url) { return; }
+            vditor.insertValue('<img src="' + url + '" />');
+        }
+
+        function formatSize(bytes) {
+            bytes = parseInt(bytes, 10) || 0;
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        $('#vditor_mgr_btn_' + field).off('click').on('click', function () {
+            layer.open({
+                type: 1,
+                title: '图片管理',
+                area: ['920px', '640px'],
+                content: $('#vditor_mgr_tpl_' + field).html(),
+                success: function (layero) {
+                    var $c = layero.find('.layui-layer-content');
+                    $c.css('background', '#fff');
+                    element.render('tab', 'vditor_mgr_tab_' + field);
+                    // 图片表格（layui table 自带分页）
+                    var ins = table.render({
+                        elem: '#vditor_table_' + field,
+                        url: '/file/vditor/manager',
+                        page: { layout: ['prev', 'page', 'next', 'count'], limit: 12, limits: [12, 24, 48] },
+                        request: { pageName: 'page', limitName: 'pageSize' },
+                        where: { keyword: '' },
+                        cols: [[
+                            { title: '缩略图', width: 90, templet: function (d) {
+                                return '<img src="' + d.url + '" style="height:40px;max-width:70px;object-fit:cover;border-radius:2px;" onerror="this.style.display=\'none\'">';
+                            } },
+                            { field: 'name', title: '文件名', minWidth: 160 },
+                            { field: 'size', title: '大小', width: 110, templet: function (d) { return formatSize(d.size); } },
+                            { field: 'ext', title: '类型', width: 80 },
+                            { field: 'create_time', title: '上传时间', width: 170 },
+                            { title: '操作', width: 90, templet: function (d) {
+                                return '<a class="layui-btn layui-btn-xs vditor-ins" data-url="' + d.url + '">插入</a>';
+                            } }
+                        ]],
+                        parseData: function (res) {
+                            return {
+                                code: res.code === 0 ? 0 : (res.code || 1),
+                                msg: res.msg || '',
+                                count: res.data ? res.data.total : 0,
+                                data: res.data ? res.data.list : []
+                            };
+                        }
+                    });
+                    // 搜索
+                    $c.find('#vditor_search_btn_' + field).off('click').on('click', function () {
+                        ins.reload({ where: { keyword: $c.find('#vditor_search_' + field).val() } });
+                    });
+                    // 重置
+                    $c.find('#vditor_reset_btn_' + field).off('click').on('click', function () {
+                        $c.find('#vditor_search_' + field).val('');
+                        ins.reload({ where: { keyword: '' } });
+                    });
+                    // 插入（事件委托，表格行动态生成）
+                    $c.on('click', '.vditor-ins', function () {
+                        insertImage($(this).data('url'));
+                        layer.closeAll();
+                    });
+                    // 本地上传
+                    $c.find('#vditor_local_' + field).off('change').on('change', function () {
+                        var files = this.files;
+                        if (!files || !files.length) { return; }
+                        var fd = new FormData();
+                        for (var i = 0; i < files.length; i++) {
+                            fd.append('file[]', files[i]);
+                        }
+                        var loadIndex = layer.msg('上传中...', { icon: 16, time: false });
+                        $.ajax({
+                            url: '/file/vditor/upload',
+                            type: 'POST',
+                            data: fd,
+                            processData: false,
+                            contentType: false,
+                            success: function (res) {
+                                layer.close(loadIndex);
+                                if (res.code === 0) {
+                                    var map = res.data.succMap || {};
+                                    Object.keys(map).forEach(function (k) { insertImage(map[k]); });
+                                    if (res.data.errFiles && res.data.errFiles.length) {
+                                        layer.msg('部分失败：' + res.data.errFiles.join(','));
+                                    } else {
+                                        layer.msg('上传成功');
+                                    }
+                                    ins.reload();
+                                } else {
+                                    layer.msg(res.msg || '上传失败');
+                                }
+                            },
+                            error: function () { layer.close(loadIndex); layer.msg('上传异常'); }
+                        });
+                    });
+                    // 网络图片：实时预览 + 直接插入（不转存，与 ueditor「通过图片地址」一致）
+                    var $urlInput = $c.find('#vditor_url_' + field);
+                    var $urlPreview = $c.find('#vditor_url_preview_' + field);
+                    $urlInput.off('input').on('input', function () {
+                        var u = $.trim($(this).val());
+                        if (!u) { $urlPreview.html('<span>图片预览区</span>'); return; }
+                        var img = new Image();
+                        img.onload = function () { $urlPreview.html('<img src="' + u + '" style="max-width:100%;max-height:300px;">'); };
+                        img.onerror = function () { $urlPreview.html('<span style="color:#c00;">图片加载失败，请检查地址</span>'); };
+                        img.src = u;
+                    });
+                    $c.find('#vditor_url_insert_' + field).off('click').on('click', function () {
+                        var u = $.trim($urlInput.val());
+                        if (!u) { layer.msg('请输入图片地址'); return; }
+                        insertImage(u);
+                        layer.closeAll();
+                    });
+                }
+            });
+        });
+    });
+</script>

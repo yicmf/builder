@@ -35,7 +35,8 @@
         //日期时间范围
         layui.use(['laydate'], function() {
             var laydate = layui.laydate;
-            laydate.render({$search.options|json_encode|raw});
+            // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+            laydate.render({$search.options|json_encode=271|raw});
         })
     </script>
 

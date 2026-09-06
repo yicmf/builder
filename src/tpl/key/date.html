@@ -1,0 +1,48 @@
+
+
+{php}if(is_array($field['field'])){
+$field['field_a'] = implode('|',$field['field']);
+$field['value_a'] = implode(' - ',$field['value']);
+{/php}
+<div class="layui-input-inline" style="width: 320px">
+    <input type="text" class="layui-input" readonly size="{$field['size']}" id="j_builder_{$field.field_a|md5}"
+           value="{$field.value_a}">
+    <input type="hidden" name="{$field.field[0]}" id="j_builder_{$field.field[0]}" value="{$field.value[0]}">
+    <input type="hidden" name="{$field.field[1]}" id="j_builder_{$field.field[1]}" value="{$field.value[1]}">
+</div>
+{php}}else{{/php}
+<div class="layui-input-inline"  style="width: 320px">
+    <input type="text" class="layui-input" name="{$field.field}" size="{$field['size']}" id="j_builder_{$field.field}" value="{$field.value}">
+</div>
+{php}}{/php}
+{notempty name='field.tips'}
+<div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+{/notempty}
+<script>
+    layui.use('laydate', function () {
+        var laydate = layui.laydate, $ = layui.$;
+
+        //执行一个laydate实例
+        {php}if (is_array($field['field'])) {{/php}
+            // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+            var options = {$field.options|json_encode=271|raw};
+            options['done'] = function (value, date) {
+                var arr = value.split(" - ")
+                console.log(arr);
+                $("#j_builder_{$field.field[0]}").val(arr[0]);
+                $("#j_builder_{$field.field[1]}").val(arr[1]);
+            };
+            laydate.render(options);
+
+            {php} }else{  {/php}
+            // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+            laydate.render({$field.options|json_encode=271|raw});
+
+            {php} } {/php}
+        }
+        );
+</script>
+
+{/case}
+
+<!--添加城市选择（需安装城市联动插件）-->

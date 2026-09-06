@@ -1,0 +1,20 @@
+
+
+<div class="class=" layui-input-inline"">
+{php}
+
+foreach ($field['options'] as $key => $option) {
+$checked = $field['value']==$key ? 'checked' : '';
+{/php}
+
+<input type="radio" name="{$field.field}" lay-filter="filter_{$name_space}_{$field.field}" value="{$key}" {$checked}
+       title="{$option|htmlspecialchars}" {$field.disabled?'disabled=""':''}>
+
+{php}
+}
+{/php}
+
+</div>
+{notempty name='field.tips'}
+<div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+{/notempty}

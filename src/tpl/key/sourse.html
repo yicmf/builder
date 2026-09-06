@@ -1,0 +1,13 @@
+
+<div class="layui-input-inline">
+    <input type="text" name="{$field.field}_input" size="{$field['size']}" value=""
+           placeholder='来源站点名|http://www.baidu.com'>
+    <select name="{$field.field}" id="{$field.field}" data-toggle="selectpicker">
+        <option value="0">选择已有站点</option>
+        {volist name="field.options" id="option"}
+        {php} $selected = $field['value']==$key ? 'selected' : '';{/php}
+        <option value="{$key}" {$selected}>{$option}</option>
+        {/volist}
+    </select>
+
+</div>

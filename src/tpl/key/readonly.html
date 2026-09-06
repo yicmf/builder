@@ -1,0 +1,8 @@
+
+    <div class="layui-input-block">
+        <input type="text"  class="layui-input" value="{$field.value|htmlspecialchars}" placeholder="无需填写" readonly>
+
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+        {/notempty}
+    </div>

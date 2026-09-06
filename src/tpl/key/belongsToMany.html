@@ -1,0 +1,81 @@
+<!-- 多对多选择 -->
+
+    <div class="layui-input-block">
+        {php}
+        $select_ids = [];
+
+        if($field['value'])
+        {
+        foreach ($field['value'] as $key => $item) {
+        $select_ids[] = $item['id'];
+        }
+        }
+        if (is_array($field['options']['column'])) {
+        $fields = [];
+        foreach ($field['options']['column'] as $key => $item) {
+        $fields[] = [
+        'name' => $item,
+        'selected' => in_array($key,$select_ids),
+        'value' => $key
+        ];
+        }
+        } else {
+
+        $fields = [];
+        }
+        {/php}
+
+        <div id="xm-select-{$field.field}-{$uniqid}" class="xm-select-demo"></div>
+        <script type="text/javascript">
+
+            //加载组件
+            layui.use(['xmSelect'], function(){
+                var xmSelect = layui.xmSelect;
+
+                //渲染多选
+
+                var demo1 = xmSelect.render({
+                    el: '#xm-select-{$field.field}-{$uniqid}',
+                    size: 'large',
+                    name: "{$field.field}",
+                    // 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合
+                    data: {$fields|json_encode=271|raw}
+            })
+                /*var demo1 = xmSelect.render({
+                    el: '#demo1',
+                    data: [
+                        {name: '张三', value: 1, selected: true},
+                        {name: '李四', value: 2, selected: true},
+                        {name: '王五', value: 3, disabled: true},
+                    ],
+                    autoRow: true,
+                    toolbar: { show: true },
+                    filterable: true,
+                    remoteSearch: true,
+                    remoteMethod: function(val, cb, show){
+                        //这里如果val为空, 则不触发搜索
+                        if(!val){
+                            return cb([]);
+                        }
+                        //这里引入了一个第三方插件axios, 相当于$.ajax
+                        $.ajax({
+                            method: 'get',
+                            url: 'https://www.fastmock.site/mock/98228b1f16b7e5112d6c0c87921eabc1/xmSelect/search',
+                            params: {
+                                keyword: val,
+                            }
+                        }).then(response => {
+                            var res = response.data;
+                            cb(res.data)
+                        }).catch(err => {
+                            cb([]);
+                        });
+                    },
+                })
+    */
+
+            })
+
+        </script>
+
+    </div>

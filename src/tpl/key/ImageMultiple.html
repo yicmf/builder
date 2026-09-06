@@ -1,0 +1,182 @@
+
+<div class="layui-input-block">
+    {php}
+    if(is_string($field['value']))
+    {
+    $images = \think\facade\Db::name('image')->where('id','in',$field['value'])->select();
+    }else{
+    $images = $field['value'];
+    }
+    {/php}
+
+
+    <script src="/static/common/sortable.min.js"></script>
+
+
+    <button type="button" class="layui-btn" id="button-upload-MultipleImage-{$field.field}">上传图片</button>
+    <div class="layui-upload-list">
+        <img class="layui-upload-img" style="display: none" id="test-upload-normal-img" src="/static/common/images/default_image_240.gif">
+        <div class="layui-upload-list" id="upload-MultipleImage-list-{$field.field}">
+
+            {volist name='images' id='vo'}
+            <div class="thumbnail"  data-id="{$vo.id}">
+                <input type="hidden" name="{$field.field}[]" id="file_value_{$field.field}" value="{$vo['id']}"/>
+                <i class="icon iconfont icon-tuodong remove-picture"></i>
+                <i class="layui-icon layui-icon-close-fill remove-picture" onclick="removeUploadImg(this,'{$field.field}')"></i>
+                <img class="layui-upload-img"  src="{$vo['url']}" >
+            </div>
+
+            {/volist}
+        </div>
+
+    </div>
+
+    <script>
+        layui.use(['admin', 'upload'], function () {
+            var $ = layui.jquery
+                , upload = layui.upload
+                ,element = layui.element;
+            var limit = "{$field.options.limit}";
+            //获取对象
+            var el = document.getElementById('upload-MultipleImage-list-{$field.field}');
+            //设置配置
+            var ops = {
+                animation: 1000,
+                //拖动结束
+                onEnd: function (evt) {
+                    console.log(evt);
+                    console.log( evt.item);
+                    //获取拖动后的排序
+                    var arr = sortable.toArray();
+                    // console.log(arr);
+                    // getUploadValue('{$field.field}');
+                },
+            };
+            window.removeUploadImg = function (obj,field) {
+                // console.log(obj);
+                $(obj).parent().remove();
+                // getUploadValue(field);
+            }
+            /*  window.getUploadValue = function (field) {
+                  // console.log(field)
+                  var temp = new Array();
+                 var items = $('#upload-MultipleImage-list-'+field).children().each(function(index){
+                     $(this).data('id') &&temp.push($(this).data('id'))
+                 });
+                 $("#file_value_"+field).val(temp.join(','));
+                  console.log(field)
+                  console.log(temp.join(','))
+              }*/
+            //初始化
+            var sortable = Sortable.create(el, ops);
+            //普通图片上传
+            var uploadInst = upload.render({
+                elem: '#button-upload-MultipleImage-{$field.field}'
+                ,accept: 'images' //图片
+                ,acceptMime: 'image/*'
+                //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
+                //   ,size: 60 //限制文件大小，单位 KB
+                , url: "{:url('/file/image/upload')}"
+                , data: {
+                    type: 'admin',
+                }
+                , multiple: true
+                , before: function (obj) {
+
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        //  console.log(result);
+                        var html = '<div class="thumbnail"   data-index="index-'+index+'" > \n' +
+                            ' <input type="hidden" name="{$field.field}[]" id="file_value_{$field.field}-'+index+'" value=""/>'+
+                            '    <i class="icon iconfont icon-tuodong remove-picture"></i>\n' +
+                            '    <i class="layui-icon layui-icon-close-fill remove-picture" onclick="removeUploadImg(this,\'{$field.field}\')"></i>\n' +
+                            '    <img class="layui-upload-img"  src="' + result + '" " alt="' + file.name + '">\n' +
+                            '\n' +
+                            '                <div class="layui-progress layui-progress-big" id="progress-{$field.field}-'+index+'" lay-showpercent="yes" lay-filter="progress-{$field.field}-'+index+'">\n' +
+                            '                   <div class="layui-progress-bar" lay-percent="0%" style="width: 0%;"><span class="layui-progress-text"></span></div>\n' +
+                            '                </div>' +
+                            '<div class="upload-msg" id="upload-msg-{$field.field}-'+index+'"></div>' +
+                            '</div>';
+                        $('#upload-MultipleImage-list-{$field.field}').append(html)
+
+                        //单个重传
+                        // tr.find('.demo-reload').on('click', function(){
+                        //     obj.upload(index, file);
+                        // });
+
+                    });
+                }
+                ,progress: function(n, elem, res, index){
+                    // console.log(elem); //得到当前触发的元素 DOM 对象。可通过该元素定义的属性值匹配到对应的进度条。
+                    // console.log(res); //得到 progress 响应信息
+                    $('#progress-{$field.field}-'+index).removeClass('layui-hide');
+                    element.progress('progress-{$field.field}-'+index, n + '%'); //进度条
+                    // if(n == 100){
+                    //     layer.msg('上传完毕', {icon: 1});
+                    // }
+                }
+                , done: function (res, index, upload) {
+                    //如果上传失败
+                    // console.log($("[data-index=\'index-"+index+"\']"));
+                    // console.log(upload)
+                    //  alert(limit>0)
+                    if(limit>0 && $("#upload-MultipleImage-list-{$field.field}").children().length>limit)
+                    {
+                        $("#upload-MultipleImage-list-{$field.field}").children().eq(0).remove();
+                    }
+                    if (res.code > 0) {
+                        //演示失败状态，并实现重传
+                        $('#progress-{$field.field}-'+index).addClass('layui-hide');
+                        var demoText = $('#upload-msg-{$field.field}-'+index);
+                        demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                        demoText.find('.demo-reload').on('click', function(){
+                            uploadInst.upload();
+                        });
+                        return layer.msg(res.message);
+                    } else {
+                        //上传成功
+                        $("[data-index=\'index-"+index+"\']").attr('data-id',res.data.id);
+                        $("#file_value_{$field.field}-"+index).val(res.data.id);
+
+                    }
+                }
+                ,allDone: function(obj){ //当文件全部被提交后，才触发
+                    // console.log(obj); //得到总文件数file_value_{$field.field}
+                    //  var arr = new Array();
+                    // $("#upload-MultipleImage-list-{$field.field}").children("img").each(function(){
+                    //    if ($(this).data('id'))
+                    //    {
+                    //        arr.push($(this).data('id'));
+                    //    }
+                    // });
+                    // $("#file_value_{$field.field}").val(arr.join(','));
+                    // getUploadValue('{$field.field}');
+                }
+                , error: function(index, upload){ //错误回调
+                    // var that = this;
+                    // var tr = that.elemList.find('tr#upload-'+ index)
+                    //     ,tds = tr.children();
+                    // tds.eq(3).find('.demo-reload').removeClass('layui-hide'); //显示重传
+                    $('#progress-{$field.field}-'+index).addClass('layui-hide');
+                    //演示失败状态，并实现重传
+                    var demoText = $('#upload-msg-{$field.field}-'+index);
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function(){
+                        uploadInst.upload();
+                    });
+
+                }
+                //function () {
+                //演示失败状态，并实现重传
+                /*    var demoText = $('#test-upload-demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        uploadInst.upload();
+                    });*/
+                // }
+            });
+        });
+    </script>
+
+
+</div>

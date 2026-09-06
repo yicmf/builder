@@ -3,13 +3,7 @@
 <script type="text/html" template>
     <link rel="stylesheet" href="{{ layui.setter.base }}style/template.css?v={{ layui.admin.v }}-1" media="all">
 </script>
-<style>
-    #organizationTreeBar {
-        padding: 10px 15px;
-        border: 1px solid #e6e6e6;
-        background-color: #f2f2f2;
-    }
-</style>
+
 <div class="layui-card layadmin-header">
     <div class="layui-breadcrumb" lay-filter="breadcrumb">
         <a lay-href="">{$p_menu_title|default=''}</a>
@@ -21,32 +15,6 @@
 </div>
 
 <div class="layui-fluid">
-
-    <div class="layui-row layui-col-space15">
-
-        {notempty name='tag_tree'}
-        <div class="layui-col-md{$tag_tree.width}">
-            <div class="layui-card">
-                <div class="layui-card-body" style="padding:10px;">
-                    <!-- 树工具栏 -->
-                    <div class="layui-form toolbar" id="organizationTreeBar">
-                        {$tag_tree.title}
-<!--                        <div class="layui-btn-group">-->
-<!--                            <a id="organ-add" class="layui-btn layui-btn-sm icon-btn" v-show="@system.manager/oadd"><i class="layui-icon"></i>添加</a>-->
-<!--                            <a id="organ-edit" class="layui-btn layui-btn-sm icon-btn" v-show="@system.manager/oedit"><i class="layui-icon"></i>修改</a>-->
-<!--                            <a id="organ-del" class="layui-btn layui-btn-sm icon-btn" v-show="@system.manager/odel"><i class="layui-icon"></i>删除</a>-->
-<!--                        </div>-->
-                    </div>
-                    <!-- 左树 -->
-                    <div id="organizationTree">
-                        <div id="ID-tree-{$namespace}-showLine"></div></div>
-                </div>
-            </div>
-
-        </div>
-        {/notempty}
-        <div class="layui-col-md{php} if(empty($tag_tree)){echo 12;}else{ echo 12-$tag_tree['width'];} {/php}">
-
     <div class="layui-card">
         <div class="layui-form layui-card-header layuiadmin-card-header-auto" lay-filter="app-{$namespace}-forum-list">
             <div class="layui-collapse ns-tips" style="display: none">
@@ -76,9 +44,6 @@
                 {notempty name='tabs_field'}
                 <input type="hidden" name="{$tabs_field}" id="{$namespace}-table-tab-f" value="{$tabs_value}">
                 {/notempty}
-                {notempty name='tag_tree.data'}
-                <input type="hidden" name="{$tag_tree.field}" id="{$namespace}-table-tag_tree" value="{$tag_tree.value}">
-                {/notempty}
                 <div class="layui-inline">
                     <button class="layui-btn" id="sub-{$namespace}-table-reload-btn" lay-submit lay-filter="{$namespace}-table-reload-btn">搜索</button>
                     <button type="reset" class="layui-btn layui-btn-primary">重置</button>
@@ -107,10 +72,6 @@
             <table class="layui-hide" id="{$namespace}-table" lay-filter="{$namespace}-table"></table>
         </div>
         {/notempty}
-
-
-    </div>
-    </div>
     </div>
 
     <script type="text/html" id="{$namespace}-table-search">
@@ -172,10 +133,9 @@
     {volist name='templets' id='vo'}
     {$vo|raw}
     {/volist}
-    <!-- 2026-09-06 方案A死资源清理：遗留调试模板（写死d.price且无任何JS引用），原块注释保留
     <script type="text/html" id="62271a4aaa0f8">
         <i class="layui-icon layui-icon-rmb"></i> {{d.price}}
-    </script>-->
+    </script>
     <style>
 
         .layui-table-cell {
@@ -201,7 +161,7 @@
             return fmt;
         }
         var tab_values = {$tabs|json_encode};
-        layui.use(["laytpl",'admin','tree','forum','table','soulTable',"element"], function(){
+        layui.use(["laytpl",'admin','forum','table','soulTable',"element"], function(){
             var $ = layui.$
                 ,admin = layui.admin
                 ,view = layui.view
@@ -210,7 +170,6 @@
                 ,soulTable = layui.soulTable
                 ,table = layui.table , r = layui.device();
             form.render(null, 'app-{$namespace}-forum-list');
-
 
             var excel_{$namespace}_table =  table.render({
                     elem: '#{$namespace}-table'
@@ -311,65 +270,6 @@
                 //location.hash = 'test='+ $(this).attr('lay-id');
             });
             //监听排序事件
-
-            {notempty name='tag_tree.data'}
-            var tree = layui.tree;
-            // var data = [{title:'江西',id:1,children:[{title:'南昌',id:1000,children:[{title:'青山湖区',id:10001},{title:'高新区',id:10002}]},{title:'九江',id:1001},{title:'赣州',id:1002}]},{title:'广西',id:2,children:[{title:'南宁',id:2000},{title:'桂林',id:2001}]},{title:'陕西',id:3,children:[{title:'西安',id:3000},{title:'延安',id:3001}]},{title:'山西',id:3,children:[{title:'太原',id:4000},{title:'长治',id:4001}]}];
-            // 渲染
-            tree.render({
-                elem: '#ID-tree-{$namespace}-showLine',
-                data: {$tag_tree.data|json_encode},
-                showCheckbox : true,
-                id: 'ID-{$namespace}-data',
-                showLine: false,  // 是否开启连接线
-                oncheck: function(obj){
-                    console.log(obj.data); // 得到当前点击的节点数据
-                    console.log(obj.checked); // 节点是否被选中
-                    console.log(obj.elem); // 得到当前节点元素
-                    console.log(obj); // 得到当前节点元素
-                    var checkedData = tree.getChecked('ID-{$namespace}-data'); // 获取选中节点的数据
-                    console.log(checkedData)
-                    console.log(excel_{$namespace}_table)
-
-                    let ids = new Array();
-
-                    checkedData.forEach(function(element) {
-                        ids.push(element.id)
-                    });
-
-
-                    console.log(ids)
-
-                    $("#{$namespace}-table-tag_tree").val(ids.join(','));
-                    $("#sub-{$namespace}-table-reload-btn").click();
-
-                    // table.reload('{$namespace}-table', {
-                    //     // initSort: obj, //记录初始排序，如果不设的话，将无法标记表头的排序状态。
-                    //     // ,url: '/api/table/search'
-                    //     where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
-                    //         // order_field: obj.field //排序字段
-                    //         // ,order: obj.type //排序方式
-                    //     }
-                    // });
-                },
-                click: function(obj){
-                    console.log(obj.data); // 得到当前点击的节点数据
-                    console.log(obj.state); // 得到当前节点的展开状态：open、close、normal
-                    console.log(obj.elem); // 得到当前节点元素
-                    console.log(obj.data.children); // 当前节点下是否有子节点
-                    // table.reload('{$namespace}-table', {
-                    //     // initSort: obj, //记录初始排序，如果不设的话，将无法标记表头的排序状态。
-                    //     // ,url: '/api/table/search'
-                    //     where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
-                    //         // order_field: obj.field //排序字段
-                    //         // ,order: obj.type //排序方式
-                    //     }
-                    // });
-
-                },
-            });
-            {/notempty}
-
             // TODO:携带带搜索条件
             table.on('sort({$namespace}-table)', function(obj){ //注：sort 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
                 console.log(obj.field); //当前排序的字段名

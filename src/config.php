@@ -12,4 +12,9 @@
         'toggle' => 'dialog',//navtab dialog
         'dialog_height' => 800,
         'dialog_width' => 1200,
+        // 2026-09-06 模板驱动：自定义模板根目录（模板驱动配置）
+        // 支持绝对路径或相对项目根目录；目录结构需与扩展 src/tpl/ 一致（table/table_tree/edit/view/dialog/select/_key/_search），
+        // 未提供的模板自动回落扩展内置实现，可整体或部分覆盖，用于接入不同前端 UI。
+        // 空字符串 = 使用扩展内置 tpl/。示例：'view_path' => 'app/view/builder'
+        'view_path' => '',
     ];

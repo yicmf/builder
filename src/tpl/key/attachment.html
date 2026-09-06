@@ -1,0 +1,138 @@
+
+
+<div class="layui-input-inline">
+
+    <div class="row">
+        <div class="col-md-3">
+            <button type="button" class="layui-btn" id="button-upload-normal-file-{$field.field}"><i class="layui-icon layui-icon-upload"></i>上传文件</button>
+        </div>
+        <div class="col-md-9" id="show-upload-normal-file-{$field.field}">
+            {notempty name='attachment' }
+            文件大小：{$attachment['size_info']|default=''}
+            <input type="hidden" id='singel_file_{$field.field}' name="{$field.field}" value="{$field['value']}">
+            {/notempty}
+            <div class="mask"></div>
+            <div class="loading">
+                <div class="layui-progress layui-progress-big" lay-showpercent="true" lay-filter="uploadProgress">
+                    <div class="layui-progress-bar layui-bg-red" lay-percent="0%"></div>
+                </div>
+            </div>
+            <style type="text/css">
+                .mask{position:fixed;width:100%;height:100%;top:0;left:0;background:#000;opacity:0.8;filter:alpha(Opacity=80);-moz-opacity:0.8;z-index:999;display:none;}
+                .loading{position:fixed;width:300px;left:50%;margin-left:-150px;top:200px;height:18px;border-radius:10px;background:#fff;z-index:9999;overflow:hidden;display:none;}
+            </style>
+        </div>
+        <script type="text/javascript">
+            layui.use(['admin', 'upload',"element"], function () {
+                var $ = layui.jquery
+                    ,element = layui.element
+                    , upload = layui.upload;
+
+                var totalPage = 0;
+                var page = 1;
+                var status = 0;
+                var save_path = '';
+                var data = {};
+                //普通附件上传
+                var uploadAttachment = upload.render({
+                    elem: '#button-upload-normal-file-{$field.field}'
+                    ,accept: 'file' //普通文件
+                    //  ,exts: 'zip|rar|7z' //只允许上传压缩文件
+                    //   ,size: 60 //限制文件大小，单位 KB
+                    , auto: false
+                    , url: "{:url('/file/Attachment/upload')}"
+                    // , before: function (obj) {
+                    //     //预读本地文件示例，不支持ie8
+                    // }
+                    ,
+                    choose: function (obj) {
+                        element.progress('uploadProgress', '0%');
+                        $('.mask').show();
+                        $('.loading').show();
+                        var files = obj.pushFile();
+                        var LENGTH = 2*1024 * 1024; //每片文件大小
+                        page = 1;
+                        status = 1;
+                        for (var key in files) {
+                            var file = files[key];
+                            var totalSize = file.size;
+                            totalPage = Math.ceil(totalSize / LENGTH);
+                            if(totalPage == 1)
+                            {
+                                uploadAttachment.upload();
+                            }else {
+                                var fileName = file.name;
+                                var fileExt = fileName.substr(fileName.lastIndexOf('.') + 1);
+                                fileName = fileName.substr(0, fileName.lastIndexOf('.'));
+                                var progressTimer = setInterval(function () {
+                                    console.log(status)
+                                    if (parseInt(totalPage) == parseInt(page) && (parseInt(status) == 2 || parseInt(status) == -1)) {
+                                        clearInterval(progressTimer);
+                                    } else {
+                                        if (status == 1) {
+                                            status = 0;
+                                            data.fileName = fileName;
+                                            data.page = page;
+                                            data.totalPage = totalPage;
+                                            data.fileExt = fileExt;
+                                            data.chunks = 1;
+                                            data.save_path = save_path;
+                                            obj.upload(key, file.slice((page - 1) * LENGTH, page * LENGTH));
+                                        }else{
+                                            data.fileExt = '';
+                                        }
+
+                                    }
+                                }, 100);
+                            }
+                        }
+                    }
+                    , done: function (res) {
+                        if (res.code == 60001) { //分片上传
+                            element.progress('uploadProgress', Math.ceil(page * 100 / totalPage) + '%');
+                            page = page + 1;
+                            status = 1;
+                            save_path = res.message;
+                            console.log(page);
+                        } else if (res.code == 0) { //上传完成
+                            status = 2;
+                            element.progress('uploadProgress', '100%');
+                            //上传成功
+                            $("#show-upload-normal-file-{$field.field}").html('' +
+                                '  文件大小：'+res.data.size +'\n' +
+                                '            <input type="hidden" id=\'singel_file_{$field.field}\' name="{$field.field}" value="'+res.data.id+'">' +
+                                '');
+                            $("[name='{$field.field}']").val(res.data.id);
+
+                            layer.msg('上传成功', {time: 1000, anim: 0}, function () {
+                                $('.mask').hide();
+                                $('.loading').hide();
+                            });
+                        } else { //上传错误
+                            status = -1;
+                            element.progress('uploadProgress', '0%');
+                            layer.msg("上传失败，请重试", {time: 3000, anim: 0}, function () {
+                                $('.mask').hide();
+                                $('.loading').hide();
+                            });
+                        }
+
+                    }
+                    , error: function () {
+                        status = -1;
+                        //演示失败状态，并实现重传
+                        var demoText = $('#test-upload-demoText');
+                        demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                        demoText.find('.demo-reload').on('click', function () {
+                            uploadAttachment.upload();
+                        });
+                    }
+                });
+
+            });
+        </script>
+
+    </div>
+
+
+</div>

@@ -1,0 +1,33 @@
+
+    <div class="layui-input-inline">
+        <span id="{$field.field}_info">{$field['value']['field']|default="暂无选择"}</span>
+
+        <!-- 2026-09-06 方案B：原为 |json_encode|raw，加 JSON_HEX_* flags 防脚本标签提前闭合 -->
+        <input type="hidden" id="{$field.field}" name="{$field.field}" value="{$field['value']|json_encode=271|raw}">
+        <button type="button" class="btn-default"
+                data-toggle="dialog"
+                data-options="{id:'amap_{$field.field}_dialog', url:'{:addon_url('Amap://Amap/index')}', title:'地图选点',max:true,width:1100,height:800,mask:true}">
+            地图选点
+        </button>
+        <script type="text/javascript">
+
+            function amapOk(obj) {
+                var flag = true;
+                var info = JSON.parse($('#amap_result').val());
+                console.log(info);
+                $("#{$field.field}").val($('#amap_result').val());
+                $("#{$field.field}_info").html(info.field);
+                if (flag) {
+                    $(this).dialog('close', 'amap_{$field.field}_dialog');
+                } else {
+                    $(this).alertmsg('error', '您未选择需要操作的图片');
+                }
+            }
+
+            function amapNo() {
+                $("#{$field.field}").val(JSON.stringify({}));
+                $("#{$field.field}_info").html('暂无选择');
+            }
+        </script>
+
+    </div>

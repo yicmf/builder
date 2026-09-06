@@ -1,0 +1,182 @@
+
+<div class="layui-input-block">
+    <style>
+        .layui-upload-img-card {
+            height: 150px;
+            margin: 0 5px 0 0;
+        }
+    </style>
+
+    <div class="layui-row" style="    display: flex;">
+        <div class="layui-col-xs2">
+            <div class="layui-upload-list front">
+                <img class="layui-upload-img-card button-upload-auth-image-front"
+                     src="{$field['data']['front']['url']|default='__COMMON__/images/idcard/f.png'}">
+                <input type="hidden" id="front_id" name="front_id" value="{$field['data']['front_id']|default=''}"/>
+                <p id="test-upload-demoText"></p>
+            </div>
+            <button type="button" class="layui-btn button-upload-auth-image-front">身份证正面</button>
+        </div>
+        <div class="layui-col-xs2">
+            <div class="layui-upload-list front">
+                <img class="layui-upload-img-card button-upload-auth-image-back"
+                     src="{$field['data']['back']['url']|default='__COMMON__/images/idcard/b.png'}">
+                <input type="hidden" id="back_id" name="back_id"
+                       value="{$field['data']['back_id']|default=''}"/>
+                <p id="test-upload-demoText"></p>
+            </div>
+            <button type="button" class="layui-btn button-upload-auth-image-back">身份证背面</button>
+        </div>
+        <div class="layui-col-xs2 {php} if( !$field['options']['need_hand'] ||!isset($field['data']['auth'])){ echo 'layui-hide';}{/php} " id="show_hand">
+            <div class="layui-upload-list front">
+                <img class="layui-upload-img-card button-upload-auth-image-hand"
+                     src="{$field['data']['hand']['url']|default='__COMMON__/images/idcard/h.jpg'}">
+                <input type="hidden" id="hand_id" name="hand_id"
+                       value="{$field['data']['hand_id']|default=''}"/>
+                <p id="test-upload-demoText"></p>
+            </div>
+            <button type="button" class="layui-btn button-upload-auth-image-hand">手持身份证</button>
+        </div>
+
+
+
+    </div>
+    <div class="layui-form-mid   auth-tips" style="color: red"></div>
+</div>
+<script>
+    layui.use(['admin', 'upload'], function () {
+        var $ = layui.jquery
+            , upload = layui.upload;
+        //普通图片上传
+        var auth_front = upload.render({
+            elem: '.button-upload-auth-image-front'
+            , accept: 'images' //普通文件
+            , exts: 'png|jpg|jpeg'
+            , size: 1024 * 5 //限制文件大小，单位 KB
+            , url: "{:url('/file/image/upload',['module'=>$module])}"
+            , data: {
+                type: 'idcard',
+                side: 'front',
+
+            }
+            , before: function (obj) {
+                //预读本地文件示例，不支持ie8
+                obj.preview(function (index, file, result) {
+                    $(".front .button-upload-auth-image-front").attr('src', result); //图片链接（base64）
+                });
+            }
+            , done: function (res) {
+                //如果上传失败
+                if (res.code > 0) {
+                    return layer.msg(res.message);
+                } else {
+                    //上传成功
+                    $("#front_id").val(res.data.id);
+                    $("[name='{$field.field}']").val(res.data.id);
+                    if (res.data.info)
+                    {
+                        $("[name='idcard_name").val(res.data.info.name);
+                        $("[name='idcard_no").val(res.data.info.idcard_no);
+                    }
+
+                    if ("1" == "{$field.options.need_hand}")
+                    {
+                        initHand();
+                        $("#show_hand").removeClass('layui-hide');
+                    }
+                }
+            }
+            , error: function () {
+                //演示失败状态，并实现重传
+                /* var demoText = $('#test-upload-demoText');
+                 demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                 demoText.find('.demo-reload').on('click', function () {
+                     auth_front.upload();
+                 });*/
+            }
+        });
+
+        var auth_back = upload.render({
+            elem: '.button-upload-auth-image-back'
+            , accept: 'images' //普通文件
+            , exts: 'png|jpg|jpeg'
+            , size: 1024 * 2 //限制文件大小，单位 KB
+            , url: "{:url('/file/image/upload')}"
+            , data: {
+                type: 'idcard',
+                side: 'back',
+            }
+            , before: function (obj) {
+                //预读本地文件示例，不支持ie8
+                obj.preview(function (index, file, result) {
+                    $(".front .button-upload-auth-image-back").attr('src', result); //图片链接（base64）
+                });
+            }
+            , done: function (res) {
+                //如果上传失败
+                if (res.code > 0) {
+                    return layer.msg(res.message);
+                } else {
+                    //上传成功
+                    $("#back_id").val(res.data.id);
+                }
+            }
+            , error: function () {
+                //演示失败状态，并实现重传
+                /*  var demoText = $('#test-upload-demoText');
+                  demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                  demoText.find('.demo-reload').on('click', function () {
+                      auth_back.upload();
+                  });*/
+            }
+        });
+
+
+        function initHand() {
+            var auth_hand = upload.render({
+                elem: '.button-upload-auth-image-hand'
+                , accept: 'images' //普通文件
+                , exts: 'png|jpg|jpeg'
+                , size: 1024 * 2 //限制文件大小，单位 KB
+                , url: "{:url('file/Image/upload')}"
+                , data: {
+                    front_id: $("#front_id").val(),
+                    type: 'hand'
+                }
+                , before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $(".front .button-upload-auth-image-hand").attr('src', result); //图片链接（base64）
+                    });
+                }
+                , done: function (res) {
+                    //如果上传失败
+                    if (res.code > 0) {
+                        layer.msg(res.message);
+                    } else {
+
+                        //上传成功
+                        $("#hand_id").val(res.data.id);
+                        if (0 != res.data.info.code)
+                        {
+                            $(".auth-tips").html(res.data.info.error_msg);
+                        }
+
+                    }
+                }
+                , error: function () {
+                    //演示失败状态，并实现重传
+                    /* var demoText = $('#test-upload-demoText');
+                     demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-mini demo-reload">重试</a>');
+                     demoText.find('.demo-reload').on('click', function () {
+                         auth_hand.upload();
+                     });*/
+                }
+            });
+        }
+
+
+
+    });
+</script>
+</div>

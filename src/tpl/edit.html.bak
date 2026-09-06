@@ -1,0 +1,479 @@
+
+
+<script type="text/javascript" src="__STATIC__/common/clipboard.min.js"></script>
+{notempty name='menu_title' }
+<title>{$menu_title}</title>
+
+<div class="layui-card layadmin-header">
+	<div class="layui-breadcrumb" lay-filter="breadcrumb">
+		<a lay-href="">{$p_menu_title|default=''}</a>
+		{present name='menu_group_title' }
+		<a><cite>{$menu_group_title}</cite></a>
+		{/present}
+		<a><cite>{$menu_title}</cite></a>
+	</div>
+</div>
+{/notempty}
+
+<div class="layui-fluid">
+	<div class="layui-row layui-col-space15">
+		<div class="layui-col-md12">
+			<div class="layui-card">
+				{notempty name='menu_title' }	<div class="layui-card-header">{$menu_title}</div>{/notempty}
+				<div class="layui-card-body" pad15>
+<form class="layui-form" action="" id="form-{$name_space}">
+					<div class="layui-form" wid100 lay-filter="">
+
+						{present name='keyList'}
+						<!-- 分组start-->
+						{php}if($group){{/php}
+						<div class="layui-tab">
+						<ul class="layui-tab-title">
+							{volist name="group" id="vGroup"}
+							<li class="{if condition='$i eq 1'}layui-this{/if}">
+								{$key}
+							</li>
+							{/volist}
+						</ul>
+							<div class="layui-tab-content">
+							{php} $flag=1;{/php}
+							{volist name="group" id="vGroup"}
+							<div class="layui-tab-item fade {if condition='$i eq 1'}layui-show{/if}" >
+
+
+									{volist name="vGroup" id="g"}
+									{volist name="keyList" id="field"}
+									{php}
+									if (strpos($g, '.')) { // 支持点语法
+									$temp = explode('.', $g);
+									$g = $temp[0].'['.$temp[1].']';
+									}
+									if($field['field'] == $g){{/php}
+									{include file="$key_path"/}
+									{php}}{/php}
+									{/volist}
+									{/volist}
+
+								{php} $flag+=1;{/php}
+							</div>
+							{/volist}
+						</div>
+						<!-- 分组else-->
+						{php}}else{{/php}
+
+							{volist name="keyList" id="field"}
+							{include file="$key_path"/}
+							{/volist}
+						{php}}{/php}
+
+						<!-- hidden start-->
+						{volist name="keyList" id="field"}
+						{eq name='field.type' value='hidden'}
+						<input type="hidden" name="{$field.field}" id='key_{$field.field}' value="{$field.value}" />
+						{/eq}
+						{/volist}
+							<input type="hidden" name="m"  value="{$Request.param.m}" />
+						<!-- hidden  end-->
+							<div>
+						{/present}
+
+						{present name='explaints' }
+						{volist name='explaints' id='vo'}
+						<blockquote class="layui-elem-quote"> {php}echo $key+1;{/php}、{$vo|raw}</blockquote>
+						{/volist}
+
+						{/present}
+
+						<div class="layui-form-item">
+							<div class="layui-input-block">
+
+								{volist name='form_buttons' id='vo'}
+
+						<button  type="{$vo.type}"
+										 {eq name="vo.type" value="close"}
+										 onclick="closeTab(this)"
+								{/eq}
+										 class="layui-btn"
+										 {notempty name="vo.url"  } data-url="{$vo.url?:''}" {/notempty}
+										 {notempty name="vo.click"  } onclick="{$vo.click}" {/notempty}
+										 {eq name="vo.type" value="submit"} lay-submit lay-filter="{$filter}"{/eq}  >{$vo.title}</button>
+
+								{/volist}
+
+								{present name='form_close'}
+								<!--	<button  type="button" class="layui-btn layui-btn-primary" onclick="close">{$form_close.title}</button>
+							<button  type="button" class="layui-btn layui-btn-primary" onclick="layer.closeAll()">{$form_close.title}</button>-->
+								{/present}
+							</div>
+						</div>
+
+					</div>
+</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{volist name='templets' id='vo'}
+{$vo}
+{/volist}
+<script>
+
+	layui.define(['form', 'upload'], function(exports){
+		var $ = layui.$
+				,layer = layui.layer
+				,laytpl = layui.laytpl
+				,setter = layui.setter
+				,view = layui.view
+				,element = layui.element
+				,admin = layui.admin
+				,form = layui.form
+				,upload = layui.upload;
+
+		var $body = $('body');
+
+		form.render();
+
+		var dialog_index = "{$dialog_index}";
+		window.closeTab = function (obj) {
+			var arr = obj.form.action.split('#');
+			element.tabDelete('layadmin-layout-tabs',arr[1]);
+			/*var clipboard = new ClipboardJS('.email', {
+				text: function () {
+					return $("#email_address").html();
+				}
+			});
+			clipboard.on('success', function (e) {
+				alert('复制成功')
+			});*/
+		}
+		//自定义验证
+		form.verify({
+			required: [/[\S]+/, '必填项不能为空'],
+			phone: [/(^$)|^1\d{10}$/, '请输入正确的手机号'],
+			email: [/(^$)|^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/, '邮箱格式不正确'],
+			url: [/(^$)|(^#)|(^http(s*):\/\/[^\s]+\.[^\s]+)/, '链接格式不正确'],
+			number: function (e) {
+				if (!e || isNaN(e)) return "只能填写数字"
+			},
+			date: [/(^$)|^(\d{4})[-\/](\d{1}|0\d{1}|1[0-2])([-\/](\d{1}|0\d{1}|[1-2][0-9]|3[0-1]))*$/, '日期格式不正确'],
+			identity: [/(^$)|(^\d{15}$)|(^\d{17}(x|X|\d)$)/, '请输入正确的身份证号'],
+			chs: [/(^$)|^[\u0391-\uFFE5]+$/,'只允许输入中文'],
+			nickname: function(value, item){ //value：表单的值、item：表单的DOM对象
+				if(!new RegExp("^[a-zA-Z0-9_\u4e00-\u9fa5\\s·]+$").test(value)){
+					return '用户名不能有特殊字符';
+				}
+				if(/(^\_)|(\__)|(\_+$)/.test(value)){
+					return '用户名首尾不能出现下划线\'_\'';
+				}
+				if(/^\d+\d+\d$/.test(value)){
+					return '用户名不能全为数字';
+				}
+			},
+			alphaDash: function(value, item){ //value：表单的值、item：表单的DOM对象
+				if(!new RegExp("^[a-zA-Z0-9_\u4e00-\u9fa5\\s·]+$").test(value)){
+					return '只能填写字母或者下划线';
+				}
+				if(/(^\_)|(\__)|(\_+$)/.test(value)){
+					return '首尾不能出现下划线\'_\'';
+				}
+				if(/^\d+\d+\d$/.test(value)){
+					return '不能全为数字';
+				}
+			}
+
+			//我们既支持上述函数式的方式，也支持下述数组的形式
+			//数组的两个值分别代表：[正则匹配、匹配不符时的提示文字]
+			,pass: [
+				/^[\S]{6,12}$/
+				,'密码必须6到12位，且不能出现空格'
+			]
+
+			//确认密码
+			,repass: function(value){
+				if(value !== $('#LAY_password').val()){
+					return '两次密码输入不一致';
+				}
+			}
+			//排序
+			,sort: function(value){
+				if(value >255 || value<0){
+					return '请输入0-255之间数字';
+				}
+			}
+		});
+// 单元格编辑事件
+// 		table.on('edit({$filter})', function(obj){
+// 			var field = obj.field; // 得到修改的字段
+// 			var value = obj.value // 得到修改后的值
+// 			var oldValue = obj.oldValue // 得到修改前的值 -- v2.8.0 新增
+// 			var data = obj.data // 得到所在行所有键值
+// 			var col = obj.getCol(); // 得到当前列的表头配置属性 -- v2.8.0 新增
+// 			console.log(obj); // 查看对象所有成员
+//
+// 			// 值的校验
+// 			if(value.replace(/\s/g, '') === ''){
+// 				layer.tips('值不能为空', this, {tips: 1});
+// 				return obj.reedit(); // 重新编辑 -- v2.8.0 新增
+// 			}
+// 			// 编辑后续操作，如提交更新请求，以完成真实的数据更新
+// 			// …
+//
+// 			// 更新当前缓存数据
+// 			var update = {};
+// 			update[field] = value;
+// 			obj.update(update, true); // 参数 true 为 v2.7 新增功能，即同步更新其他包含自定义模板并可能存在关联的列视图
+// 		});
+		form.on('submit({$filter})', function(obj){
+			//	layer.msg(JSON.stringify(obj.field));
+			//	layer.msg(JSON.stringify(obj.field));
+			// console.log(this);
+			// console.log(obj);
+			$.ajax({
+				url:$(this).data('url'), //请求的url地址
+				dataType:"json", //返回格式为json
+				async:true,//请求是否异步，默认为异步，这也是ajax重要特性
+				data:obj.field, //参数值
+				type:"POST", //请求方式
+
+				success:function(req){
+					//请求成功时处理
+					if ( 0 == req.code)
+					{
+						if (req.closeCurrent)
+						{
+							if(parseFloat(dialog_index)>0)
+							{
+								layer.close(dialog_index); //执行关闭
+							}else{
+								setTimeout(function() {
+									var arr = obj.form.action.split('#');
+									console.log(arr);
+									element.tabDelete('layadmin-layout-tabs',arr[1]);
+								},req.wait*1000);
+							}
+						}
+						// if (req.reload)
+						// {
+						// 	if(parseFloat(dialog_index)>0)
+						// 	{
+						// 		layui.table.reload('{$filter}-table'); //重载表格
+						// 	}else{
+						// 		layui.index.render();
+						// 	}
+						// }
+						layer.msg(req.message,{
+							time:req.wait*1000
+						});
+
+					}else if( 307 == req.code)
+					{
+						// 重定向
+						// var othis = $(this)
+						// ,href = othis.attr('lay-href')
+						// ,target = othis.attr('target')
+						// ,router = layui.router();
+
+						// admin.tabsPage.elem = othis;
+						// if ('_self' == target)
+						// {
+						admin.events.closeThisTabs();
+						//setTimeout(() => {
+						//  console.log($('#LAY_app_tabsheader').children('li').length);
+						// console.log($(TABS_HEADER).eq($('#LAY_app_tabsheader').children('li').length - 1));
+						// $('#LAY_app_tabsheader').children('li').eq($('#LAY_app_tabsheader').children('li').length - 2).find('.layui-tab-close').trigger('click'); }, 1000);
+						// }
+						//admin.prevRouter[router.path[0]] = router.href; //记录上一次各菜单的路由信息
+						//执行跳转
+						location.hash = admin.correctRouter(req.redirect);
+
+					}else{
+						layer.msg(req.message);
+					}
+				},
+				complete:function(){
+					//请求完成的处理
+				},
+				error:function(err){
+					//请求出错处理
+					if (err.status !== 200)
+					{
+
+						layer.msg(err.responseJSON.message);
+				}else{
+						layer.msg('调试');
+						console.log(err);
+					}
+					// layer.msg(JSON.stringify(err));
+				}
+			});
+			//提交修改
+			return false;
+		});
+
+
+		//邮件服务
+		form.on('submit(set_system_email)', function(obj){
+			layer.msg(JSON.stringify(obj.field));
+
+			//提交修改
+			/*
+            admin.req({
+              url: ''
+              ,data: obj.field
+              ,success: function(){
+
+              }
+            });
+            */
+			return false;
+		});
+
+
+		//设置我的资料
+		form.on('submit(setmyinfo)', function(obj){
+			layer.msg(JSON.stringify(obj.field));
+
+			//提交修改
+			/*
+            admin.req({
+              url: ''
+              ,data: obj.field
+              ,success: function(){
+
+              }
+            });
+            */
+			return false;
+		});
+
+		//上传头像
+		var avatarSrc = $('#LAY_avatarSrc');
+		upload.render({
+			url: '/api/upload/'
+			,elem: '#LAY_avatarUpload'
+			,done: function(res){
+				if(res.status == 0){
+					avatarSrc.val(res.url);
+				} else {
+					layer.msg(res.msg, {icon: 5});
+				}
+			}
+		});
+
+		//查看头像
+		admin.events.avartatPreview = function(othis){
+			var src = avatarSrc.val();
+			layer.photos({
+				photos: {
+					"title": "查看头像" //相册标题
+					,"data": [{
+						"src": src //原图地址
+					}]
+				}
+				,shade: 0.01
+				,closeBtn: 1
+				,anim: 5
+			});
+		};
+
+			//绑定选择事件
+			{volist name='triggers' id='trigger'}
+				form.on('{$trigger.field.type}(filter_{$name_space}_{$trigger.field.field})', function(data){
+					//layer.msg(JSON.stringify(obj.field));
+					console.log(data);
+					console.log(this);
+					{$trigger['tpl']}
+
+					{php}  if('checkbox' == $trigger['field']['type']) {{/php}
+						var trigger_value = new Array();
+						$("#form-{$name_space}").find('input[lay-filter=filter_{$name_space}_{$trigger.field.field}]:checked').each(function() {
+							trigger_value.push($(this).val());
+						});
+
+						var trigger_checked = data.elem.checked;
+						{volist name='trigger.data' id='vo'}
+
+						var trigger_field_{$vo.field} =
+
+						0{volist name='vo.value' id='vvo'} +($.inArray("{$vvo}",trigger_value) + 1){/volist};
+
+							console.log("{$vo.field}"+ trigger_field_{$vo.field} )
+							if (trigger_field_{$vo.field}>0)
+							{
+								$('{$vo.jquery}').show();
+							}else{
+									$('{$vo.jquery}').hide();
+							}
+						{/volist}
+
+						{php}  }{/php}
+
+								{php}  if('switch' == $trigger['field']['type']) {{/php}
+
+									if (this.checked) {
+										$("#builder_switch_{$trigger['field']['field']}").val(1);
+									} else {
+										$("#builder_switch_{$trigger['field']['field']}").val(0);
+									}
+
+									var trigger_value = this.checked?1:0;
+									{volist name='trigger.data' id='vo'}
+									if(trigger_value=="{$vo['value']}" )
+									{
+										$('{$vo.jquery_hide}').hide();///111
+										$('{$vo.jquery_show}').show();
+									}
+									{/volist}
+
+
+									{php}  }{/php}
+
+
+							{php}  if('radio' == $trigger['field']['type'] || 'select' == $trigger['field']['type']) {{/php}
+
+								var trigger_value = data['value'];
+								{volist name='trigger.data' id='vo'}
+								if(trigger_value=="{$vo['value']}" )
+								{
+									$('{$vo.jquery_hide}').hide();///111
+									$('{$vo.jquery_show}').show();
+								}
+								{/volist}
+
+
+						{php}  }{/php}
+
+					return false;
+				});
+			{/volist}
+
+				/*** 隐藏选项2start**/
+				{volist name='triggers' id='trigger'}
+
+				{php}  if('checkbox' != $trigger['field']['type']) {{/php}
+//111111
+						{volist name='trigger.data' id='vo' }
+							{eq name='vo.is_show' value = '1'}
+							$('{$vo.jquery_hide}').hide();
+							{/eq}
+						{/volist}
+
+					{php}  }{/php}
+				{php}  if('checkbox' == $trigger['field']['type']) {{/php}
+
+				{volist name='trigger.data' id='vo' }
+				{eq name='vo.is_show' value = '0'}
+				$('{$vo.jquery}').hide();
+				{/eq}
+					{/volist}
+
+					{php}  }{/php}
+
+
+				{/volist}
+			/*** 隐藏选项2end**/
+
+		});
+</script>
+

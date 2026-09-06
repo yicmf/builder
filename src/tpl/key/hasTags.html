@@ -1,0 +1,11 @@
+
+<div class="layui-input-inline">
+    {present name="field['value']"}
+    {volist name="field['value']" id='vo2'}
+    <span style="margin-left: 1px; margin-top: 1px;" data-value="{$vo2}" class="">
+		<i class="fa fa-tag"></i> {$vo2}&nbsp;&nbsp;</span>
+    <input type="hidden" name="{$field.field}" value="{$vo2}">
+    {/volist}
+    {/present}
+
+</div>

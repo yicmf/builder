@@ -10,7 +10,9 @@
 
 namespace yicmf\builder;
 
-use app\ucenter\event\AuthGroup as AuthGroupEvent;
+// 2026-09-06 解耦收尾：以下三个 app\* 引用全部移出包依赖，原实现改为由项目侧服务提供者注入
+// （默认权限检查回调见 app\common\service\BuilderService::boot，通过 Table::setDefaultAuthChecker 注入）
+// use app\ucenter\event\AuthGroup as AuthGroupEvent;
 use think\exception\HttpException;
 use yicmf\tools\ChinesePinyin;
 use think\Model;
@@ -20,8 +22,9 @@ use think\facade\Cache;
 use think\facade\Config;
 use think\facade\Hook;
 use think\Exception;
-use app\file\model\Picture as PictureModel;
-use app\file\model\Attachment as AttachmentModel;
+// 2026-09-06 解耦收尾：Picture/Attachment 经排查为死引用（无任何活跃调用），注释保留
+// use app\file\model\Picture as PictureModel;
+// use app\file\model\Attachment as AttachmentModel;
 use yicmf\builder\table\ColumnBuilder;
 use yicmf\builder\table\SearchBuilder;
 use yicmf\builder\table\ButtonBuilder;
@@ -51,6 +54,23 @@ class Table extends Builder
 
     /** 2026-09-06 解耦：可注入的权限检查回调，签名 function(string $url, $user): bool */
     protected $authChecker;
+
+    /**
+     * 2026-09-06 解耦收尾：静态默认权限检查回调（项目级，服务提供者注入）
+     * 优先级低于实例回调（setAuthChecker）；由 app\common\service\BuilderService 注入，
+     * 包装原默认实现 app\ucenter\event\AuthGroup::checkRule
+     * @var callable|null
+     */
+    protected static $defaultAuthChecker;
+
+    /**
+     * 注入项目级默认权限检查回调（2026-09-06 解耦收尾，由服务提供者调用）
+     * @param callable|null $checker function(string $url, $user): bool
+     */
+    public static function setDefaultAuthChecker($checker)
+    {
+        self::$defaultAuthChecker = $checker;
+    }
 
     private $_keyList = [];
 
@@ -1023,22 +1043,43 @@ class Table extends Builder
      */
     public function authCheck($url)
     {
-        // 2026-09-06 解耦：已注入自定义权限检查回调时优先使用，未注入保持原逻辑（app\ucenter\AuthGroup）
+        // 2026-09-06 解耦收尾：权限检查回调三级解析——
+        // 1) 实例回调（setAuthChecker 注入，优先级最高）
         if (isset($this->authChecker) && is_callable($this->authChecker)) {
             return (bool) call_user_func($this->authChecker, $url, $this->_user);
         }
-        if ($this->_user) {
-            $url = explode('?', $url)[0];
-            if (strpos($url, '.html')) {
-                $url = str_replace('.html', '', $url);
+        // 2) 静态默认回调（由项目侧服务提供者注入，见 app\common\service\BuilderService::boot，
+        //    其内包装 app\event\ucenter\AuthGroup::checkRule）。
+        //    与原实现语义一致：仅在有用户时执行权限判定（_user 为 false/null 直接放行），
+        //    且调用前先做 URL 规整（去 query、去 .html 后缀、去前导斜杠）
+        if (isset(self::$defaultAuthChecker) && is_callable(self::$defaultAuthChecker)) {
+            if (!$this->_user) {
+                return true;
             }
-            if (0 === strpos($url, '/')) {
-                $url = substr($url, 1);
+            $checkUrl = explode('?', $url)[0];
+            if (strpos($checkUrl, '.html')) {
+                $checkUrl = str_replace('.html', '', $checkUrl);
             }
-            return AuthGroupEvent::checkRule($url, $this->_user);
-        } else {
-            return true;
+            if (0 === strpos($checkUrl, '/')) {
+                $checkUrl = substr($checkUrl, 1);
+            }
+            return (bool) call_user_func(self::$defaultAuthChecker, $checkUrl, $this->_user);
         }
+        // 3) 均未注入时放行（authCheck 仅控制按钮可见性，真实鉴权仍由 UserAuth 中间件执行）；
+        //    原 AuthGroupEvent::checkRule 逻辑已整体迁至项目侧注入实现，注释保留如下
+        // if ($this->_user) {
+        //     $url = explode('?', $url)[0];
+        //     if (strpos($url, '.html')) {
+        //         $url = str_replace('.html', '', $url);
+        //     }
+        //     if (0 === strpos($url, '/')) {
+        //         $url = substr($url, 1);
+        //     }
+        //     return AuthGroupEvent::checkRule($url, $this->_user);
+        // } else {
+        //     return true;
+        // }
+        return true;
     }
 
     /**
@@ -2524,6 +2565,22 @@ EOF;
         // </script>
         // EOF;
         //         return $this->key($field, $title, false, $width, 'normal', $style, '#' . $templet);
+    }
+
+    /**
+     * 可点击复制的文本列（2026-09-06 新增，实现在 ColumnBuilder::keyCopy）
+     * 单元格内容点击即复制到剪贴板，点击处理器见 tpl/table.html 的 .builder-copy-text 委托
+     * @param string $field 字段名
+     * @param string $title 列标题
+     * @param string $width 列宽
+     * @param string $style 单元格样式
+     * @return $this
+     */
+    public function keyCopy($field, $title, $width = '', $style = '')
+    {
+        $this->columnBuilder()->keyCopy(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
     }
 
     /**

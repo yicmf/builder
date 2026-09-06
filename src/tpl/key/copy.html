@@ -1,0 +1,31 @@
+
+    <div class="layui-input-block">
+        <input id="copy_{$name_space}_{$field.field}" type="text" onmouseenter="this.select()" data-clipboard-text="{$field.value|htmlspecialchars}"  class="layui-input" value="{$field.value|htmlspecialchars}"  readonly>
+
+        {notempty name='field.tips'}
+        <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+        {/notempty}
+    </div>
+
+    <script>
+        layui.use([], function(){
+            var $ = layui.$;
+            var layer = layui.layer;
+
+            var clipboard = new ClipboardJS('#copy_{$name_space}_{$field.field}');
+            clipboard.on('success', function(e) {
+
+                layer.msg('复制成功');
+                clipboard.destroy();  //解决多次弹窗
+                e.clearSelection();
+            });
+            clipboard.on('error', function(e) {
+                layer.msg('复制失败');
+                clipboard.destroy();  //解决多次弹窗
+                e.clearSelection();
+            });
+        });
+
+
+
+    </script>

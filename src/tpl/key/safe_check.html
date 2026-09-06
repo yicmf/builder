@@ -1,0 +1,81 @@
+
+    {php}
+    $arr = explode(',',$field['field']);
+    {/php}
+    <div class="layui-input-inline">
+        <select name="safe_check_type" id="safe_check_type" lay-verify="required">
+            <option value=""></option>
+            {volist name='arr' id='vo'}
+            <option value="{$vo}">{$field['data'][$vo]}</option>
+            {/volist}
+        </select>
+    </div>
+
+    <div class="layui-input-inline">
+        <button type="button" class="layui-btn send_safe_check">发送验证码</button>
+    </div>
+
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}
+
+    <script>
+
+        var $ = layui.jquery;
+        var send_safe_check_time = {$field.options.wait_time};
+
+        function set_safe_time() {
+            if (send_safe_check_time == 0) {
+                $('.send_safe_check').html('发送验证码');
+                send_safe_check_time = {$field.options.wait_time};
+            } else {
+                $('.send_safe_check').html('请等待' + send_safe_check_time + '秒');
+                send_safe_check_time--;
+                setTimeout("set_safe_time()", 1000)
+            }
+        }
+
+        $('.send_safe_check').click(function () {
+            if (send_safe_check_time == {$field.options.wait_time} && $('#safe_check_type').val()) {
+                var loading = layer.load()
+                $.ajax({
+                    url: "{:url('ucenter/admin.Foreign/safe')}", //请求的url地址
+                    dataType: "json", //返回格式为json
+                    type: "POST", //请求方式
+                    data: {
+                        safe_check_type: $('#safe_check_type').val(),
+                        type: 'safe_code'
+                    }, //请求方式
+                    success: function (req) {
+                        layer.close(loading);
+                        layer.msg(req.message);
+                        //请求成功时处理
+                        if (0 == req.code) {
+                            set_safe_time();
+                        } else {
+                            layer.msg(req.message);
+                        }
+                    },
+                    complete: function () {
+                        //请求完成的处理
+                        layer.close(loading);
+                    },
+                    error: function (err) {
+                        //请求出错处理
+                        layer.close(loading);
+                        layer.msg(JSON.stringify(err));
+                    }
+                });
+            } else {
+
+                if (send_safe_check_time == {$field.options.wait_time}) {
+                    layer.msg('请选择发送方式');
+                } else {
+                    layer.msg('请等待倒计时完毕');
+                }
+
+            }
+
+
+        });
+    </script>

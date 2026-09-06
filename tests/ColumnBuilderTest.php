@@ -110,6 +110,44 @@ class ColumnBuilderTest extends TestCase
         $this->assertSame([], $builder->getLeftLeader());
     }
 
+    // ==================== keyCopy 可点击复制列（2026-09-06 新增） ====================
+
+    public function testKeyCopyAddsTempletColumn()
+    {
+        $builder = new ColumnBuilder();
+        $builder->keyCopy('title', '标题');
+
+        $keyList = $builder->getKeyList();
+        $this->assertCount(1, $keyList);
+        $this->assertSame('title', $keyList[0]['field']);
+        $this->assertSame('标题', $keyList[0]['title']);
+        // templet 指向注入的 text/html 模板块
+        $this->assertMatchesRegularExpression('/^#k[a-z0-9]+$/i', $keyList[0]['templet']);
+
+        // templet 块：复制属性经 encodeURIComponent 防属性注入，展示为原值 + 复制图标
+        $this->assertCount(1, $builder->getTemplets());
+        $templet = $builder->getTemplets()[0];
+        $this->assertStringContainsString('id="' . ltrim($keyList[0]['templet'], '#') . '"', $templet);
+        $this->assertStringContainsString('data-builder-copy="{{ encodeURIComponent(d.title || \'\') }}"', $templet);
+        $this->assertStringContainsString('builder-copy-text', $templet);
+        $this->assertStringContainsString('{{ d.title }}', $templet);
+    }
+
+    public function testKeyCopyViaFacadeKeepsChainAndLandsInColumnBuilder()
+    {
+        $table = $this->makeTable();
+
+        $result = $table->keyCopy('sn', '序列号')->keyId();
+
+        $this->assertSame($table, $result);
+        $ref = new \ReflectionMethod($table, 'columnBuilder');
+        $ref->setAccessible(true);
+        $columns = $ref->invoke($table);
+        $this->assertCount(2, $columns->getKeyList());
+        $this->assertSame('sn', $columns->getKeyList()[0]['field']);
+        $this->assertCount(1, $columns->getTemplets());
+    }
+
     public function testGetKeyListRefIsSameArray()
     {
         $builder = new ColumnBuilder();

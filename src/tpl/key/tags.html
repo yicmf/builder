@@ -1,0 +1,20 @@
+
+<link rel="stylesheet" href="/static/admin/src/controller/inputTags.css">
+
+<div class="layui-input-inline tags" id="tags">
+    <input type="text" name="" id='tags_{$field.field}' placeholder="回车生成标签" autocomplete="off">
+    <script type="text/javascript">
+        layui.use(['inputTags'], function () {
+            var inputTags = layui.inputTags;
+            inputTags.render({
+                elem: '#tags_{$field.field}',
+                content: ['标题一', '标题二'],
+                aldaBtn: true,
+                done: function (value) {
+                    console.log(value)
+                }
+            })
+
+        })
+    </script>
+</div>
