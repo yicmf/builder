@@ -3,7 +3,7 @@
 // +----------------------------------------------------------------------
 // | builder
 // +----------------------------------------------------------------------
-// | Copyright (c) 2015-2022 http://www.yicmf.com, All rights reserved.
+// | Copyright (c) 2015-2026 http://www.yicmf.com, All rights reserved.
 // +----------------------------------------------------------------------
 // | Author: 微尘 <yicmf@qq.com>
 // +----------------------------------------------------------------------
@@ -11,8 +11,8 @@
 namespace yicmf\builder;
 
 use app\ucenter\event\AuthGroup as AuthGroupEvent;
-use Overtrue\Pinyin\Pinyin;
 use think\exception\HttpException;
+use yicmf\tools\ChinesePinyin;
 use think\Model;
 use think\facade\Db;
 use think\db\Where;
@@ -22,6 +22,10 @@ use think\facade\Hook;
 use think\Exception;
 use app\file\model\Picture as PictureModel;
 use app\file\model\Attachment as AttachmentModel;
+use yicmf\builder\table\ColumnBuilder;
+use yicmf\builder\table\SearchBuilder;
+use yicmf\builder\table\ButtonBuilder;
+use yicmf\builder\table\QueryResolver;
 
 class Table extends Builder
 {
@@ -32,6 +36,21 @@ class Table extends Builder
     private $_statistics;
 
     private $_warning;
+
+    /** 2026-09-06 拆分重构：列定义状态持有者 */
+    private $columns;
+
+    /** 2026-09-06 拆分重构：搜索配置持有者 */
+    private $searchBuilderObj;
+
+    /** 2026-09-06 拆分重构：按钮配置持有者 */
+    private $buttonBuilderObj;
+
+    /** 2026-09-06 拆分重构：查询配置持有者 */
+    private $queryResolverObj;
+
+    /** 2026-09-06 解耦：可注入的权限检查回调，签名 function(string $url, $user): bool */
+    protected $authChecker;
 
     private $_keyList = [];
 
@@ -106,16 +125,142 @@ class Table extends Builder
     protected $_cssl;
     protected $_jsl;
     protected $_with = [];
-    protected $_where;
+    protected $_where = [];
     protected $_order;
     protected $_field = ['id', 'status'];
     protected $_count = [];
+    protected $_hidden_field = [];
     protected $_sum = [];
     protected $_avg = [];
     protected $_max = [];
     protected $_min = [];
     protected $_user;
 
+    /**
+	 * 列定义构建器（懒加载，兼容跳过构造函数的测试场景）
+	 * @return \yicmf\builder\table\ColumnBuilder
+	 */
+	private function columnBuilder()
+	{
+		if (!isset($this->columns)) {
+			$this->columns = new ColumnBuilder($this->_default_pk);
+		}
+		return $this->columns;
+	}
+
+	/**
+	 * 搜索配置构建器（懒加载，兼容跳过构造函数的测试场景）
+	 * @return \yicmf\builder\table\SearchBuilder
+	 */
+	private function searchBuilder()
+	{
+		if (!isset($this->searchBuilderObj)) {
+			$this->searchBuilderObj = new SearchBuilder();
+		}
+		return $this->searchBuilderObj;
+	}
+
+	/**
+	 * 按钮配置构建器（懒加载，兼容跳过构造函数的测试场景）
+	 * @return \yicmf\builder\table\ButtonBuilder
+	 */
+	private function buttonBuilder()
+	{
+		if (!isset($this->buttonBuilderObj)) {
+			$this->buttonBuilderObj = new ButtonBuilder($this);
+		}
+		return $this->buttonBuilderObj;
+	}
+
+	/**
+	 * 查询配置构建器（懒加载，兼容跳过构造函数的测试场景）
+	 * 2026-09-06 拆分重构：自 Table 迁出的查询状态持有者
+	 * @return \yicmf\builder\table\QueryResolver
+	 */
+	private function queryResolver()
+	{
+		if (!isset($this->queryResolverObj)) {
+			$this->queryResolverObj = new QueryResolver($this);
+		}
+		return $this->queryResolverObj;
+	}
+
+	/**
+	 * 2026-09-06 拆分重构：供 QueryResolver 写入快捷编辑模板
+	 */
+	public function getColumnBuilder()
+	{
+		return $this->columnBuilder();
+	}
+
+	/**
+	 * 2026-09-06 拆分重构：供 ButtonBuilder 访问当前请求
+	 */
+	public function getRequest()
+	{
+		return $this->request;
+	}
+	/**
+	 * 2026-09-06 拆分重构：供 ButtonBuilder 访问当前模块名
+	 */
+	public function getModule()
+	{
+		return $this->module;
+	}
+	/**
+	 * 2026-09-06 拆分重构：供 ButtonBuilder 访问交互方式配置
+	 */
+	public function getToggle()
+	{
+		return $this->toggle;
+	}
+	/**
+	 * 2026-09-06 拆分重构：供 ButtonBuilder 访问弹窗默认宽度
+	 */
+	public function getDialogWidth()
+	{
+		return $this->dialog_width_default;
+	}
+	/**
+	 * 2026-09-06 拆分重构：供 ButtonBuilder 访问弹窗默认高度
+	 */
+	public function getDialogHeight()
+	{
+		return $this->dialog_height_default;
+	}
+	/**
+	 * 2026-09-06 拆分重构：供 ButtonBuilder 访问当前用户
+	 */
+	public function getUser()
+	{
+		return $this->_user;
+	}
+
+	/**
+	 * 解析搜索可用的数据表字段（2026-09-06 拆分重构：自原 _searchWhere 抽出）
+	 * @return array
+	 */
+	private function resolveSearchDbFields()
+	{
+		$model = $this->queryResolver()->getModel(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+		// $model = $this->_model;
+		if (!is_null($model)) {
+			if (is_string($model)) {
+				$db_fields = $model::getTableFields();
+			} else {
+				$db_fields = $model->getTableFields();
+			}
+		} else {
+			$db_fields = array_merge($this->queryResolver()->getField(), $this->columnBuilder()->getExtraFields()); // 2026-09-06 拆分重构：改为从QueryResolver读取
+			// $db_fields = array_merge($this->_field, $this->columnBuilder()->getExtraFields());
+		}
+		return $db_fields;
+	}
+
+    /**
+     * 初始化表格构建器
+     * @return $this
+     */
     protected function initialize()
     {
         if ($this->request->param('callback', '')) {
@@ -151,9 +296,14 @@ class Table extends Builder
      */
     public function model($model, $pagination = true)
     {
-        $this->_model = $model;
-        $this->_pagination = $pagination;
+        $this->queryResolver()->model(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：查询配置迁至 table/QueryResolver，原实现注释保留
+        //
+        //         $this->_model = $model;
+        //         $this->_pagination = $pagination;
+        //         return $this;
     }
 
     /**
@@ -162,12 +312,18 @@ class Table extends Builder
     public function tag($tag, $title = '标签', $value = '', $field = 'tag_id', $width = 2)
     {
 
-        $this->_search[] = [
+        $this->searchBuilder()->pushSearch([
             'field' => $field,
             'type' => 'hidden',
             'condition' => 'in',
             'value' => $value,
-        ];
+        ]); // 2026-09-06 拆分重构：改为写入SearchBuilder
+        // $this->_search[] = [
+        //     'field' => $field,
+        //     'type' => 'hidden',
+        //     'condition' => 'in',
+        //     'value' => $value,
+        // ];
         $this->_left_tag['title'] = $title;
         $this->_left_tag['data'] = $tag;
         $this->_left_tag['width'] = $width;
@@ -191,12 +347,18 @@ class Table extends Builder
         if (empty($default)) {
             $default = $lists[0]['id'];
         }
-        $this->_search[] = [
+        $this->searchBuilder()->pushSearch([
             'field' => $field,
             'type' => 'tabs',
             'condition' => '=',
             'value' => $default,
-        ];
+        ]); // 2026-09-06 拆分重构：改为写入SearchBuilder
+        // $this->_search[] = [
+        //     'field' => $field,
+        //     'type' => 'tabs',
+        //     'condition' => '=',
+        //     'value' => $default,
+        // ];
         $this->_tabs = [
             'field' => $field,
             'tabs' => $lists,
@@ -250,8 +412,13 @@ class Table extends Builder
      */
     public function totalRowField($field,$templet)
     {
-        $this->_total_row[] = ['field' => $field, 'templet' => $templet];
+        $this->queryResolver()->totalRowField(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：查询配置迁至 table/QueryResolver，原实现注释保留
+        //
+        //         $this->_total_row[] = ['field' => $field, 'templet' => $templet];
+        //         return $this;
     }
 
 
@@ -319,15 +486,42 @@ class Table extends Builder
     }
 
     /**
-     * 模型的where条件
-     * @param $where
+     * 模型的where条件，用法与模型where一致，支持链式多次调用（条件之间为AND关系）
+     * where('id', 1) 等于 where('id', '=', 1)
+     * where('id', '>', 1) / where('status', 1) / where(['status' => 1]) / where([['id', '>', 1]])
+     * where('status=1') 字符串原生条件 / where(function($q){...}) 闭包子查询
+     * 多次调用会累积为 AND 条件（与模型链式 where 一致）
+     * @param mixed ...$args 透传给模型 where 的参数（1/2/3 个，或数组/字符串/闭包）
      * @return $this
+     * [Buddy 2026-08-28] 调整：改为条件包数组累积，兼容模型一致的 1/2/3 参数及闭包/字符串，支持链式
      * @author  : 微尘 <yicmf@qq.com>
      */
-    public function where($where)
+    public function where(...$args)
     {
-        $this->_where = $where;
+        $this->queryResolver()->where(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：查询配置迁至 table/QueryResolver，原实现注释保留
+        //
+        //         $this->_where[] = $args;
+        //         return $this;
+    }
+
+    /**
+     * 将 Table 上累积的 where 条件包应用到查询对象
+     * 每个条件包是一组传给模型 where 的参数（支持数组/字符串/闭包/2参/3参）
+     * [Buddy 2026-08-28] 新增：统一消费 _where 条件包，兼容链式多次调用
+     * @param \think\db\Query|\think\Model $query
+     * @return mixed
+     */
+    protected function _applyWhere($query)
+    {
+        $wherePacks = $this->queryResolver()->getWhere(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+        // foreach ($this->_where as $pack) {
+        foreach ($wherePacks as $pack) {
+            $query = $query->where(...$pack);
+        }
+        return $query;
     }
 
     /**
@@ -338,8 +532,13 @@ class Table extends Builder
      */
     public function order($order)
     {
-        $this->_order = $order;
+        $this->queryResolver()->order(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：查询配置迁至 table/QueryResolver，原实现注释保留
+        //
+        //         $this->_order = $order;
+        //         return $this;
     }
 
     /**
@@ -350,8 +549,30 @@ class Table extends Builder
      */
     public function field($field)
     {
-        $this->_field = array_merge($this->_field, is_array($field) ? $field : [$field]);
+        $this->queryResolver()->field(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：查询配置迁至 table/QueryResolver，原实现注释保留
+        //
+        //         $this->_field = array_merge($this->_field, is_array($field) ? $field : [$field]);
+        //         return $this;
+    }
+
+    /**
+     * 模型指定字段
+     * @param string $field
+     * @return $this
+     * @author  : 微尘 <yicmf@qq.com>
+     */
+    public function hiddenField($field)
+    {
+        $this->queryResolver()->hiddenField(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：查询配置迁至 table/QueryResolver，原实现注释保留
+        //
+        //         $this->_hidden_field = array_merge($this->_hidden_field, is_array($field) ? $field : [$field]);
+        //         return $this;
     }
 
     /**
@@ -464,8 +685,13 @@ class Table extends Builder
      */
     public function setClearUrl($url)
     {
-        $this->_setClearUrl = $url;
+        $this->searchBuilder()->setClearUrl(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $this->_setClearUrl = $url;
+        //         return $this;
     }
 
     /**
@@ -476,8 +702,13 @@ class Table extends Builder
      */
     public function setSelectPostUrl($url)
     {
-        $this->_selectPostUrl = url($url);
+        $this->searchBuilder()->setSelectPostUrl(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $this->_selectPostUrl = url($url);
+        //         return $this;
     }
 
     /**
@@ -491,7 +722,8 @@ class Table extends Builder
     {
         $get = $this->request->get();
         $param = empty($param) ? $get : $param;
-        $this->_searchPostUrl = url($url, $param);
+        $this->searchBuilder()->setSearchPostUrlValue(url($url, $param)); // 2026-09-06 拆分重构：改为写入SearchBuilder
+        // $this->_searchPostUrl = url($url, $param);
         return $this;
     }
 
@@ -504,17 +736,22 @@ class Table extends Builder
      */
     public function button($title, $attr)
     {
-        if (isset($attr['url']) && strpos($attr['url'], '/Admin')) {
-            $attr['url'] = str_replace('/Admin', '/admin', $attr['url']);
-        }
-        if (false === $this->authCheck($attr['url'])) {
-            return $this;
-        }
-        $this->_buttonList[] = [
-            'title' => $title,
-            'attr' => $attr,
-        ];
+        $this->buttonBuilder()->button(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         if (isset($attr['url']) && strpos($attr['url'], '/Admin')) {
+        //             $attr['url'] = str_replace('/Admin', '/admin', $attr['url']);
+        //         }
+        //         if (false === $this->authCheck($attr['url'])) {
+        //             return $this;
+        //         }
+        //         $this->_buttonList[] = [
+        //             'title' => $title,
+        //             'attr' => $attr,
+        //         ];
+        //         return $this;
     }
 
     /**
@@ -528,14 +765,19 @@ class Table extends Builder
      */
     public function buttonUpdate($url = 'update', $title = '新增', $width = '', $height = '', $attr = [])
     {
-        $default['url'] = $url;
-        $default['class'] = 'layui-bg-green';
-        $default['icon'] = 'plus';
-        $default['width'] = $width ?: $this->dialog_width_default;
-        $default['height'] = $height ?: $this->dialog_height_default;
-        $default['data-title'] = $title != '新增' ? $title : $this->request->controller() . '新增';
-        $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
-        return $this->buttonDialog($title, array_merge($default, $attr));
+        $this->buttonBuilder()->buttonUpdate(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $default['url'] = $url;
+        //         $default['class'] = 'layui-bg-green';
+        //         $default['icon'] = 'plus';
+        //         $default['width'] = $width ?: $this->dialog_width_default;
+        //         $default['height'] = $height ?: $this->dialog_height_default;
+        //         $default['data-title'] = $title != '新增' ? $title : $this->request->controller() . '新增';
+        //         $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
+        //         return $this->buttonDialog($title, array_merge($default, $attr));
     }
 
     /**
@@ -546,22 +788,27 @@ class Table extends Builder
      */
     public function buttonExcelImport($url = 'import', $title = '导入',$attr = [])
     {
-        if (false === strpos($url, '/')) {
-            // 补充
-            if ($this->module)
-            {
-                $url = $this->module . '/' . $this->request->controller() . '/' . $url;
-            }else{
-                $url =  $this->request->controller() . '/' . $url;
-            }
-        }
-        $default['url'] = $url;
-        $default['class'] = 'layui-bg-green';
-        $default['icon'] = 'plus';
-        $default['event'] = 'import';
-        $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
-
-        return $this->button($title, array_merge($default, $attr));
+        $this->buttonBuilder()->buttonExcelImport(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         if (false === strpos($url, '/')) {
+        //             // 补充
+        //             if ($this->module)
+        //             {
+        //                 $url = $this->module . '/' . $this->request->controller() . '/' . $url;
+        //             }else{
+        //                 $url =  $this->request->controller() . '/' . $url;
+        //             }
+        //         }
+        //         $default['url'] = $url;
+        //         $default['class'] = 'layui-bg-green';
+        //         $default['icon'] = 'plus';
+        //         $default['event'] = 'import';
+        //         $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
+        //
+        //         return $this->button($title, array_merge($default, $attr));
     }
 
     /**
@@ -574,16 +821,21 @@ class Table extends Builder
      */
     public function buttonFull($url, $title = '新增', $icon = 'plus', $attr = [])
     {
-        $default['url'] = $url;
-        $default['class'] = 'layui-bg-green';
-        if (is_string($icon)) {
-            $default['icon'] = $icon;
-        }
-        $default['width'] = '100%';
-        $default['height'] = '100%';
-        $default['data-title'] = $title != '新增' ? $title : $this->request->controller() . '新增';
-        $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
-        return $this->buttonDialog($title, array_merge($default, $attr));
+        $this->buttonBuilder()->buttonFull(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $default['url'] = $url;
+        //         $default['class'] = 'layui-bg-green';
+        //         if (is_string($icon)) {
+        //             $default['icon'] = $icon;
+        //         }
+        //         $default['width'] = '100%';
+        //         $default['height'] = '100%';
+        //         $default['data-title'] = $title != '新增' ? $title : $this->request->controller() . '新增';
+        //         $default['data-id'] = 'id' . md5('dialog-' . $this->request->controller() . '-add-' . $this->request->time());
+        //         return $this->buttonDialog($title, array_merge($default, $attr));
     }
 
     /**
@@ -595,14 +847,19 @@ class Table extends Builder
      */
     public function buttonCustom($url, $title, $attr = [])
     {
-        $attr['url'] = $url;
-        $attr['class'] = isset($attr['class']) ? $attr['class'] : 'layui-bg-green';
-        $attr['width'] = isset($attr['width']) ? $attr['width'] : $this->dialog_width_default;
-        $attr['height'] = isset($attr['height']) ? $attr['height'] : $this->dialog_height_default;
-        $attr['toggle'] = $this->toggle;
-        $attr['event'] = 'edit';
-        $attr['title'] = $title ?: $this->request->controller();
-        return $this->button($title, $attr);
+        $this->buttonBuilder()->buttonCustom(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $attr['url'] = $url;
+        //         $attr['class'] = isset($attr['class']) ? $attr['class'] : 'layui-bg-green';
+        //         $attr['width'] = isset($attr['width']) ? $attr['width'] : $this->dialog_width_default;
+        //         $attr['height'] = isset($attr['height']) ? $attr['height'] : $this->dialog_height_default;
+        //         $attr['toggle'] = $this->toggle;
+        //         $attr['event'] = 'edit';
+        //         $attr['title'] = $title ?: $this->request->controller();
+        //         return $this->button($title, $attr);
     }
 
     /**
@@ -614,27 +871,32 @@ class Table extends Builder
      */
     public function buttonDialog($title, $attr, $toggle = 'navtab')
     {
-        if (false === strpos($attr['url'], '/')) {
-            // 补充
-            if ($this->module)
-            {
-                $attr['url'] = $this->module . '/' . $this->request->controller() . '/' . $attr['url'];
-            }else{
-                $attr['url'] =  $this->request->controller() . '/' . $attr['url'];
-            }
-        }
-        $attr['height'] = is_numeric($attr['height']) ? ($attr['height'] . 'px') : $attr['height'];
-        $attr['width'] = is_numeric($attr['width']) ? ($attr['width'] . 'px') : $attr['width'];
-        //            if (false === strpos($attr['url'], '?')) {
-        //                // 补充
-        //                $attr['url'] = $attr['url'] . '?auto_builder={$auto_builder}';
-        //            } else {
-        //                $attr['url'] = $attr['url'] . '&auto_builder={$auto_builder}';
-        //            }
-        return $this->button($title, array_merge($attr, [
-            'toggle' => $this->toggle,
-            'event' => 'popup',
-        ]));
+        $this->buttonBuilder()->buttonDialog(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         if (false === strpos($attr['url'], '/')) {
+        //             // 补充
+        //             if ($this->module)
+        //             {
+        //                 $attr['url'] = $this->module . '/' . $this->request->controller() . '/' . $attr['url'];
+        //             }else{
+        //                 $attr['url'] =  $this->request->controller() . '/' . $attr['url'];
+        //             }
+        //         }
+        //         $attr['height'] = is_numeric($attr['height']) ? ($attr['height'] . 'px') : $attr['height'];
+        //         $attr['width'] = is_numeric($attr['width']) ? ($attr['width'] . 'px') : $attr['width'];
+        //         //            if (false === strpos($attr['url'], '?')) {
+        //         //                // 补充
+        //         //                $attr['url'] = $attr['url'] . '?auto_builder={$auto_builder}';
+        //         //            } else {
+        //         //                $attr['url'] = $attr['url'] . '&auto_builder={$auto_builder}';
+        //         //            }
+        //         return $this->button($title, array_merge($attr, [
+        //             'toggle' => $this->toggle,
+        //             'event' => 'popup',
+        //         ]));
     }
 
     /**
@@ -646,21 +908,26 @@ class Table extends Builder
      */
     public function buttonAjax($url, $title, $toggle = 'doajax', $attr = [])
     {
-        $attr['url'] = url($url);
-        if (false === strpos($attr['url'], '?')) {
-            // 补充
-            $attr['url'] = $attr['url'] . '?auto_builder={$auto_builder}';
-        } else {
-            $attr['url'] = $attr['url'] . '&auto_builder={$auto_builder}';
-        }
-
-        $attr['class'] = isset($attr['class']) ? $attr['class'] : 'btn-default';
-        if (!isset($attr['icon'])) {
-            $attr['icon'] = 'refresh';
-        }
-        $attr['toggle'] = $toggle;
-        $attr['event'] = 'ajax';
-        return $this->button($title, $attr);
+        $this->buttonBuilder()->buttonAjax(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $attr['url'] = url($url);
+        //         if (false === strpos($attr['url'], '?')) {
+        //             // 补充
+        //             $attr['url'] = $attr['url'] . '?auto_builder={$auto_builder}';
+        //         } else {
+        //             $attr['url'] = $attr['url'] . '&auto_builder={$auto_builder}';
+        //         }
+        //
+        //         $attr['class'] = isset($attr['class']) ? $attr['class'] : 'btn-default';
+        //         if (!isset($attr['icon'])) {
+        //             $attr['icon'] = 'refresh';
+        //         }
+        //         $attr['toggle'] = $toggle;
+        //         $attr['event'] = 'ajax';
+        //         return $this->button($title, $attr);
     }
 
 
@@ -673,11 +940,16 @@ class Table extends Builder
      */
     public function buttonDisable($url, $title = '禁用', $attr = [])
     {
-        $attr['class'] = 'btn-red';
-        $attr['message'] = '确定要' . $title . '么？';
-        $attr['icon'] = 'minus-circle';
-        $attr['type'] = 'button';
-        return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
+        $this->buttonBuilder()->buttonDisable(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $attr['class'] = 'btn-red';
+        //         $attr['message'] = '确定要' . $title . '么？';
+        //         $attr['icon'] = 'minus-circle';
+        //         $attr['type'] = 'button';
+        //         return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
     }
 
     /**
@@ -689,11 +961,16 @@ class Table extends Builder
      */
     public function buttonEnable($url, $title = '启用', $attr = [])
     {
-        $attr['class'] = 'layui-bg-green';
-        $attr['message'] = '确定要' . $title . '么？';
-        $attr['icon'] = 'check-circle-o';
-        $attr['type'] = 'button';
-        return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
+        $this->buttonBuilder()->buttonEnable(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $attr['class'] = 'layui-bg-green';
+        //         $attr['message'] = '确定要' . $title . '么？';
+        //         $attr['icon'] = 'check-circle-o';
+        //         $attr['type'] = 'button';
+        //         return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
     }
 
     /**
@@ -705,13 +982,18 @@ class Table extends Builder
      */
     public function buttonDelete($url, $title = '删除选中', $attr = [])
     {
-        $attr['class'] = 'btn-blue';
-        $attr['message'] = '确定要' . $title . '么？';
-        $attr['icon'] = 'trash-o';
-        $attr['data-idname'] = 'id';
-        $attr['data-group'] = 'ids';
-        $attr['type'] = 'button';
-        return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
+        $this->buttonBuilder()->buttonDelete(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $attr['class'] = 'btn-blue';
+        //         $attr['message'] = '确定要' . $title . '么？';
+        //         $attr['icon'] = 'trash-o';
+        //         $attr['data-idname'] = 'id';
+        //         $attr['data-group'] = 'ids';
+        //         $attr['type'] = 'button';
+        //         return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
     }
 
     /**
@@ -723,10 +1005,15 @@ class Table extends Builder
      */
     public function buttonDeleteAll($url, $title = '删除所有', $attr = [])
     {
-        $attr['class'] = 'btn-blue';
-        $attr['message'] = '确定要' . $title . '么？';
-        $attr['icon'] = 'trash-o';
-        return $this->buttonAjax($url, $title, 'doajax', $attr);
+        $this->buttonBuilder()->buttonDeleteAll(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $attr['class'] = 'btn-blue';
+        //         $attr['message'] = '确定要' . $title . '么？';
+        //         $attr['icon'] = 'trash-o';
+        //         return $this->buttonAjax($url, $title, 'doajax', $attr);
     }
 
     /**
@@ -736,6 +1023,10 @@ class Table extends Builder
      */
     public function authCheck($url)
     {
+        // 2026-09-06 解耦：已注入自定义权限检查回调时优先使用，未注入保持原逻辑（app\ucenter\AuthGroup）
+        if (isset($this->authChecker) && is_callable($this->authChecker)) {
+            return (bool) call_user_func($this->authChecker, $url, $this->_user);
+        }
         if ($this->_user) {
             $url = explode('?', $url)[0];
             if (strpos($url, '.html')) {
@@ -751,6 +1042,17 @@ class Table extends Builder
     }
 
     /**
+     * 注入自定义权限检查回调（2026-09-06 解耦：替代对 app\ucenter 的硬依赖）
+     * @param callable|null $checker function(string $url, $user): bool
+     * @return $this
+     */
+    public function setAuthChecker($checker)
+    {
+        $this->authChecker = $checker;
+        return $this;
+    }
+
+    /**
      * 无条件ajax请求
      * @param string $url
      * @param string $title
@@ -760,9 +1062,14 @@ class Table extends Builder
      */
     public function buttonRefresh($url, $title = '刷新', $attr = [])
     {
-        !isset($attr['class']) && $attr['class'] = 'btn-blue';
-        //         $attr['icon'] = 'trash-o';
-        return $this->buttonAjax($url, $title, 'doajax', $attr);
+        $this->buttonBuilder()->buttonRefresh(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         !isset($attr['class']) && $attr['class'] = 'btn-blue';
+        //         //         $attr['icon'] = 'trash-o';
+        //         return $this->buttonAjax($url, $title, 'doajax', $attr);
     }
 
     /**
@@ -774,11 +1081,16 @@ class Table extends Builder
      */
     public function buttonRestore($url, $title = '还原', $attr = [])
     {
-        $attr['class'] = 'btn-blue';
-        $attr['message'] = '确定要' . $title . '么？';
-        $attr['icon'] = 'undo';
-        $attr['type'] = 'button';
-        return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
+        $this->buttonBuilder()->buttonRestore(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $attr['class'] = 'btn-blue';
+        //         $attr['message'] = '确定要' . $title . '么？';
+        //         $attr['icon'] = 'undo';
+        //         $attr['type'] = 'button';
+        //         return $this->buttonAjax($url, $title, 'doajaxchecked', $attr);
     }
 
     /**
@@ -789,7 +1101,8 @@ class Table extends Builder
     public function buttonClear($url = null)
     {
         if (!$url) {
-            $url = $this->_setClearUrl;
+            $url = $this->searchBuilder()->getSetClearUrl(); // 2026-09-06 拆分重构：改为从SearchBuilder读取
+            // $url = $this->_setClearUrl;
         }
         $attr['class'] = 'ajax-post tox-confirm';
         $attr['data-confirm'] = '您确实要彻底删除吗？（彻底删除后不可恢复）';
@@ -806,8 +1119,13 @@ class Table extends Builder
      */
     public function buttonSort($url, $title = '排序', $attr = [])
     {
-        $attr['url'] = $url;
-        return $this->button($title, $attr);
+        $this->buttonBuilder()->buttonSort(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $attr['url'] = $url;
+        //         return $this->button($title, $attr);
     }
 
     /**
@@ -825,17 +1143,22 @@ class Table extends Builder
      */
     public function groupAction($title, $url, $msg, $toggle, $idname = null, $group = null, $class = null, $br = null)
     {
-        $this->_group[] = [
-            'msg' => $msg,
-            'title' => $title,
-            'url' => $url,
-            'toggle' => $toggle,
-            'idname' => $idname,
-            'group' => $group,
-            'class' => $class,
-            'br' => $br,
-        ];
+        $this->buttonBuilder()->groupAction(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         $this->_group[] = [
+        //             'msg' => $msg,
+        //             'title' => $title,
+        //             'url' => $url,
+        //             'toggle' => $toggle,
+        //             'idname' => $idname,
+        //             'group' => $group,
+        //             'class' => $class,
+        //             'br' => $br,
+        //         ];
+        //         return $this;
     }
 
     /**
@@ -849,16 +1172,21 @@ class Table extends Builder
      */
     public function searchText($field, $title, $placeholder = '', $default = '', $attr = [])
     {
-        $this->_search[] = [
-            'title' => $title,
-            'field' => $field,
-            'type' => 'text',
-            'condition' => '=',
-            'placeholder' => $placeholder,
-            'value' => $default,
-            'attr' => $attr,
-        ];
+        $this->searchBuilder()->searchText(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $this->_search[] = [
+        //             'title' => $title,
+        //             'field' => $field,
+        //             'type' => 'text',
+        //             'condition' => '=',
+        //             'placeholder' => $placeholder,
+        //             'value' => $default,
+        //             'attr' => $attr,
+        //         ];
+        //         return $this;
     }
 
     /**
@@ -872,16 +1200,49 @@ class Table extends Builder
      */
     public function searchTextLike($field, $title, $placeholder = '支持模糊搜索', $default = '', $attr = [])
     {
-        $this->_search[] = [
-            'title' => $title,
-            'field' => $field,
-            'type' => 'text',
-            'condition' => 'like',
-            'value' => $default,
-            'placeholder' => $placeholder,
-            'attr' => $attr,
-        ];
+        $this->searchBuilder()->searchTextLike(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $this->_search[] = [
+        //             'title' => $title,
+        //             'field' => $field,
+        //             'type' => 'text',
+        //             'condition' => 'like',
+        //             'value' => $default,
+        //             'placeholder' => $placeholder,
+        //             'attr' => $attr,
+        //         ];
+        //         return $this;
+    }
+
+    /**
+     * 模糊搜索text文本信息.
+     * @param string $title
+     * @param string $field
+     * @param string $placeholder
+     * @param string $default
+     * @param array $attr
+     * @return $this
+     */
+    public function searchTextIn($field, $title, $placeholder = '多个值用英文逗号","隔开', $default = '', $attr = [])
+    {
+        $this->searchBuilder()->searchTextIn(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $this->_search[] = [
+        //             'title' => $title,
+        //             'field' => $field,
+        //             'type' => 'text',
+        //             'condition' => 'in',
+        //             'value' => $default,
+        //             'placeholder' => $placeholder,
+        //             'attr' => $attr,
+        //         ];
+        //         return $this;
     }
 
     /**
@@ -895,16 +1256,21 @@ class Table extends Builder
      */
     public function searchUser($title, $placeholder = '支持邮箱、手机、账号、ID', $default = '', $field = 'user_id', $attr = [])
     {
-        $this->_search[] = [
-            'title' => $title,
-            'field' => $field,
-            'type' => 'text',
-            'condition' => 'search_user',
-            'value' => $default,
-            'placeholder' => $placeholder,
-            'attr' => $attr,
-        ];
+        $this->searchBuilder()->searchUser(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $this->_search[] = [
+        //             'title' => $title,
+        //             'field' => $field,
+        //             'type' => 'text',
+        //             'condition' => 'search_user',
+        //             'value' => $default,
+        //             'placeholder' => $placeholder,
+        //             'attr' => $attr,
+        //         ];
+        //         return $this;
     }
 
 
@@ -923,52 +1289,58 @@ class Table extends Builder
      */
     public function searchDate($field, $title, $placeholder = null, $default = null, $width = 300, $min = '', $max = '', $type = 'date', $range = false)
     {
-        $formats = [
-            'year' => 'yyyy',
-            'date' => 'yyyy-MM-dd',
-            'datetime' => 'yyyy-MM-dd HH:mm:ss',
-        ];
-        $format = [
-            'date' => 'Y-m-d',
-            'datetime' => 'Y-m-d H:i:s',
-        ];
-
-        if (is_string($default)) {
-            if (!strpos($default, ' - ')) {
-                if (time_format($default) < time_format('now')) {
-                    $default = time_format($default, $format[$type]) . ' - ' . time_format('now', $format[$type]);
-                } else {
-                    $default = time_format('now', $format[$type]) . ' - ' . time_format($default, $format[$type]);
-                }
-            }
-        }
-        $options = [
-            'elem' => '#j_table_builder_' . (strpos($field, '|') ? md5($field) : $field),
-            'type' => $type,
-            'range' => $range,
-            'format ' => $formats[$type],
-            'mark ' => [],
-            'min' => $min,
-            'max' => $max,
-            'value' => $default,
-        ];
-        foreach ($options as $key => $item) {
-            if (!$item) {
-                unset($options[$key]);
-            }
-        }
-        $this->_search[] = [
-            'title' => $title,
-            'field' => $field,
-            'type' => 'datepicker',
-            'value' => $default,
-            'condition' => 'between',
-            'placeholder' => $placeholder,
-            'width' => $width,
-            'options' => $options,
-        ];
+        $this->searchBuilder()->searchDate(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
-
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $formats = [
+        //             'year' => 'yyyy',
+        //             'date' => 'yyyy-MM-dd',
+        //             'datetime' => 'yyyy-MM-dd HH:mm:ss',
+        //         ];
+        //         $format = [
+        //             'date' => 'Y-m-d',
+        //             'datetime' => 'Y-m-d H:i:s',
+        //         ];
+        //
+        //         if (is_string($default)) {
+        //             if (!strpos($default, ' - ')) {
+        //                 if (strtotime($default) < time()) {
+        //                     $default = time_format($default, $format[$type]) . ' - ' . time_format('now', $format[$type]);
+        //                 } else {
+        //                     $default = time_format('now', $format[$type]) . ' - ' . time_format($default, $format[$type]);
+        //                 }
+        //             }
+        //         }
+        //         $options = [
+        //             'elem' => '#j_table_builder_' . (strpos($field, '|') ? md5($field) : $field),
+        //             'type' => $type,
+        //             'range' => $range,
+        //             'format' => $formats[$type],
+        //             'mark' => [],
+        //             'min' => $min,
+        //             'max' => $max,
+        //             'value' => $default,
+        //         ];
+        //         foreach ($options as $key => $item) {
+        //             if (!$item) {
+        //                 unset($options[$key]);
+        //             }
+        //         }
+        //         $this->_search[] = [
+        //             'title' => $title,
+        //             'field' => $field,
+        //             'type' => 'datepicker',
+        //             'value' => $default,
+        //             'condition' => 'between',
+        //             'placeholder' => $placeholder,
+        //             'width' => $width,
+        //             'options' => $options,
+        //         ];
+        //         return $this;
+        //
+        //     }
     }
 
     /**
@@ -984,7 +1356,12 @@ class Table extends Builder
      */
     public function searchDateTimeRange($field, $title, $placeholder = null, $default = null, $width = 300, $min = '', $max = '')
     {
-        return $this->searchDate($field, $title, $placeholder, $default, $width, $min, $max, 'datetime', true);
+        $this->searchBuilder()->searchDateTimeRange(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         return $this->searchDate($field, $title, $placeholder, $default, $width, $min, $max, 'datetime', true);
     }
 
     /**
@@ -1000,7 +1377,12 @@ class Table extends Builder
      */
     public function searchDateRange($field, $title, $placeholder = null, $default = null, $width = 180, $min = '', $max = '')
     {
-        return $this->searchDate($field, $title, $placeholder, $default, $width, $min, $max, 'date', true);
+        $this->searchBuilder()->searchDateRange(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         return $this->searchDate($field, $title, $placeholder, $default, $width, $min, $max, 'date', true);
     }
 
 
@@ -1016,18 +1398,23 @@ class Table extends Builder
      */
     public function searchBool($field, $title, $des = '', $default = '', $attr = [])
     {
-        $options = [
-            [
-                'id' => 0,
-                'value' => '否',
-            ],
-            [
-                'id' => 1,
-                'value' => '是',
-            ],
-        ];
-
-        return $this->searchSelect($field, $title, $options, $des, $default, $attr);
+        $this->searchBuilder()->searchBool(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $options = [
+        //             [
+        //                 'id' => 0,
+        //                 'value' => '否',
+        //             ],
+        //             [
+        //                 'id' => 1,
+        //                 'value' => '是',
+        //             ],
+        //         ];
+        //
+        //         return $this->searchSelect($field, $title, $options, $des, $default, $attr);
     }
 
     /**
@@ -1043,18 +1430,23 @@ class Table extends Builder
      */
     public function searchSelect($field, $title, $options = [], $placeholder = '', $default = '', $attr = [])
     {
-        $this->_search[] = [
-            'title' => $title,
-            'field' => $field,
-            'value' => $default,
-            'default' => $default,
-            'type' => 'select',
-            'placeholder' => $placeholder,
-            'attr' => $attr,
-            'condition' => '=',
-            'options' => $options,
-        ];
+        $this->searchBuilder()->searchSelect(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $this->_search[] = [
+        //             'title' => $title,
+        //             'field' => $field,
+        //             'value' => $default,
+        //             'default' => $default,
+        //             'type' => 'select',
+        //             'placeholder' => $placeholder,
+        //             'attr' => $attr,
+        //             'condition' => '=',
+        //             'options' => $options,
+        //         ];
+        //         return $this;
     }
 
 
@@ -1071,17 +1463,22 @@ class Table extends Builder
      */
     public function search($title = '搜索', $field = 'key', $type = 'text', $placeholder = '', $default = '', $attr = [], $options = null)
     {
-        $this->_search[] = [
-            'title' => $title,
-            'field' => $field,
-            'value' => $default,
-            'type' => $type,
-            'condition' => '=',
-            'placeholder' => $placeholder,
-            'attr' => $attr,
-            'options' => $options,
-        ];
+        $this->searchBuilder()->search(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         $this->_search[] = [
+        //             'title' => $title,
+        //             'field' => $field,
+        //             'value' => $default,
+        //             'type' => $type,
+        //             'condition' => '=',
+        //             'placeholder' => $placeholder,
+        //             'attr' => $attr,
+        //             'options' => $options,
+        //         ];
+        //         return $this;
     }
 
     /**
@@ -1092,53 +1489,70 @@ class Table extends Builder
      */
     public function setKeys($fields = [])
     {
-        $this->_keyList = array_merge($this->_keyList, $fields);
+        $this->columnBuilder()->setKeys(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $this->_keyList = array_merge($this->_keyList, $fields);
+        //         return $this;
     }
 
 
+    /**
+     * 设置需要快捷编辑（行内编辑）的字段
+     * 支持文本、下拉（select）、开关（switch）等类型，select/switch 会自动生成对应模板
+     * @param array|string $fields 字段名列表，可为数组或逗号分隔的字符串，也可为字段名=>配置的数组
+     * @param mixed $update 快捷编辑提交的附加参数（是否可编辑等）
+     * @return $this
+     */
     public function quickUpdate($fields, $update=null)
     {
-        $fields = is_array($fields) ? $fields : explode(',', $fields);
-        foreach ($fields as $index => $item) {
-            if (is_numeric($index)) {
-                $this->_quick_update[$item] = ['option' => ['type'=>'text'], 'qucik_edit' => $update];
-            } else {
-                if ($item['type'] == 'select')
-                {
-                    $templet = 'k'.uniqid();
-                    $op = json_encode($item['option']);
-                    $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
-  {{#  var cityList = $op; }}
-  <select name="$index" lay-filter="select-demo" lay-append-to="body"  lay-ignore>
-    <option value="">请选择</option>
-    {{#  layui.each(cityList, function(i, v){ }}
-    <option value="{{= v }}" {{= v === d.city ? 'selected' : '' }}>{{= v }}</option>
-    {{#  }); }}
-  </select> 
-</script>
-EOF;
-                    $templet = '#' . $templet;
-                    $item['templet'] = $templet;
-                }elseif ('switch' == $item['type']) {
-
-                    $templet = 'k'.uniqid();
-                    $op = json_encode($item['option']);
-                    $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
-  <!-- 这里的 checked 的状态值判断仅作为演示 -->
-  <input type="checkbox" data-name="$index" name="$index" value="{{= d.$index }}" title="ON|OFF"  lay-skin="switch" lay-filter="demo-templet-status" {{= d.$index == 1 ? "checked" : "" }}>
-</script>
-EOF;
-                    $templet = '#' . $templet;
-                    $item['templet'] = $templet;
-
-                }
-                $this->_quick_update[$index] = ['option' => $item, 'qucik_edit' => $update];
-            }
-        }
+        $this->queryResolver()->quickUpdate(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：quickUpdate 迁至 table/QueryResolver（模板写入经 getColumnBuilder 回调），原实现注释保留
+        //
+        //         $fields = is_array($fields) ? $fields : explode(',', $fields);
+        //         foreach ($fields as $index => $item) {
+        //             if (is_numeric($index)) {
+        //                 $this->_quick_update[$item] = ['option' => ['type'=>'text'], 'qucik_edit' => $update];
+        //             } else {
+        //                 if ($item['type'] == 'select')
+        //                 {
+        //                     $templet = 'k'.uniqid();
+        //                     $op = json_encode($item['option']);
+        //                     $this->columnBuilder()->templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //   {{#  var cityList = $op; }}
+        //   <select name="$index" lay-filter="select-demo" lay-append-to="body"  lay-ignore>
+        //     <option value="">请选择</option>
+        //     {{#  layui.each(cityList, function(i, v){ }}
+        //     <option value="{{= v }}" {{= v === d.city ? 'selected' : '' }}>{{= v }}</option>
+        //     {{#  }); }}
+        //   </select>
+        // </script>
+        // EOF;
+        //                     $templet = '#' . $templet;
+        //                     $item['templet'] = $templet;
+        //                 }elseif ('switch' == $item['type']) {
+        //
+        //                     $templet = 'k'.uniqid();
+        //                     $op = json_encode($item['option']);
+        //                     $this->columnBuilder()->templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //   <!-- 这里的 checked 的状态值判断仅作为演示 -->
+        //   <input type="checkbox" data-name="$index" name="$index" value="{{= d.$index }}" title="ON|OFF"  lay-skin="switch" lay-filter="demo-templet-status" {{= d.$index == 1 ? "checked" : "" }}>
+        // </script>
+        // EOF;
+        //                     $templet = '#' . $templet;
+        //                     $item['templet'] = $templet;
+        //
+        //                 }
+        //                 $this->_quick_update[$index] = ['option' => $item, 'qucik_edit' => $update];
+        //             }
+        //         }
+        //         return $this;
     }
 
     /**
@@ -1157,108 +1571,113 @@ EOF;
      */
     public function key($field, $title, $sort = false, $width = '', $type = 'normal', $style = '', $templet = '', $map = [])
     {
-        if (false === strpos($field, '{$') && strpos($field, '.')) {
-            $templet = 'k'.uniqid();
-            if (preg_match('/(.*)\[:(.*)\]/', $field, $matches)) {
-                $field = $matches[1];
-                $foreignKey = $matches[2];
-            } else {
-                $foreignKey = '';
-            }
-            $with = explode('.', $field);
-
-            if (!isset($this->_with[$with[0]])) {
-                $this->_with[$with[0]] = [$with[1]];
-            } else {
-                $this->_with[$with[0]][] = $with[1];
-            }
-            if ($foreignKey) {
-                $this->_field[] = $foreignKey;
-            } else {
-                $this->_field[] = $with[0] . '_id';
-            }
-            $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
- {{#  if(d.{$with[0]}){ }}
-   {{d.{$field}}}
-    {{#  }else{ }}
-    -
-  {{#  } }}
-</script>
-EOF;
-            $templet = '#' . $templet;
-        }
-
-        if (preg_match('/(.*)\[(.*)\]/', $title, $matches)) {
-            $title = $matches[2];
-            $hide = true;
-        } else {
-            $hide = false;
-        }
-        if (!($templet instanceof \Closure) && false === strpos($field, '.')) {
-            $this->_field = array_merge($this->_field, is_array($field) ? $field : explode(',', $field));
-        } elseif (false !== strpos($field, '{$data')) {
-            $this->_field[] = substr(explode('|', $field)[0], 7);;
-        }
-        if (!$sort) {
-            $sort = false;
-            $filter = false;
-        } elseif (true === $sort || 'desc' == $sort || 'asc' == $sort) {
-            $sort = true;
-            $filter = false;
-        } else {
-            if (false !== strpos($sort, 'sort') && false !== strpos($sort, 'filter')) {
-                $sort = true;
-                $filter = true;
-            } elseif (false === strpos($sort, 'sort') && false !== strpos($sort, 'filter')) {
-                $sort = false;
-                $filter = true;
-            } else {
-                $sort = true;
-                $filter = false;
-            }
-        }
-        if ($field == 'id') {
-            $fixed = 'left';
-        } else {
-            $fixed = '';
-        }
-        if ($type == 'children') {
-            $key = [
-                'type' => $type,
-                'field' => $field,
-                'title' => $title,
-                'collapse' => 1,
-                'childWidth' => 'full',
-                'style' => $style,
-                'templet' => $templet,
-            ];
-        } else {
-
-            $key = [
-                'field' => $field,
-                'type' => $type,
-                'title' => $title,
-                'sort' => $sort,
-                'hide' => $hide,
-                'filter' => $filter,
-                //                'tips' => $tips,
-                'style' => $style,
-                'fixed' => $fixed,
-                'templet' => $templet,
-                'map' => $map,
-//                'totalRow' => '{{= parseInt(d.TOTAL_NUMS) }} 次',//totalRow: '合计：'
-                //                'even' => true,
-            ];
-            if (!$templet)
-            {
-                unset($key['templet']);
-            }
-        }
-        $reKey = [];
-        !empty($width) && $key['width'] = $width;
-        $this->_keyList[] = $key;
+        $this->columnBuilder()->key(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         if (false === strpos($field, '{$') && strpos($field, '.')) {
+        //             $templet = 'k'.uniqid();
+        //             if (preg_match('/(.*)\[:(.*)\]/', $field, $matches)) {
+        //                 $field = $matches[1];
+        //                 $foreignKey = $matches[2];
+        //             } else {
+        //                 $foreignKey = '';
+        //             }
+        //             $with = explode('.', $field);
+        //
+        //             if (!isset($this->_with[$with[0]])) {
+        //                 $this->_with[$with[0]] = [$with[1]];
+        //             } else {
+        //                 $this->_with[$with[0]][] = $with[1];
+        //             }
+        //             if ($foreignKey) {
+        //                 $this->_field[] = $foreignKey;
+        //             } else {
+        //                 $this->_field[] = $with[0] . '_id';
+        //             }
+        //             $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //  {{#  if(d.{$with[0]}){ }}
+        //    {{d.{$field}}}
+        //     {{#  }else{ }}
+        //     -
+        //   {{#  } }}
+        // </script>
+        // EOF;
+        //             $templet = '#' . $templet;
+        //         }
+        //
+        //         if (preg_match('/(.*)\[(.*)\]/', $title, $matches)) {
+        //             $title = $matches[2];
+        //             $hide = true;
+        //         } else {
+        //             $hide = false;
+        //         }
+        //         if (!($templet instanceof \Closure) && false === strpos($field, '.')) {
+        //             $this->_field = array_merge($this->_field, is_array($field) ? $field : explode(',', $field));
+        //         } elseif (false !== strpos($field, '{$data')) {
+        //             $this->_field[] = substr(explode('|', $field)[0], 7);;
+        //         }
+        //         if (!$sort) {
+        //             $sort = false;
+        //             $filter = false;
+        //         } elseif (true === $sort || 'desc' == $sort || 'asc' == $sort) {
+        //             $sort = true;
+        //             $filter = false;
+        //         } else {
+        //             if (false !== strpos($sort, 'sort') && false !== strpos($sort, 'filter')) {
+        //                 $sort = true;
+        //                 $filter = true;
+        //             } elseif (false === strpos($sort, 'sort') && false !== strpos($sort, 'filter')) {
+        //                 $sort = false;
+        //                 $filter = true;
+        //             } else {
+        //                 $sort = true;
+        //                 $filter = false;
+        //             }
+        //         }
+        //         if ($field == 'id') {
+        //             $fixed = 'left';
+        //         } else {
+        //             $fixed = '';
+        //         }
+        //         if ($type == 'children') {
+        //             $key = [
+        //                 'type' => $type,
+        //                 'field' => $field,
+        //                 'title' => $title,
+        //                 'collapse' => 1,
+        //                 'childWidth' => 'full',
+        //                 'style' => $style,
+        //                 'templet' => $templet,
+        //             ];
+        //         } else {
+        //
+        //             $key = [
+        //                 'field' => $field,
+        //                 'type' => $type,
+        //                 'title' => $title,
+        //                 'sort' => $sort,
+        //                 'hide' => $hide,
+        //                 'filter' => $filter,
+        //                 //                'tips' => $tips,
+        //                 'style' => $style,
+        //                 'fixed' => $fixed,
+        //                 'templet' => $templet,
+        //                 'map' => $map,
+        // //                'totalRow' => '{{= parseInt(d.TOTAL_NUMS) }} 次',//totalRow: '合计：'
+        //                 //                'even' => true,
+        //             ];
+        //             if (!$templet)
+        //             {
+        //                 unset($key['templet']);
+        //             }
+        //         }
+        //         $reKey = [];
+        //         !empty($width) && $key['width'] = $width;
+        //         $this->_keyList[] = $key;
+        //         return $this;
     }
 
     /**
@@ -1272,7 +1691,12 @@ EOF;
      */
     public function keyBool($field, $title, $sort = false, $width = '', $style = '')
     {
-        return $this->keySwitch($field, $title, '是|否', $sort, $width, $style);
+        $this->columnBuilder()->keyBool(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->keySwitch($field, $title, '是|否', $sort, $width, $style);
     }
 
     /**
@@ -1287,21 +1711,26 @@ EOF;
      */
     public function keySwitch($field, $title, $map = ['启用', '禁用'], $sort = 'desc', $width = '', $style = '')
     {
-        if (is_array($map)) {
-            $map_text = implode('|', $map);
-        } else {
-            $map_text = $map;
-            $map = explode('|', $map);
-        }
-        $map_result[0] = $map[1];
-        $map_result[1] = $map[0];
-        $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
-    <input type="checkbox" disabled  lay-skin="switch" lay-text="$map_text" {{ d.{$field} == 1 ? 'checked' : '' }}>
-</script>
-EOF;
-        return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet, $map_result);
+        $this->columnBuilder()->keySwitch(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         if (is_array($map)) {
+        //             $map_text = implode('|', $map);
+        //         } else {
+        //             $map_text = $map;
+        //             $map = explode('|', $map);
+        //         }
+        //         $map_result[0] = $map[1];
+        //         $map_result[1] = $map[0];
+        //         $templet = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //     <input type="checkbox" disabled  lay-skin="switch" lay-text="$map_text" {{ d.{$field} == 1 ? 'checked' : '' }}>
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet, $map_result);
     }
 
 
@@ -1313,12 +1742,17 @@ EOF;
      */
     public function keyLeftLeader($type)
     {
-        if (false == $type) {
-            $this->_left_leader = [];
-        } else {
-            $this->_left_leader = ['type' => $type, 'fixed' => 'left'];
-        }
+        $this->columnBuilder()->keyLeftLeader(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         if (false == $type) {
+        //             $this->_left_leader = [];
+        //         } else {
+        //             $this->_left_leader = ['type' => $type, 'fixed' => 'left'];
+        //         }
+        //         return $this;
     }
 
     /**
@@ -1333,7 +1767,12 @@ EOF;
      */
     public function keyText($field, $title, $sort = false, $width = '', $style = '')
     {
-        return $this->key($field, $title, $sort, $width, 'normal', $style);
+        $this->columnBuilder()->keyText(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style);
     }
     /**
      * 显示纯文本
@@ -1347,16 +1786,21 @@ EOF;
      */
     public function keyEditerText($field, $title, $sort = false, $width = '', $style = '')
     {
-        $templet = 'k'.uniqid();
-
-
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
-    
-    <div>{{- d.$field }}</div>
-</script>
-EOF;
-        return $this->key($field, $title, $sort, $width, 'normal', $style);
+        $this->columnBuilder()->keyEditerText(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet = 'k'.uniqid();
+        //
+        //
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //
+        //     <div>{{- d.$field }}</div>
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style);
     }
 
 
@@ -1372,7 +1816,12 @@ EOF;
      */
     public function keyAuthor($field, $title, $sort = false, $width = '', $style = '')
     {
-        return $this->key($field, text($title), $sort, $width, 'normal', $style, '');
+        $this->columnBuilder()->keyAuthor(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->key($field, text($title), $sort, $width, 'normal', $style, '');
     }
 
 
@@ -1384,7 +1833,12 @@ EOF;
      */
     public function keyHidden($field)
     {
-        return $this->key($field, '', false, '', 'hidden', '', '');
+        $this->columnBuilder()->keyHidden(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->key($field, '', false, '', 'hidden', '', '');
     }
 
     /**
@@ -1395,7 +1849,12 @@ EOF;
      */
     public function append($field)
     {
-        return $this->key($field, '', false, '', 'hidden', '', '');
+        $this->columnBuilder()->append(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->key($field, '', false, '', 'hidden', '', '');
     }
 
     /**
@@ -1418,7 +1877,9 @@ EOF;
             $style = 'dollar';
         }
 
-        $this->_templets[] = <<<EOF
+        // 2026-09-06 拆分重构：改为写入ColumnBuilder的templets（原写入行注释保留）
+        // $this->_templets[] = <<<EOF
+        $this->columnBuilder()->templets[] = <<<EOF
 <script type="text/html" id="$templet">
    <i class="layui-icon layui-icon-$style"></i> {{d.$field}}
 </script>
@@ -1439,13 +1900,18 @@ EOF;
      */
     public function keyDollar($field, $title, $sort = false, $width = '', $style = '')
     {
-        $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
-   <i class="layui-icon layui-icon-dollar"></i> {{d.$field}}
-</script>
-EOF;
-        return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet);
+        $this->columnBuilder()->keyDollar(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //    <i class="layui-icon layui-icon-dollar"></i> {{d.$field}}
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet);
     }
 
     /**
@@ -1460,13 +1926,18 @@ EOF;
      */
     public function keyDiamond($field, $title, $sort = false, $width = '', $style = '')
     {
-        $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
-   <i class="layui-icon layui-icon-diamond"></i> {{d.$field}}
-</script>
-EOF;
-        return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet);
+        $this->columnBuilder()->keyDiamond(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //    <i class="layui-icon layui-icon-diamond"></i> {{d.$field}}
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet);
     }
 
     /**
@@ -1481,13 +1952,18 @@ EOF;
      */
     public function keyRmb($field, $title, $sort = false, $width = '', $style = '')
     {
-        $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
-   <i class="layui-icon layui-icon-rmb"></i> {{d.$field}}
-</script>
-EOF;
-        return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet);
+        $this->columnBuilder()->keyRmb(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //    <i class="layui-icon layui-icon-rmb"></i> {{d.$field}}
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet);
     }
 
     /**
@@ -1502,13 +1978,18 @@ EOF;
      */
     public function keyTemplate($field, $templet, $title, $sort = false, $width = '', $style = '')
     {
-        $templet_name = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-   $templet
-</script>
-EOF;
-        return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet_name);
+        $this->columnBuilder()->keyTemplate(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet_name = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        //    $templet
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet_name);
     }
 
     /**
@@ -1523,8 +2004,13 @@ EOF;
      */
     public function keyCount($field, $title, $sort = true, $width = '', $style = '')
     {
-        $this->_count[] = $field;
-        return $this->key($field . '_count', $title, $sort, $width, 'normal', $style);
+        $this->columnBuilder()->keyCount(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $this->_count[] = $field;
+        //         return $this->key($field . '_count', $title, $sort, $width, 'normal', $style);
     }
 
     /**
@@ -1539,7 +2025,12 @@ EOF;
      */
     public function keyField($field, $title, $sort = false, $width = '', $style = '', $templet = '')
     {
-        return $this->key($field, $title, $sort, $width, 'normal', $style, $templet);
+        $this->columnBuilder()->keyField(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style, $templet);
     }
 
     /**
@@ -1553,7 +2044,12 @@ EOF;
      */
     public function keyColor($field, $title, $sort = false, $width = '')
     {
-        return $this->key($field, text($title), $sort, $width, 'normal');
+        $this->columnBuilder()->keyColor(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->key($field, text($title), $sort, $width, 'normal');
     }
 
     /**
@@ -1566,7 +2062,12 @@ EOF;
      */
     public function keyCreateTime($title = '创建时间', $sort = false, $style = '')
     {
-        return $this->keyTime('create_time', text($title), 'yyyy-MM-dd HH:mm:ss', $sort, $style);
+        $this->columnBuilder()->keyCreateTime(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->keyTime('create_time', text($title), 'yyyy-MM-dd HH:mm:ss', $sort, $style);
     }
 
     /**
@@ -1579,7 +2080,12 @@ EOF;
      */
     public function keyUpdateTime($title = '更新时间', $sort = false, $style = '')
     {
-        return $this->keyTime('update_time', text($title), 'yyyy-MM-dd HH:mm:ss', $sort, $style);
+        $this->columnBuilder()->keyUpdateTime(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->keyTime('update_time', text($title), 'yyyy-MM-dd HH:mm:ss', $sort, $style);
     }
 
     /**
@@ -1592,22 +2098,27 @@ EOF;
      */
     public function keyTime($field, $title, $format = 'yyyy-MM-dd HH:mm:ss', $sort = false, $style = '')
     {
-        $templet_name = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-   {{#  
-   if(d.$field && '0000-00-00 00:00:00' != d.$field){
-  var date = new Date(d.$field);
-  var time = date.Format("$format");
-  }else{
-  var time = '-';
-  }
-}}
-<span title="{{d.{$field}}}">{{time}}</span>  
-</script>
-EOF;
-        return $this->key($field, $title, $sort, strlen($format) * 8 + 10, 'normal', $style, '#' . $templet_name);
-        //            $opt['format'] = $format;
+        $this->columnBuilder()->keyTime(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet_name = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        //    {{#
+        //    if(d.$field && '0000-00-00 00:00:00' != d.$field){
+        //   var date = new Date(d.$field);
+        //   var time = date.Format("$format");
+        //   }else{
+        //   var time = '-';
+        //   }
+        // }}
+        // <span title="{{d.{$field}}}">{{time}}</span>
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, strlen($format) * 8 + 10, 'normal', $style, '#' . $templet_name);
+        //         //            $opt['format'] = $format;
     }
 
     /**
@@ -1621,7 +2132,12 @@ EOF;
      */
     public function keyEmail($field, $title, $sort = false, $width = '')
     {
-        return $this->key($field, text($title), $sort, $width, 'normal');
+        $this->columnBuilder()->keyEmail(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->key($field, text($title), $sort, $width, 'normal');
     }
 
     /**
@@ -1633,7 +2149,12 @@ EOF;
      */
     public function keyHtml($field, $title)
     {
-        return $this->key($field, $title, 'html', '', 'normal');
+        $this->columnBuilder()->keyHtml(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->key($field, $title, 'html', '', 'normal');
     }
 
     /**
@@ -1648,24 +2169,29 @@ EOF;
      */
     public function keyMap($field, $title, $map, $sort = false, $width = '', $style = '')
     {
-        if (empty($width)) {
-            $max = strlen($title);
-            foreach ($map as $v) {
-                if ($max < strlen($v)) {
-                    $max = strlen($v);
-                }
-            }
-            $width = $max * 5 + 40;
-        }
-        $templet_name = 'k'.uniqid();
-        $map_en = json_encode($map, JSON_UNESCAPED_UNICODE);
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-   {{#  var map = $map_en }}
-   {{map[d.{$field}]}}
-</script>
-EOF;
-        return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet_name, $map);
+        $this->columnBuilder()->keyMap(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         if (empty($width)) {
+        //             $max = strlen($title);
+        //             foreach ($map as $v) {
+        //                 if ($max < strlen($v)) {
+        //                     $max = strlen($v);
+        //                 }
+        //             }
+        //             $width = $max * 5 + 40;
+        //         }
+        //         $templet_name = 'k'.uniqid();
+        //         $map_en = json_encode($map, JSON_UNESCAPED_UNICODE);
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        //    {{#  var map = $map_en }}
+        //    {{map[d.{$field}]}}
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, $width, 'normal', $style, '#' . $templet_name, $map);
     }
 
     /**
@@ -1679,7 +2205,12 @@ EOF;
      */
     public function keyId($title = 'ID', $sort = false, $width = 80, $style = '')
     {
-        return $this->keyText($this->_default_pk, $title, $sort, $width, $style);
+        $this->columnBuilder()->keyId(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->keyText($this->_default_pk, $title, $sort, $width, $style);
     }
 
 
@@ -1692,15 +2223,20 @@ EOF;
      */
     public function keyImage($field, $title, $style = '')
     {
-        $templet_name = 'k'.uniqid();
-        $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
- layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
-</script>
-EOF;
-        return $this->key($field, $title, false, 50 + 35, $style, 'normal', '#' . $templet_name);
+        $this->columnBuilder()->keyImage(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet_name = 'k'.uniqid();
+        //         $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        // <div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
+        //  layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, false, 50 + 35, $style, 'normal', '#' . $templet_name);
     }
 
     /**
@@ -1712,18 +2248,23 @@ EOF;
      */
     public function keyImages($field, $title, $style = '')
     {
-        $templet_name = 'k'.uniqid();
-        $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-<div class="layer-photos" id="layer-photos-$field-{{d.id}}"  style="display: inline-block">
-  {{#  layui.each(d.{$field}, function(index, item){ }}
-<img style="width: 50px;cursor:pointer" title="" layer-src="{{item}}" src="{{item}}">
- {{#  }); }}
-</div>
-</script>
-EOF;
-        return $this->key($field, $title, false, '300', $style, 'normal', '#' . $templet_name);
+        $this->columnBuilder()->keyImages(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet_name = 'k'.uniqid();
+        //         $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        // <div class="layer-photos" id="layer-photos-$field-{{d.id}}"  style="display: inline-block">
+        //   {{#  layui.each(d.{$field}, function(index, item){ }}
+        // <img style="width: 50px;cursor:pointer" title="" layer-src="{{item}}" src="{{item}}">
+        //  {{#  }); }}
+        // </div>
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, false, '300', $style, 'normal', '#' . $templet_name);
     }
 
     /**
@@ -1735,48 +2276,53 @@ EOF;
      */
     public function keyImageModel($field, $title, $style = '')
     {
-        if (strpos($field, '|')) {
-            $temp = explode('|', $field);
-            $field = $temp[1];
-            $this->_with[$temp[0]] = ['id', 'url'];
-        } elseif (strpos($field, '_id')) {
-            $temp = explode('_', $field);
-            $this->_with[$temp[0]] = ['id', 'url'];
-        } else {
-            $temp = $field;
-        }
-        $templet_name = 'k'.uniqid();
-        $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
-        if (is_array($temp)) {
-            $with_field = $temp[0];
-        } else {
-            $with_field = $temp;
-        }
-//			$this->_templets[] = <<<EOF
-//<script type="text/html" id="$templet_name">
-//<div class="layer-photos"  style="display: inline-block" id="layer-photos-$with_field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title=""
-// layer-src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}" src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}"></div>
-//</script>
-//EOF;
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
- layer-src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}" src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}"></div>
-</script>
-EOF;
-
-//			$this->_templets[] = <<<EOF
-//<script type="text/html" id="$templet_name">
-//<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
-// layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
-//</script>
-//EOF;
-        //            $this->_templets[] = <<<EOF
-        //<script type="text/html" id="$templet_name">
-        // <img style="display: inline-block; width: 25px; height: 25px;" src= {{ d.{$temp}?d.{$field}:'{$common}/images/default_image.gif' }}>
-        //</script>
-        //EOF;
-        return $this->key($field, $title, false, 50 + mb_strlen($title, 'utf-8') * 14, $style, 'normal', '#' . $templet_name);
+        $this->columnBuilder()->keyImageModel(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         if (strpos($field, '|')) {
+        //             $temp = explode('|', $field);
+        //             $field = $temp[1];
+        //             $this->_with[$temp[0]] = ['id', 'url'];
+        //         } elseif (strpos($field, '_id')) {
+        //             $temp = explode('_', $field);
+        //             $this->_with[$temp[0]] = ['id', 'url'];
+        //         } else {
+        //             $temp = $field;
+        //         }
+        //         $templet_name = 'k'.uniqid();
+        //         $common = config('view.tpl_replace_string.__COMMON__') . '/images/default_image.gif';
+        //         if (is_array($temp)) {
+        //             $with_field = $temp[0];
+        //         } else {
+        //             $with_field = $temp;
+        //         }
+        // //			$this->_templets[] = <<<EOF
+        // //<script type="text/html" id="$templet_name">
+        // //<div class="layer-photos"  style="display: inline-block" id="layer-photos-$with_field-{{d.id}}"><img style="display: inline-block; width: 50px;cursor:pointer" title=""
+        // // layer-src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}" src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}"></div>
+        // //</script>
+        // //EOF;
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        // <div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
+        //  layer-src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}" src="{{ d.{$with_field}?d.{$with_field}.url:'{$common}' }}"></div>
+        // </script>
+        // EOF;
+        //
+        // //			$this->_templets[] = <<<EOF
+        // //<script type="text/html" id="$templet_name">
+        // //<div class="layer-photos" id="layer-photos-$field-{{d.id}}"><img style="display: inline-block; width: 30px;cursor:pointer" title=""
+        // // layer-src="{{ d.{$field}?d.{$field}:'{$common}' }}" src="{{ d.{$field}?d.{$field}:'{$common}' }}"></div>
+        // //</script>
+        // //EOF;
+        //         //            $this->_templets[] = <<<EOF
+        //         //<script type="text/html" id="$templet_name">
+        //         // <img style="display: inline-block; width: 25px; height: 25px;" src= {{ d.{$temp}?d.{$field}:'{$common}/images/default_image.gif' }}>
+        //         //</script>
+        //         //EOF;
+        //         return $this->key($field, $title, false, 50 + mb_strlen($title, 'utf-8') * 14, $style, 'normal', '#' . $templet_name);
     }
 
     /**
@@ -1788,18 +2334,23 @@ EOF;
      */
     public function keyImagesModel($field, $title, $style = '')
     {
-        $templet_name = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-<div class="layer-photos"  style="display: inline-block" id="layer-photos-$field-{{d.id}}">
- {{#  layui.each(d.{$field}, function(index, item){ }}
-<img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看2大图"
- layer-src="{{ item.url }}" src="{{ item.url }}">
-   {{#  }); }}
-   </div>
-</script>
-EOF;
-        return $this->key($field, $title, false, 300, $style, 'normal', '#' . $templet_name);
+        $this->columnBuilder()->keyImagesModel(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet_name = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        // <div class="layer-photos"  style="display: inline-block" id="layer-photos-$field-{{d.id}}">
+        //  {{#  layui.each(d.{$field}, function(index, item){ }}
+        // <img style="display: inline-block; width: 50px;cursor:pointer" title="点击查看2大图"
+        //  layer-src="{{ item.url }}" src="{{ item.url }}">
+        //    {{#  }); }}
+        //    </div>
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, false, 300, $style, 'normal', '#' . $templet_name);
     }
 
     /**
@@ -1813,38 +2364,43 @@ EOF;
      */
     public function keyUser($field, $title, $url = '/ucenter/admin/User/view', $width = 150, $style = '')
     {
-        if (strpos($field, '|')) {
-            $temp = explode('|', $field);
-            $with_field = $temp[0];
-            $field = $temp[1];
-        } else {
-            $temp = explode('_', $field);
-            unset($temp[count($temp) - 1]);
-            $with_field = implode('_', $temp);
-        }
-        if (isset($this->_with[$with_field]))
-        {
-            $this->_with[$with_field] = array_merge($this->_with[$with_field], ['id', 'avatar', 'nickname']);
-        }else{
-            $this->_with[$with_field] = ['id', 'avatar', 'nickname'];
-        }
-        $templet_name = 'k'.uniqid();
-        $common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
-        $url = url($url) . '?id={{d.' . $with_field . '.id}}';
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-  {{#  if(d.{$with_field}){ }}
-    <a style="cursor:pointer " lay-href="$url" >
-  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}.avatar?d.{$with_field}.avatar:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
-  </a>
-  {{#  }else{ }}    
-       <div style="cursor:pointer ">
--
-  </div>
-  {{#  } }} 
-</script>
-EOF;
-        return $this->key($field, $title, false, $width, 'normal', $style, '#' . $templet_name);
+        $this->columnBuilder()->keyUser(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         if (strpos($field, '|')) {
+        //             $temp = explode('|', $field);
+        //             $with_field = $temp[0];
+        //             $field = $temp[1];
+        //         } else {
+        //             $temp = explode('_', $field);
+        //             unset($temp[count($temp) - 1]);
+        //             $with_field = implode('_', $temp);
+        //         }
+        //         if (isset($this->_with[$with_field]))
+        //         {
+        //             $this->_with[$with_field] = array_merge($this->_with[$with_field], ['id', 'avatar', 'nickname']);
+        //         }else{
+        //             $this->_with[$with_field] = ['id', 'avatar', 'nickname'];
+        //         }
+        //         $templet_name = 'k'.uniqid();
+        //         $common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
+        //         $url = url($url) . '?id={{d.' . $with_field . '.id}}';
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        //   {{#  if(d.{$with_field}){ }}
+        //     <a style="cursor:pointer " lay-href="$url" >
+        //   <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}.avatar?d.{$with_field}.avatar:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
+        //   </a>
+        //   {{#  }else{ }}
+        //        <div style="cursor:pointer ">
+        // -
+        //   </div>
+        //   {{#  } }}
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, false, $width, 'normal', $style, '#' . $templet_name);
     }
 
     /**
@@ -1857,13 +2413,18 @@ EOF;
      */
     public function keyIp($field = 'ip', $title = 'IP地址', $sort = false, $type = '')
     {
-        $templet_name = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-   <i class="layui-icon layui-icon-link"></i> <a href="https://www.ip.cn/?ip={{d.$field}}" target="_blank"> {{d.$field}}</a> 
-</script>
-EOF;
-        return $this->key($field, $title, $sort, 160, 'normal', $type, '#' . $templet_name);
+        $this->columnBuilder()->keyIp(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet_name = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        //    <i class="layui-icon layui-icon-link"></i> <a href="https://www.ip.cn/?ip={{d.$field}}" target="_blank"> {{d.$field}}</a>
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, $sort, 160, 'normal', $type, '#' . $templet_name);
     }
 
     /**
@@ -1875,7 +2436,12 @@ EOF;
      */
     public function keyTitle($title = '标题', $sort = false, $width = '')
     {
-        return $this->keyText('title', $title, $sort, $width);
+        $this->columnBuilder()->keyTitle(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         return $this->keyText('title', $title, $sort, $width);
     }
 
     /**
@@ -1889,8 +2455,13 @@ EOF;
      */
     public function keyClosure($title, $closure, $width = '', $style = '')
     {
-        $pinyin = new Pinyin();
-        return $this->key($pinyin->permalink($title, '_'), text($title), false, $width, $closure, $style);
+        $this->columnBuilder()->keyClosure(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $pinyin = new ChinesePinyin();
+        //         return $this->key($pinyin->transformWithoutTone($title, '_'), text($title), false, $width, $closure, $style);
     }
 
     /**
@@ -1904,23 +2475,28 @@ EOF;
      */
     public function keyTemplateChild($title, $templet, $width = 80, $style = '')
     {
-        $templet_name = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet_name">
-   $templet
-</script>
-EOF;
-        $this->_keyList[] = [
-            'field' => 'skus',
-            'title' => $title,
-            'type' => 'child',
-            'width' => $width,
-            'style' => $style,
-            'collapse' => 1,
-            'children' => '#' . $templet_name,
-            'childWidth' => 'full',
-        ];
+        $this->columnBuilder()->keyTemplateChild(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet_name = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet_name">
+        //    $templet
+        // </script>
+        // EOF;
+        //         $this->_keyList[] = [
+        //             'field' => 'skus',
+        //             'title' => $title,
+        //             'type' => 'child',
+        //             'width' => $width,
+        //             'style' => $style,
+        //             'collapse' => 1,
+        //             'children' => '#' . $templet_name,
+        //             'childWidth' => 'full',
+        //         ];
+        //         return $this;
     }
 
     /**
@@ -1935,14 +2511,19 @@ EOF;
      */
     public function keyLink($field, $title, $url, $target = '_self', $width = '', $style = '')
     {
-        // 修整添加多个空字段时显示不正常的
-        $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-<script type="text/html" id="$templet">
-   <i class="layui-icon layui-icon-link"></i> <a href="$url" target="$target"> {{d.$field}}</a> 
-</script>
-EOF;
-        return $this->key($field, $title, false, $width, 'normal', $style, '#' . $templet);
+        $this->columnBuilder()->keyLink(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         // 修整添加多个空字段时显示不正常的
+        //         $templet = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        // <script type="text/html" id="$templet">
+        //    <i class="layui-icon layui-icon-link"></i> <a href="$url" target="$target"> {{d.$field}}</a>
+        // </script>
+        // EOF;
+        //         return $this->key($field, $title, false, $width, 'normal', $style, '#' . $templet);
     }
 
     /**
@@ -1960,7 +2541,9 @@ EOF;
         $dialog_height = isset($arr['height']) ? $arr['height'] : $this->dialog_height_default;
         // 修整添加多个空字段时显示不正常的
         $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
+        // 2026-09-06 拆分重构：改为写入ColumnBuilder的templets（原写入行注释保留）
+        // $this->_templets[] = <<<EOF
+        $this->columnBuilder()->templets[] = <<<EOF
  <script type="text/html" id="$templet">
           <a style="cursor:pointer "  lay-event="dialog" data-url="$url" data-width="$dialog_width" data-height="$dialog_height" ><i class="layui-icon layui-icon-search"></i> {{d.$field}}</a>
         </script>
@@ -1983,7 +2566,9 @@ EOF;
         $dialog_height = isset($arr['height']) ? $arr['height'] : $this->dialog_height_default;
         // 修整添加多个空字段时显示不正常的
         $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
+        // 2026-09-06 拆分重构：改为写入ColumnBuilder的templets（原写入行注释保留）
+        // $this->_templets[] = <<<EOF
+        $this->columnBuilder()->templets[] = <<<EOF
  <script type="text/html" id="$templet">
           <a style="cursor:pointer "  lay-event="view" data-url="$url" data-width="$dialog_width" data-height="$dialog_height" ><i class="layui-icon layui-icon-search"></i> {{d.$field}}</a>
         </script>
@@ -2001,19 +2586,24 @@ EOF;
      */
     public function keyTab($field, $title, $url, $width = '')
     {
-        if (false !== strpos($url, '{$')) {
-            // 补充
-            $url = str_replace('{$', '{{d.', $url);
-            $url = str_replace('}', '}}', $url);
-        }
-        // 修整添加多个空字段时显示不正常的
-        $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
- <script type="text/html" id="$templet">
-          <a style="cursor:pointer " lay-href="$url" ><i class="layui-icon layui-icon-layouts"></i> {{d.$field}}</a>
-        </script>
-EOF;
-        return $this->key($field, $title, false, $width, 'tab', '', '#' . $templet);
+        $this->columnBuilder()->keyTab(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         if (false !== strpos($url, '{$')) {
+        //             // 补充
+        //             $url = str_replace('{$', '{{d.', $url);
+        //             $url = str_replace('}', '}}', $url);
+        //         }
+        //         // 修整添加多个空字段时显示不正常的
+        //         $templet = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        //  <script type="text/html" id="$templet">
+        //           <a style="cursor:pointer " lay-href="$url" ><i class="layui-icon layui-icon-layouts"></i> {{d.$field}}</a>
+        //         </script>
+        // EOF;
+        //         return $this->key($field, $title, false, $width, 'tab', '', '#' . $templet);
     }
 
     /**
@@ -2026,17 +2616,22 @@ EOF;
      */
     public function keyProgress($field, $title, $sort = false, $width = '')
     {
-        // 修整添加多个空字段时显示不正常的
-        $templet = 'k'.uniqid();
-        $this->_templets[] = <<<EOF
-  <script type="text/html" id="$templet">
-        <div class="layui-progress layuiadmin-order-progress" lay-filter="progress-"+ {{ d.id }} +"">
-          <div class="layui-progress-bar layui-bg-blue" lay-percent= {{ d.$field }}></div>
-        </div>
-      </script>
-
-EOF;
-        return $this->key($field, $title, false, $width, 'normal', '', '#' . $templet);
+        $this->columnBuilder()->keyProgress(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         // 修整添加多个空字段时显示不正常的
+        //         $templet = 'k'.uniqid();
+        //         $this->_templets[] = <<<EOF
+        //   <script type="text/html" id="$templet">
+        //         <div class="layui-progress layuiadmin-order-progress" lay-filter="progress-{{ d.id }}" lay-showPercent="true">
+        //           <div class="layui-progress-bar layui-bg-blue" style="width: {{ d.$field }}%;"></div>
+        //         </div>
+        //       </script>
+        //
+        // EOF;
+        //         return $this->key($field, $title, false, $width, 'normal', '', '#' . $templet);
     }
 
     /**
@@ -2048,15 +2643,20 @@ EOF;
      */
     public function keyStatus($map = null, $sort = false, $style = '')
     {
-        $templet_name = 'k'.uniqid();
-        $map = !is_null($map) ? $map : [
-            -2 => '已删除',
-            -1 => '禁用',
-            1 => '启用',
-            0 => '未审核',
-            2 => '推荐',
-        ];
-        return $this->keyMap('status', '状态', $map, $sort, '', $style);
+        $this->columnBuilder()->keyStatus(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：key*系列迁至 Table/ColumnBuilder，原实现注释保留
+        //
+        //         $templet_name = 'k'.uniqid();
+        //         $map = !is_null($map) ? $map : [
+        //             -2 => '已删除',
+        //             -1 => '禁用',
+        //             1 => '启用',
+        //             0 => '未审核',
+        //             2 => '推荐',
+        //         ];
+        //         return $this->keyMap('status', '状态', $map, $sort, '', $style);
     }
 
     /**
@@ -2075,12 +2675,13 @@ EOF;
         if (false === strpos($url, '/')) {
             if (false !== strpos($this->request->controller(), 'Admin.')) {
                 // 补充
-                $url = ($this->module?($this->module.'/'):'') . lcfirst($this->request->controller()) . '/' . $url;
+                $url = ($this->module?($this->module.'/'):'') . lcfirst(str_replace('.','/',$this->request->controller()) ) . '/' . $url;
             } else {
                 // 补充
-                $url =  ($this->module?($this->module.'/'):'')  . $this->request->controller() . '/' . $url;
+                $url =  ($this->module?($this->module.'/'):'')  . str_replace('.','/',$this->request->controller()) . '/' . $url;
             }
         }
+//        dump($this->request->controller());
         if (false !== strpos($url, '{$')) {
             // 补充
             $url = str_replace('{$', '{{d.', $url);
@@ -2148,7 +2749,12 @@ EOF;
      */
     public function actionDisable($title = '不可操作', $status = [])
     {
-        return $this->keyDoAction('', $title, empty($status) ? [0, 1, 2] : $status, 'no', '', 'layui-btn-orange', 'stop');
+        $this->buttonBuilder()->actionDisable(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction('', $title, empty($status) ? [0, 1, 2] : $status, 'no', '', 'layui-btn-orange', 'stop');
     }
 
 
@@ -2162,8 +2768,13 @@ EOF;
      */
     public function actionView($url = 'view?id={$id}', $title = '详情', $status = [])
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-btn-green', 'search');
-
+        $this->buttonBuilder()->actionView(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-btn-green', 'search');
+        //
     }
 
     /**
@@ -2176,7 +2787,12 @@ EOF;
      */
     public function actionManager($url = 'manager?id={$id}', $title = '授权', $status = [])
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'form', '', 'layui-btn-green', 'auz');
+        $this->buttonBuilder()->actionManager(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'form', '', 'layui-btn-green', 'auz');
     }
 
 
@@ -2190,7 +2806,12 @@ EOF;
      */
     public function actionLink($url, $title, $status = [])
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-bg-green', 'link');
+        $this->buttonBuilder()->actionLink(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, 'tab', '', 'layui-bg-green', 'link');
     }
 
     /**
@@ -2206,7 +2827,12 @@ EOF;
      */
     public function actionAjax($url = 'delete?id={$id}', $title = '删除', $status = [], $message = '', $icon = 'set', $class = 'layui-btn-normal')
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, $class, $icon);
+        $this->buttonBuilder()->actionAjax(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, $class, $icon);
     }
 
     /**
@@ -2220,7 +2846,12 @@ EOF;
      */
     public function actionDelete($url = 'delete?id={$id}', $title = '删除', $status = [], $message = '')
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'delete');
+        $this->buttonBuilder()->actionDelete(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [-1, 0, 1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'delete');
     }
 
     /**
@@ -2234,7 +2865,12 @@ EOF;
      */
     public function actionUpdate($url = 'update?id={$id}', $title = '编辑', $status = [], $dialog = false)
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, $dialog == false ? 'tab' : $dialog, '', 'layui-bg-green', 'edit');
+        $this->buttonBuilder()->actionUpdate(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [0, 1, 2] : $status, $dialog == false ? 'tab' : $dialog, '', 'layui-bg-green', 'edit');
     }
 
     /**
@@ -2248,7 +2884,12 @@ EOF;
      */
     public function actionRemove($url = 'clear?id={$id}', $title = '彻底删除', $status = [], $message = '')
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [-2] : $status, 'ajax', $message, 'btn-red', 'trash-o');
+        $this->buttonBuilder()->actionRemove(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [-2] : $status, 'ajax', $message, 'btn-red', 'trash-o');
     }
 
     /**
@@ -2262,7 +2903,12 @@ EOF;
      */
     public function actionForbid($url = 'forbid?id={$id}', $title = '禁用', $status = [], $message = '')
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'close-fill');
+        $this->buttonBuilder()->actionForbid(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [1, 2] : $status, 'ajax', $message, 'layui-btn-danger', 'close-fill');
     }
 
     /**
@@ -2276,7 +2922,12 @@ EOF;
      */
     public function actionToCheck($url = 'check?id={$id}', $title = '通过审核', $status = [], $message = '')
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [0] : $status, 'ajax', $message, 'layui-bg-green', 'ok');
+        $this->buttonBuilder()->actionToCheck(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [0] : $status, 'ajax', $message, 'layui-bg-green', 'ok');
     }
 
     /**
@@ -2290,7 +2941,12 @@ EOF;
      */
     public function actionRestore($url = 'restore?id={$id}', $title = '启用', $status = [], $message = '')
     {
-        return $this->keyDoAction($url, $title, empty($status) ? [-1, -2] : $status, 'ajax', $message, 'btn-red', 'ok-circle');
+        $this->buttonBuilder()->actionRestore(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
+        return $this;
+        // 2026-09-06 拆分重构：button/action系列迁至 table/ButtonBuilder，原实现注释保留
+        //
+        //         return $this->keyDoAction($url, $title, empty($status) ? [-1, -2] : $status, 'ajax', $message, 'btn-red', 'ok-circle');
     }
 
     /**
@@ -2346,9 +3002,14 @@ EOF;
      */
     public function data($data, $pagination = true)
     {
-        $this->_data = $data;
-        $this->_pagination = $pagination;
+        $this->queryResolver()->data(...func_get_args());
+        // 2026-09-06 拆分重构：保持原链式语义，返回 Table 自身
         return $this;
+        // 2026-09-06 拆分重构：查询配置迁至 table/QueryResolver，原实现注释保留
+        //
+        //         $this->_data = $data;
+        //         $this->_pagination = $pagination;
+        //         return $this;
     }
 
     /**
@@ -2376,15 +3037,24 @@ EOF;
             if ($this->request->get('__method', 'excel') == 'quick') {
                 $update = $this->request->post();
                 $searchWhere = $this->_searchWhere();
-                foreach ($this->_quick_update as $__field => $item) {
+                foreach ($this->queryResolver()->getQuickUpdate() as $__field => $item) { // 2026-09-06 拆分重构：改为从QueryResolver读取
+                // foreach ($this->_quick_update as $__field => $item) {
                     try {
                         if ($update['__field'] == $__field) {
                             $qucikEdit = $item['qucik_edit'];
                             if ($qucikEdit instanceof \Closure) {
                                 // 闭包
-                                $qucikEdit($update,$update['__field'],$update['__value'], $this->_where, $searchWhere);
+                                $qucikEdit($update,$update['__field'],$update['__value'], $this->queryResolver()->getWhere(), $searchWhere); // 2026-09-06 拆分重构：改为从QueryResolver读取
                             } else {
-                                $this->_model::where('id', $update['id'])->where($this->_where)->update([$update['__field'] => $update['__value']]);
+//                                $this->_model::where('id', $update['id'])->where($this->_where)->update([$update['__field'] => $update['__value']]);
+                                $__qrModel = $this->queryResolver()->getModel(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                                $whereModel = $this->_applyWhere($__qrModel::where([]));
+                                // $whereModel = $this->_applyWhere($this->_model::where([]));
+                                $qucikEditData = $whereModel->where('id', $update['id'])->find();
+                                if ($qucikEditData) {
+                                    $qucikEditData[$update['__field']] = $update['__value'];
+                                    $qucikEditData->save();
+                                }
                             }
                         }
                         $result = ['code' => 0, 'message' => ''];
@@ -2400,20 +3070,24 @@ EOF;
                         // 获取筛选条件
                         $columns = json_decode(htmlspecialchars_decode($this->request->post('columns/s')), true);
                         $result = [];
-                        $model = $this->_model;
+                        $model = $this->queryResolver()->getModel(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                        // $model = $this->_model;
                         if ($model instanceof \Closure) {
                             // 闭包
                             $result = [];
-                        } elseif (empty($this->_data)) {
+                        } elseif (empty($this->queryResolver()->getData())) { // 2026-09-06 拆分重构：改为从QueryResolver读取
+                        // } elseif (empty($this->_data)) {
                             if (is_string($model)) {
-                                $whereModel = $model::where($searchWhere)->where($this->_where);
+                                $whereModel = $this->_applyWhere($model::where($searchWhere));
                             } else {
-                                $whereModel = $model->where($searchWhere)->where($this->_where);
+                                $whereModel = $this->_applyWhere($model->where($searchWhere));
                             }
-                            if (count($this->_count)) {
+                            if (count($this->columnBuilder()->getCount())) { // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+                            //                             if (count($this->_count)) {
                                 $result = [];
                             } else {
-                                foreach ($this->_keyList as $index => $item) {
+                                foreach ($this->columnBuilder()->getKeyList() as $index => $item) { // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+                                //                                 foreach ($this->_keyList as $index => $item) {
                                     if (in_array($item['field'], $columns)) {
                                         $column = $whereModel->field($item['field'])->distinct(true)->limit(10)->column($item['field']);
                                         //										if (count($item['map']) > 0 && $column) {
@@ -2433,37 +3107,45 @@ EOF;
                             $result = [];
                         }
                     } else {
-                        $this->_field = $this->_getField($this->_field);
+                        $_qrField = $this->_getField($this->queryResolver()->getField()); // 2026-09-06 拆分重构：改为从QueryResolver读取（局部变量承接原 _field 赋值）
+                        // $this->_field = $this->_getField($this->_field);
                         $list_rows = 1000000;
                         $page = 1;
                         $result = [];
-                        $model = $this->_model;
+                        $model = $this->queryResolver()->getModel(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                        // $model = $this->_model;
                         if ($model instanceof \Closure) {
                             // 闭包
-                            $result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
-                        } elseif (empty($this->_data)) {
-                            $whereModel = $model::where($searchWhere)->where($this->_where);
+                            $result = $model($searchWhere, $_qrField, $searchOrder, $page, $list_rows);
+                        } elseif (empty($this->queryResolver()->getData())) { // 2026-09-06 拆分重构：改为从QueryResolver读取
+                        // } elseif (empty($this->_data)) {
+                            $whereModel = $this->_applyWhere($model::where($searchWhere));
                             $result['code'] = 0;
-                            if (count($this->_count)) {
-                                $lists = $whereModel->withCount($this->_count)->order($searchOrder)->limit($list_rows * ($page - 1), $list_rows)->select();
+                            if (count($this->columnBuilder()->getCount())) { // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+                            //                             if (count($this->_count)) {
+                                $lists = $whereModel->withCount($this->columnBuilder()->getCount())->order($searchOrder)->limit($list_rows * ($page - 1), $list_rows)->select(); // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+                                //                                 $lists = $whereModel->withCount($this->_count)->order($searchOrder)->limit($list_rows * ($page - 1), $list_rows)->select();
                             } else {
                                 $lists = $whereModel->order($searchOrder)->limit($list_rows * ($page - 1), $list_rows)->select();
                             }
                             $result['count'] = $whereModel->count();
                         } else {
-                            if ($this->_data instanceof \Closure) {
-                                $data = $this->_data;
+                            if ($this->queryResolver()->getData() instanceof \Closure) { // 2026-09-06 拆分重构：改为从QueryResolver读取
+                            // if ($this->_data instanceof \Closure) {
+                                $data = $this->queryResolver()->getData(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                                // $data = $this->_data;
                                 // 闭包
-                                $lists = $data($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+                                $lists = $data($searchWhere, $_qrField, $searchOrder, $page, $list_rows);
                             } else {
-                                $lists = $this->_data;
+                                $lists = $this->queryResolver()->getData(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                                // $lists = $this->_data;
                             }
                             if (isset($lists['code'])) {
                                 $result = $lists;
                                 $lists = $lists['data'];
                             } else {
                                 $result['code'] = 0;
-                                $result['count'] = count($this->_data);
+                                $result['count'] = count($this->queryResolver()->getData()); // 2026-09-06 拆分重构：改为从QueryResolver读取
                             }
                         }
                         // 数据转换
@@ -2487,7 +3169,8 @@ EOF;
             switch ($__method) {
                 case 'quick':
 
-                    foreach ($this->_quick_update as $index => $item) {
+                    foreach ($this->queryResolver()->getQuickUpdate() as $index => $item) { // 2026-09-06 拆分重构：改为从QueryResolver读取
+                    // foreach ($this->_quick_update as $index => $item) {
 
                         dump($item);
                     }
@@ -2508,10 +3191,11 @@ EOF;
                     } else {
                         $name = 'table';
                     }
-                    $this->_formantKeyList();
+                    $this->_formatKeyList();
                     $this->_setMenu();
                     // 显示页面
-                    $this->assign('templets', $this->_templets);
+                    $this->assign('templets', $this->columnBuilder()->getTemplets()); // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+                    // $this->assign('templets', $this->_templets);
                     $this->assign('do_action', $this->_do_action);
                     $this->assign('toolbar', $this->_toolbar);
                     $this->assign('namespace', $this->_namespace?:'');
@@ -2520,8 +3204,11 @@ EOF;
                     $this->assign('warning', $this->_warning);
 
 
-                    $this->assign('keyList', array_values($this->_keyList));
-                    $this->assign('buttonList', $this->_buttonList);
+                    $keyListRef = &$this->columnBuilder()->getKeyListRef();
+                    $this->assign('keyList', array_values($keyListRef)); // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+                    // $this->assign('keyList', array_values($this->_keyList));
+                    $this->assign('buttonList', $this->buttonBuilder()->getButtonList()); // 2026-09-06 拆分重构：改为从ButtonBuilder读取
+                    // $this->assign('buttonList', $this->_buttonList);
                     $this->assign('callback', $this->_callback);
                     $this->assign('excel', $this->_excel);
                     if (isset($this->_excel['filename']) && !$this->_excel['filename']) {
@@ -2535,31 +3222,45 @@ EOF;
                     $this->assign('pk', $this->_default_pk);
                     /* 加入搜索 */
                     $search_value = [];
-                    if (count($this->_search) > 0) {
-                        $this->assign('searches', $this->_search);
+                    if (count($this->searchBuilder()->getSearch()) > 0) { // 2026-09-06 拆分重构：改为从SearchBuilder读取
+                        // if (count($this->_search) > 0) {
+                        $this->assign('searches', $this->searchBuilder()->getSearch()); // 2026-09-06 拆分重构：改为从SearchBuilder读取
+                        // $this->assign('searches', $this->_search);
                         if (count($this->_search_more) > 0) {
                             $this->assign('search_more', $this->_search_more);
                         }
-                        foreach ($this->_search as $index => $search_item) {
+                        foreach ($this->searchBuilder()->getSearch() as $index => $search_item) { // 2026-09-06 拆分重构：改为从SearchBuilder读取
+                            // foreach ($this->_search as $index => $search_item) {
                             $search_value[$search_item['field']] = $search_item['value'];
                         }
                     }
                     $this->assign('search_value', $search_value);
-                    if (empty($this->_searchPostUrl)) {
-                        $this->_searchPostUrl = $this->request->url();
+                    if (empty($this->searchBuilder()->getSearchPostUrl())) { // 2026-09-06 拆分重构：改为从SearchBuilder读取
+                        $this->searchBuilder()->setSearchPostUrlValue($this->request->url()); // 2026-09-06 拆分重构：改为写入SearchBuilder
+                        // if (empty($this->_searchPostUrl)) {
+                        //     $this->_searchPostUrl = $this->request->url();
+                        // }
                     }
-                    if (strpos($this->_searchPostUrl, '/Admin')) {
-                        $this->_searchPostUrl = str_replace('/Admin', '/admin', $this->_searchPostUrl);
+                    $searchPostUrl = $this->searchBuilder()->getSearchPostUrl(); // 2026-09-06 拆分重构：改为从SearchBuilder读取
+                    if (strpos($searchPostUrl, '/Admin')) {
+                        $searchPostUrl = str_replace('/Admin', '/admin', $searchPostUrl);
                     }
-                    $this->assign('searchPostUrl', $this->_searchPostUrl);
+                    $this->assign('searchPostUrl', $searchPostUrl); // 2026-09-06 拆分重构：改为从SearchBuilder读取
+                    // if (strpos($this->_searchPostUrl, '/Admin')) {
+                    //     $this->_searchPostUrl = str_replace('/Admin', '/admin', $this->_searchPostUrl);
+                    // }
+                    // $this->assign('searchPostUrl', $this->_searchPostUrl);
                     /* 复选框 */
-                    $this->assign('group', $this->_group);
+                    $this->assign('group', $this->buttonBuilder()->getGroup()); // 2026-09-06 拆分重构：改为从ButtonBuilder读取
+                    // $this->assign('group', $this->_group);
                     /* 加入筛选select */
                     $this->assign('selects', $this->_select);
-                    $this->assign('selectPostUrl', $this->_selectPostUrl);
+                    $this->assign('selectPostUrl', $this->searchBuilder()->getSelectPostUrl()); // 2026-09-06 拆分重构：改为从SearchBuilder读取
+                    // $this->assign('selectPostUrl', $this->_selectPostUrl);
                     /* 加入隐藏表单 */
                     $this->assign('hidden', $this->_hidden);
-                    $this->assign('page', $this->_pagination ? 1 : 0);
+                    $this->assign('page', $this->queryResolver()->isPaginated() ? 1 : 0); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                    // $this->assign('page', $this->_pagination ? 1 : 0);
                     $this->assign('auto_refresh', $this->_auto_refresh);
                     if ($this->_tabs['field']) {
                         $this->assign('tabs', $this->_tabs['tabs']);
@@ -2575,32 +3276,41 @@ EOF;
         }
     }
 
-    protected function _formantKeyList()
+    /**
+     * 格式化列清单
+     * 合并快捷编辑配置、移除隐藏列、附加合计行模板，并按操作按钮数量计算操作列宽度后追加操作列
+     * @return void
+     */
+    protected function _formatKeyList()
     {
-        foreach ($this->_keyList as $index => $item) {
-            foreach ($this->_quick_update as $index2 => $item2) {
-                if ($index2 == $this->_keyList[$index]['field']) {
+        $keyListRef = &$this->columnBuilder()->getKeyListRef(); // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+        foreach ($keyListRef as $index => $item) {
+            foreach ($this->queryResolver()->getQuickUpdate() as $index2 => $item2) { // 2026-09-06 拆分重构：改为从QueryResolver读取
+            // foreach ($this->_quick_update as $index2 => $item2) {
+                if ($index2 == $keyListRef[$index]['field']) {
                     if ($item2['option']['type']=='select')
                     {
-                        $this->_keyList[$index]['templet'] =$item2['option']['templet'];
+                        $keyListRef[$index]['templet'] =$item2['option']['templet'];
                     }elseif ($item2['option']['type']=='switch')
                     {
-                        $this->_keyList[$index]['templet'] =$item2['option']['templet'];
+                        $keyListRef[$index]['templet'] =$item2['option']['templet'];
                     }else{
-                        $this->_keyList[$index]['edit'] = 'text';
+                        $keyListRef[$index]['edit'] = 'text';
                     }
                 }
             }
             if (isset($item['type']) && $item['type'] == 'hidden') {
-                unset($this->_keyList[$index]);
+                unset($keyListRef[$index]);
             } elseif (isset($item['type']) && $item['type'] == 'child') //'type'=>'child',
             {
-                unset($this->_keyList[$index]['field']);
+                unset($keyListRef[$index]['field']);
             }
-            foreach ($this->_total_row as $index2 => $item2) {
+            $totalRowList = $this->queryResolver()->getTotalRow(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+            // foreach ($this->_total_row as $index2 => $item2) {
+            foreach ($totalRowList as $index2 => $item2) {
 
-                if ($this->_keyList[$index]['field'] == $this->_total_row[$index2]['field']) {
-                    $this->_keyList[$index]['totalRow'] = $this->_total_row[$index2]['templet'];
+                if ($keyListRef[$index]['field'] == $totalRowList[$index2]['field']) {
+                    $keyListRef[$index]['totalRow'] = $totalRowList[$index2]['templet'];
                 }
             }
         }
@@ -2631,7 +3341,7 @@ EOF;
                 }
                 $this->_action_width = (($max + count($object) - 1) * 70 + 100);
             }
-            $this->_keyList[] = [
+            $keyListRef[] = [
                 'fixed' => 'right',
                 'title' => '操作',
                 'align' => 'center',
@@ -2639,9 +3349,14 @@ EOF;
                 'width' => $this->_action_width
             ];
         }
-        !empty($this->_left_leader) && array_unshift($this->_keyList, $this->_left_leader);
+        !empty($this->columnBuilder()->getLeftLeader()) && array_unshift($keyListRef, $this->columnBuilder()->getLeftLeader());
     }
 
+    /**
+     * 根据当前请求查询并设置菜单标题
+     * 按请求参数匹配 menu 表记录，填充页面的一级/父级菜单标题
+     * @return void
+     */
     protected function _setMenu()
     {
         $get = $this->request->except(explode(',', 'v,m,status'), 'get');
@@ -2686,10 +3401,16 @@ EOF;
         $this->assign('menu_title', $this->_title?:'');
     }
 
+    /**
+     * 组装表格 AJAX 请求返回的数据
+     * 根据模型（或闭包、数据数组）查询列表，应用搜索条件、排序、分页与隐藏字段，转换后返回 code/count/data 结构
+     * @return array
+     */
     protected function _formatAjaxData()
     {
         try {
-            $this->_field = $this->_getField($this->_field);
+            $_qrField = $this->_getField($this->queryResolver()->getField()); // 2026-09-06 拆分重构：改为从QueryResolver读取（局部变量承接原 _field 赋值）
+            // $this->_field = $this->_getField($this->_field);
             $list_rows = $this->request->has('limit', 'param') ? $this->request->param('limit') : 15;
             $page = $this->request->has('page', 'param') ? $this->request->param('page') : 1;
             $result = [];
@@ -2697,25 +3418,38 @@ EOF;
             $searchOrder = $this->_searchOrder();
 //                    dump($searchWhere);
 //                    exit();
-            $model = $this->_model;
+            $model = $this->queryResolver()->getModel(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+            // $model = $this->_model;
             if ($model instanceof \Closure) {
                 // 闭包
-                $result = $model($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+                $result = $model($searchWhere, $_qrField, $searchOrder, $page, $list_rows);
             } elseif (!is_null($model)) {
                 if (is_string($model)) {
-                    $whereModel = $model::where($searchWhere)
+                    $whereModel = $this->_applyWhere($model::where($searchWhere));
 //							->field(implode($this->_field, ','))
-                        ->where($this->_where);
                 } else {
-                    $whereModel = $model->where($searchWhere)
+                    $whereModel = $this->_applyWhere($model->where($searchWhere));
 //							->field(implode($this->_field, ','))
-                        ->where($this->_where);
+                }
+
+                // 列表仅查询展示字段白名单，避免 SELECT * 把 longblob 等二进制大字段带出导致 JSON 编码失败（Malformed UTF-8）
+                // 未显式 ->field() 的页面 _field 为空，行为不变（仍 SELECT *）
+                if (!empty($_qrField)) { // 2026-09-06 拆分重构：改为读取QueryResolver解析结果（原 _field）
+                    // if (!empty($this->_field)) {
+                    //   $whereModel->field($this->_field);
+                }
+                if (!empty($this->queryResolver()->getHiddenField())) { // 2026-09-06 拆分重构：改为从QueryResolver读取
+                    // if (!empty($this->_hidden_field)) {
+                    $whereModel->hidden($this->queryResolver()->getHiddenField()); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                    // $whereModel->hidden($this->_hidden_field);
                 }
 
                 $result['code'] = 0;
                 $result['count'] = $whereModel->count();
-                if (count($this->_count)) {
-                    $lists = $whereModel->withCount($this->_count)
+                if (count($this->columnBuilder()->getCount())) { // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+                //                 if (count($this->_count)) {
+                    $lists = $whereModel->withCount($this->columnBuilder()->getCount())
+                        //                     $lists = $whereModel->withCount($this->_count)
                         ->order($searchOrder)
                         ->limit($list_rows * ($page - 1), $list_rows)->select();
                 } else {
@@ -2724,12 +3458,15 @@ EOF;
                         ->limit($list_rows * ($page - 1), $list_rows)->select();
                 }
             } else {
-                if ($this->_data instanceof \Closure) {
-                    $data = $this->_data;
+                if ($this->queryResolver()->getData() instanceof \Closure) { // 2026-09-06 拆分重构：改为从QueryResolver读取
+                // if ($this->_data instanceof \Closure) {
+                    $data = $this->queryResolver()->getData(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                    // $data = $this->_data;
                     // 闭包
-                    $lists = $data($searchWhere, $this->_field, $searchOrder, $page, $list_rows);
+                    $lists = $data($searchWhere, $_qrField, $searchOrder, $page, $list_rows);
                 } else {
-                    $lists = $this->_data;
+                    $lists = $this->queryResolver()->getData(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+                    // $lists = $this->_data;
                 }
 
                 if (isset($lists['code'])) {
@@ -2759,10 +3496,17 @@ EOF;
     }
 
 
+    /**
+     * 过滤字段列表，仅保留模型数据表中真实存在的字段
+     * @param array $field 待过滤的字段名数组
+     * @return array 过滤后的字段数组
+     */
     protected function _getField($field)
     {
+        $field = array_merge($field, $this->columnBuilder()->getExtraFields()); // 2026-09-06 拆分重构：合并ColumnBuilder的extraFields
         $field = array_unique($field);
-        $model = $this->_model;
+        $model = $this->queryResolver()->getModel(); // 2026-09-06 拆分重构：改为从QueryResolver读取
+        // $model = $this->_model;
         if (!is_null($model)) {
             if (is_string($model)) {
                 $db_fields = $model::getTableFields();
@@ -2779,118 +3523,143 @@ EOF;
         return $field;
     }
 
+    /**
+     * 获取当前请求的排序列表 SQL 片段
+     * 优先取请求中的 order_field/order，其次取设置的默认排序，最终回退为 id DESC
+     * @return string
+     */
     protected function _searchOrder()
     {
-        if ($this->request->has('order_field')) {
-            return $this->request->param('order_field') . ' ' . $this->request->param('order');
-        } elseif (!$this->_order) {
-            return 'id DESC';
-        } else {
-            return $this->_order;
-        }
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，转发并传入请求与默认排序
+        return $this->searchBuilder()->searchOrder($this->request, $this->queryResolver()->getOrder()); // 2026-09-06 拆分重构：改为从QueryResolver读取
+        // return $this->searchBuilder()->searchOrder($this->request, $this->_order);
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
+        //
+        //         if ($this->request->has('order_field')) {
+        //             return $this->request->param('order_field') . ' ' . $this->request->param('order');
+        //         } elseif (!$this->_order) {
+        //             return 'id DESC';
+        //         } else {
+        //             return $this->_order;
+        //         }
     }
 
+    /**
+     * 根据请求中的搜索参数组装查询条件
+     * 遍历请求的 field/a 参数并匹配已设置的搜索项，生成模型 where 条件数组
+     * @return array
+     */
     protected function _searchWhere()
     {
-        $fields = $this->request->param('field/a');
-//        dump($fields);
-//        dump($this->_search);
-        $model = $this->_model;
-        if (!is_null($model)) {
-            if (is_string($model)) {
-                $db_fields = $model::getTableFields();
-            } else {
-                $db_fields = $model->getTableFields();
-            }
-        } else {
-            $db_fields = $this->_field;
-        }
-        $where = [];
-        $_search_field = [];
-        if (is_array($fields)) {
-            foreach ($this->_search as $search) {
-                if (in_array($search['field'], $db_fields) && isset($fields[$search['field']]) && $fields[$search['field']] != '') {
-                    $_search_field[] = $search['field'];
-                    if ('like' === $search['condition']) {
-                        $where[] = [$search['field'], 'like', '%' . $fields[$search['field']] . '%'];
-                    } elseif ('between' === $search['condition']) {
-                        if ('datepicker' === $search['type']) {
-                            $temp = explode(' - ', $fields[$search['field']]);
-                            if ($temp[0] && $temp[1]) {
-                                $where[] = [$search['field'], 'between time', $temp];
-                            }
-                        }
-                    } elseif ('search_user' == $search['condition']) {
-                        $ids = Db::name('user')
-                            ->where('status', '>', -2)
-                            ->where('id|username|email|nickname', 'like', '%' . $fields[$search['field']] . '%')
-                            ->column('id');
-                        $where[] = [$search['field'], 'in', $ids];
-                    } elseif ('in' == $search['condition']) {
-                        $where[] = [$search['field'], 'in', $fields[$search['field']]];
-                    } else {
-                        $where[] = [$search['field'], '=', $fields[$search['field']]];
-                    }
-                }
-            }
-        }
-        $urlFields = $this->request->except(explode(',', 'v,page,limit,user,m,field,video,store'));
-        if (is_array($urlFields)) {
-            foreach ($urlFields as $field => $field_value) {
-                if (!in_array($field, $db_fields) || in_array($field, $_search_field)) {
-                    continue;
-                }
-//					$out = false;
-//					foreach ($this->_search as $search) {
-//						if ($search['field'] == $field) {
-//							$out = true;
-//							continue;
-//						}
-//					}
-//					if ($out) {
-//						continue;
-//					}
-                $where[] = [$field, '=', $field_value];
-            }
-        }
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，此处解析数据表字段后转发
+        $db_fields = $this->resolveSearchDbFields();
+        $this->searchBuilder()->request = $this->request; // 2026-09-06 拆分重构：注入当前请求供 SearchBuilder 解析搜索参数
+        return $this->searchBuilder()->searchWhere($db_fields);
+        // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，原实现注释保留
         //
-
-        $filterSos = $this->request->param('filterSos/s')?json_decode(htmlspecialchars_decode($this->request->param('filterSos/s')), true):[];
-
-
-        //筛选数据支持
-        if (is_array($filterSos)) {
-            foreach ($filterSos as $index => $filterSo) {
-                if ('in' == $filterSo['mode']) {
-                    $where[] = $this->_getMode($filterSo);
-                } elseif ('group' == $filterSo['mode']) {
-                    throw new Exception('暂不支持');
-//						foreach ($filterSo['children'] as $child) {
-//							$where[] = $this->_getMode($child);
-//						}
-                } else {
-                }
-            }
-        }
-        return $where;
+        //         $fields = $this->request->param('field/a');
+        // //        dump($fields);
+        // //        dump($this->_search);
+        //         $model = $this->_model;
+        //         if (!is_null($model)) {
+        //             if (is_string($model)) {
+        //                 $db_fields = $model::getTableFields();
+        //             } else {
+        //                 $db_fields = $model->getTableFields();
+        //             }
+        //         } else {
+        //             $db_fields = array_merge($this->_field, $this->columnBuilder()->getExtraFields()); // 2026-09-06 拆分重构：合并extraFields后读取
+        //             // $db_fields = $this->_field;
+        //         }
+        //         $where = [];
+        //         $_search_field = [];
+        //         if (is_array($fields)) {
+        //             foreach ($this->_search as $search) {
+        //                 if (in_array($search['field'], $db_fields) && isset($fields[$search['field']]) && $fields[$search['field']] != '') {
+        //                     $_search_field[] = $search['field'];
+        //                     if ('like' === $search['condition']) {
+        //                         $where[] = [$search['field'], 'like', '%' . $fields[$search['field']] . '%'];
+        //                     } elseif ('between' === $search['condition']) {
+        //                         if ('datepicker' === $search['type']) {
+        //                             $temp = explode(' - ', $fields[$search['field']]);
+        //                             if ($temp[0] && $temp[1]) {
+        //                                 $where[] = [$search['field'], 'between time', $temp];
+        //                             }
+        //                         }
+        //                     } elseif ('search_user' == $search['condition']) {
+        //                         $ids = Db::name('user')
+        //                             ->where('status', '>', -2)
+        //                             ->where('id|username|email|nickname', 'like', '%' . $fields[$search['field']] . '%')
+        //                             ->column('id');
+        //                         $where[] = [$search['field'], 'in', $ids];
+        //                     } elseif ('in' == $search['condition']) {
+        //                         $where[] = [$search['field'], 'in', $fields[$search['field']]];
+        //                     } else {
+        //                         $where[] = [$search['field'], '=', $fields[$search['field']]];
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         $urlFields = $this->request->except(explode(',', 'v,page,limit,user,m,field,video,store'));
+        //         if (is_array($urlFields)) {
+        //             foreach ($urlFields as $field => $field_value) {
+        //                 if (!in_array($field, $db_fields) || in_array($field, $_search_field)) {
+        //                     continue;
+        //                 }
+        // //					$out = false;
+        // //					foreach ($this->_search as $search) {
+        // //						if ($search['field'] == $field) {
+        // //							$out = true;
+        // //							continue;
+        // //						}
+        // //					}
+        // //					if ($out) {
+        // //						continue;
+        // //					}
+        //                 $where[] = [$field, '=', $field_value];
+        //             }
+        //         }
+        //         //
+        //
+        //         $filterSos = $this->request->param('filterSos/s')?json_decode(htmlspecialchars_decode($this->request->param('filterSos/s')), true):[];
+        //
+        //
+        //         //筛选数据支持
+        //         if (is_array($filterSos)) {
+        //             foreach ($filterSos as $index => $filterSo) {
+        //                 if ('in' == $filterSo['mode']) {
+        //                     $where[] = $this->_getMode($filterSo);
+        //                 } elseif ('group' == $filterSo['mode']) {
+        //                     throw new Exception('暂不支持');
+        // //						foreach ($filterSo['children'] as $child) {
+        // //							$where[] = $this->_getMode($child);
+        // //						}
+        //                 } else {
+        //                 }
+        //             }
+        //         }
+        //         return $where;
     }
 
-    private function _getMode($filter)
-    {
-        if ('in' == $filter['mode']) {
-            $data = [$filter['field'], 'in', $filter['values']];
-//				$data = [$filter['field'], 'in', $this->_getFieldValue($filter['field'], $filter['values'])];
-        } elseif ('condition' == $filter['mode']) {
-            if ('eq' == $filter['type']) {
-                $data = [$filter['field'], '=', $this->_getFieldValue($filter['field'], $filter['value'])];
-            }
-        }
-        return $data;
-    }
+    // 2026-09-06 拆分重构：search*系列迁至 Table/SearchBuilder，_getMode 原实现注释保留
+    //
+    //     private function _getMode($filter)
+    //     {
+    //         if ('in' == $filter['mode']) {
+    //             $data = [$filter['field'], 'in', $filter['values']];
+    // //				$data = [$filter['field'], 'in', $this->_getFieldValue($filter['field'], $filter['values'])];
+    //         } elseif ('condition' == $filter['mode']) {
+    //             if ('eq' == $filter['type']) {
+    //                 $data = [$filter['field'], '=', $this->_getFieldValue($filter['field'], $filter['value'])];
+    //             }
+    //         }
+    //         return $data;
+    //     }
 
     private function _getFieldValue($field, $value)
     {
-        foreach ($this->_keyList as $index => $item) {
+        foreach ($this->columnBuilder()->getKeyList() as $index => $item) { // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+        //         foreach ($this->_keyList as $index => $item) {
             if ($item['field'] == $field) {
                 if (count($item['map']) > 0) {
                     if (is_array($value)) {
@@ -2927,7 +3696,8 @@ EOF;
         isset($data['status']) && $conver_data['status'] = $data['status'];
         isset($data['id']) && $conver_data['id'] = $data['id'];
 
-        foreach ($this->_keyList as $key) {
+        foreach ($this->columnBuilder()->getKeyList() as $key) { // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+        //         foreach ($this->_keyList as $key) {
             if (isset($key['field'])) {
 
                 if (isset($key['type']) && $key['type'] instanceof \Closure) {
@@ -2955,7 +3725,8 @@ EOF;
                 }
             }
         }
-        foreach ($this->_with as $key => $items) {
+        foreach ($this->columnBuilder()->getWith() as $key => $items) { // 2026-09-06 拆分重构：改为从ColumnBuilder读取
+        //         foreach ($this->_with as $key => $items) {
             if (isset($data[$key]) && !is_string($data[$key])) {
                 $temp = [];
                 foreach ($items as $item) {
@@ -2975,11 +3746,11 @@ EOF;
         }
         if ($this->_row_style instanceof \Closure) {
             $closure = $this->_row_style;
-            $conver_data['_row_style'] = $closure($data, $item);
+            $conver_data['_row_style'] = $closure($data);
         }
         if ($this->_row_class instanceof \Closure) {
             $closure = $this->_row_class;
-            $conver_data['_row_class'] = $closure($data, $item);
+            $conver_data['_row_class'] = $closure($data);
         }
         //            if ($excel)
         //            {

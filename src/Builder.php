@@ -36,11 +36,16 @@
 		 */
 		protected $request;
 
+		/** 弹窗默认宽度 */
 		protected $dialog_width_default = 1200;
 
+		/** 弹窗默认高度 */
 		protected $dialog_height_default = 700;
 
+		/** 展示方式，默认弹窗（dialog） */
 		protected $toggle = 'dialog';
+
+		/** 当前模块名 */
 		protected $module = '';
 		/**
 		 * 视图文件路径
@@ -79,6 +84,10 @@
 			is_file($lang_file) && $this->app->lang->load($lang_file);
 		}
 
+		/**
+		 * 初始化方法，供子类覆写
+		 * @access protected
+		 */
 		// 初始化
 		protected function initialize(){}
 
@@ -156,7 +165,7 @@
 		{
 			$result = [];
 			foreach ($attr as $key => $value) {
-				$value = htmlspecialchars($value);
+				$value = htmlspecialchars((string)$value);
 				if (strlen($value) > 0) {
 					$result[] = (is_null($prefix) ? '' : $prefix) . "$key=\"$value\"";
 				}
@@ -164,13 +173,20 @@
 			return implode(' ', $result);
 		}
 
+		/**
+		 * 将属性数组编译为html属性字符串（已做htmlspecialchars转义）
+		 * @access protected
+		 * @param array $attr 属性数组
+		 * @return string
+		 */
 		protected function compileHtmlAttr($attr)
 		{
-			$result = [];
-			foreach ($attr as $key => $value) {
-				//            $value = htmlspecialchars($value);
-				$result[] = $key . ' = "' . $value . '"';
-			}
-			return implode(' ', $result);
+			return $this->_compileHtmlAttr($attr);
+			// 2026-09-06 XSS修复：原实现未做htmlspecialchars转义，改为委托_compileHtmlAttr，原代码注释保留
+			// $result = [];
+			// foreach ($attr as $key => $value) {
+			//     $result[] = $key . ' = "' . $value . '"';
+			// }
+			// return implode(' ', $result);
 		}
 	}

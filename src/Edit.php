@@ -16,6 +16,7 @@
 	use think\exception\ValidateException;
 	use think\facade\Lang;
 	use think\Model;
+	use yicmf\builder\edit\FormItemBuilder;
 
 	class Edit extends Builder
 	{
@@ -23,6 +24,8 @@
 
 
 		private $_keyList = [];
+		/** 2026-09-06 拆分重构：表单项配置持有者 */
+		private $formItemBuilderObj;
 
 		// 提示信息
 		private $_explaints = [];
@@ -62,6 +65,21 @@
 
 		protected $_namespace;
 
+	/**
+	 * 表单项构建器（懒加载，兼容跳过构造函数的测试场景）
+	 * @return \yicmf\builder\edit\FormItemBuilder
+	 */
+	private function formItemBuilder()
+	{
+		if (!isset($this->formItemBuilderObj)) {
+			$this->formItemBuilderObj = new FormItemBuilder($this->_default_pk);
+		}
+		return $this->formItemBuilderObj;
+	}
+
+		/**
+		 * 初始化编辑器构建器，生成当前请求唯一的表单命名空间标识
+		 */
 		protected function initialize()
 		{
 
@@ -134,8 +152,9 @@
 			if (is_array($trigger)) {
 				$this->_triggers = array_merge($this->_triggers, $trigger);
 			} else {
-				if (!is_array($value) && strpos($value, ',')) {
-					$value = explode(',', $value);
+			// [Buddy 2026-09-02] 调整：null/int 安全 + 修正 strpos 位置 0 被判为 falsy 的逻辑缺陷
+			if (is_string($value) && strpos($value, ',') !== false) {
+				$value = explode(',', $value);
 				} elseif (!is_array($value) && (is_numeric($value) || is_string($value))) {
 					$value = [$value];
 				} elseif (is_array($value) && empty($value)) {
@@ -164,7 +183,12 @@
 		 */
 		public function keyHtml($name, $html, $title, $tips = null)
 		{
-			return $this->key($name, $title, $tips, 'html', $html);
+		$this->formItemBuilder()->keyHtml(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($name, $title, $tips, 'html', $html);
 		}
 
 
@@ -175,7 +199,12 @@
 		 */
 		public function keyHidden($name, $default = '')
 		{
-			return $this->key($name, null, null, 'hidden', [], $default);
+		$this->formItemBuilder()->keyHidden(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($name, null, null, 'hidden', [], $default);
 		}
 
 
@@ -189,7 +218,12 @@
 		 */
 		public function keyReadOnly($name, $title, $tips = null)
 		{
-			return $this->key($name, $title, $tips, 'readonly');
+		$this->formItemBuilder()->keyReadOnly(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($name, $title, $tips, 'readonly');
 		}
 
 		/**
@@ -202,7 +236,12 @@
 		 */
 		public function keyCopy($name, $title, $tips = null)
 		{
-			return $this->key($name, $title, $tips, 'copy');
+		$this->formItemBuilder()->keyCopy(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($name, $title, $tips, 'copy');
 		}
 
 		/**
@@ -216,7 +255,12 @@
 		 */
 		public function keyText($name, $title, $tips = null, $default = null, $verify = null)
 		{
-			return $this->key($name, $title, $tips, 'string', null, $default, $verify);
+		$this->formItemBuilder()->keyText(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($name, $title, $tips, 'string', null, $default, $verify);
 		}
 
 		/**
@@ -230,7 +274,12 @@
 		 */
 		public function keyIcp($field, $title, $tips = null, $default = '', $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'icp', null, $default, $verify);
+		$this->formItemBuilder()->keyIcp(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'icp', null, $default, $verify);
 		}
 
 		/**
@@ -245,7 +294,12 @@
 		 */
 		public function keyTextInline($field, $title, $tips = null, $default = '', $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'inline', null, $default, $verify);
+		$this->formItemBuilder()->keyTextInline(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'inline', null, $default, $verify);
 		}
 
 		/**
@@ -259,8 +313,13 @@
 		 */
 		public function keySafeCheck($field, $title, $tips = null, $wait_time = 60)
 		{
-			$this->key($field, $title, $tips, 'safe_check', ['wait_time' => $wait_time, 'obj_id' => uniqid()]);
-			return $this->keyTextInline('check_code', '验证码', '请输入收到的验证码', '', 'required');
+		$this->formItemBuilder()->keySafeCheck(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$this->key($field, $title, $tips, 'safe_check', ['wait_time' => $wait_time, 'obj_id' => uniqid()]);
+		// 			return $this->keyTextInline('check_code', '验证码', '请输入收到的验证码', '', 'required');
 		}
 
 		/**
@@ -275,7 +334,12 @@
 		 */
 		public function keyArray($field, $title, $tips = null, $size = 30, $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'string', null, $size, $verify);
+		$this->formItemBuilder()->keyArray(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'string', null, $size, $verify);
 		}
 
 		/**
@@ -289,7 +353,12 @@
 		 */
 		public function keyTitle($field = 'title', $title = '标题', $tips = null, $size = 30, $verify = null)
 		{
-			return $this->keyText($field, $title, $tips, null, $size, $verify);
+		$this->formItemBuilder()->keyTitle(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->keyText($field, $title, $tips, null, $size, $verify);
 		}
 
 		/**
@@ -303,7 +372,12 @@
 		 */
 		public function keyAmap($field, $title, $tips = null, $default = null, $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'amap', null, $default, $verify);
+		$this->formItemBuilder()->keyAmap(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'amap', null, $default, $verify);
 		}
 
 		/**
@@ -318,7 +392,12 @@
 		 */
 		public function keyRadio($field, $title, $options, $tips = null, $default = 0, $verify = null, $disabled = null)
 		{
-			return $this->key($field, $title, $tips, 'radio', $options, $default, $verify, 30, $disabled);
+		$this->formItemBuilder()->keyRadio(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'radio', $options, $default, $verify, 30, $disabled);
 		}
 
 		/**
@@ -334,7 +413,12 @@
 		 */
 		public function keyBool($field, $title, $tips = null, $default = 0, $options = ['否', '是'], $verify = null, $disabled = null)
 		{
-			return $this->keyRadio($field, $title, $options, $tips, $default, $verify, $disabled);
+		$this->formItemBuilder()->keyBool(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->keyRadio($field, $title, $options, $tips, $default, $verify, $disabled);
 		}
 
 		/**
@@ -350,7 +434,12 @@
 		 */
 		public function keySwitch($field, $title, $tips = null, $default = 1, $options = [1 => '是', 0 => '否'], $verify = null, $disabled = null)
 		{
-			return $this->key($field, $title, $tips, 'switch', $options, $default, $verify, 30, $disabled);
+		$this->formItemBuilder()->keySwitch(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'switch', $options, $default, $verify, 30, $disabled);
 		}
 
 		/**
@@ -363,12 +452,17 @@
 		 */
 		public function keySex($field = 'sex', $title = '性别', $tips = null, $default = 0)
 		{
-			$options = [
-				2 => '女',
-				1 => '男',
-				0 => '保密',
-			];
-			return $this->keyRadio($field, $title, $options, $tips, $default);
+		$this->formItemBuilder()->keySex(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$options = [
+		// 				2 => '女',
+		// 				1 => '男',
+		// 				0 => '保密',
+		// 			];
+		// 			return $this->keyRadio($field, $title, $options, $tips, $default);
 		}
 
 
@@ -385,7 +479,12 @@
 		 */
 		public function keyBelongsToMany($field, $title, $column, $tips = null, $default = null, $size = 30, $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'belongsToMany', ['column' => $column, 'field' => $field, 'limit' => 0], $default, $verify, $size);
+		$this->formItemBuilder()->keyBelongsToMany(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'belongsToMany', ['column' => $column, 'field' => $field, 'limit' => 0], $default, $verify, $size);
 		}
 
 
@@ -409,28 +508,33 @@
          */
         public function keyBelongTo($field, $url, $title, $show_field = '', $tips = null, $default = null, $size = null, $verify = null)
 		{
-            $old_filed = $field;
-			if (strpos($field, '|')) {
-				// 获取field
-				$temp = explode('|', $field);
-				$v_field = $temp[1];
-				$field = $temp[0];
-			}
-			if (!strpos($url, '?')) {
-				// 获取field
-                $url = $url.'?';
-			}
-			if (strpos($field, '.')) {
-				$temp = explode('.', $field);
-				$show_field = $temp[1];
-				$model_name = $temp[0];
-                if (!strpos($old_filed, '|')) {
-                    $v_field = $temp[0] . '_id';
-                }
-			} else {
-                $show_field = 'id';
-			}
-			return $this->key($v_field, $title, $tips, 'belongTo', ['model_name'=>$model_name,'old_field'=>$old_filed,'show_field_value'=>'','url' => $url, 'show_field' => $show_field, 'field' => $field, 'limit' => 0], $default, $verify, $size);
+		$this->formItemBuilder()->keyBelongTo(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		//             $old_filed = $field;
+		// 			if (strpos($field, '|')) {
+		// 				// 获取field
+		// 				$temp = explode('|', $field);
+		// 				$v_field = $temp[1];
+		// 				$field = $temp[0];
+		// 			}
+		// 			if (!strpos($url, '?')) {
+		// 				// 获取field
+		//                 $url = $url.'?';
+		// 			}
+		// 			if (strpos($field, '.')) {
+		// 				$temp = explode('.', $field);
+		// 				$show_field = $temp[1];
+		// 				$model_name = $temp[0];
+		//                 if (!strpos($old_filed, '|')) {
+		//                     $v_field = $temp[0] . '_id';
+		//                 }
+		// 			} else {
+		//                 $show_field = 'id';
+		// 			}
+		// 			return $this->key($v_field, $title, $tips, 'belongTo', ['model_name'=>$model_name,'old_field'=>$old_filed,'show_field_value'=>'','url' => $url, 'show_field' => $show_field, 'field' => $field, 'limit' => 0], $default, $verify, $size);
 		}
 
 		/**
@@ -445,7 +549,12 @@
 		 */
 		public function keySelect($field, $title, $options, $tips = null, $default = '', $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'select', $options, $default, $verify);
+		$this->formItemBuilder()->keySelect(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'select', $options, $default, $verify);
 		}
 
 		/**
@@ -461,7 +570,12 @@
 		 */
 		public function keySelectMultiple($field, $title, $options, $tips = null, $default = '', $size = 30, $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'select_multiple', $options, $default, $verify, $size);
+		$this->formItemBuilder()->keySelectMultiple(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'select_multiple', $options, $default, $verify, $size);
 		}
 
 		/**
@@ -476,7 +590,12 @@
 		 */
 		public function keySelectMultistage($field, $title, $options, $tips = null, $default = '', $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'select_multistage', $options, $default, $verify);
+		$this->formItemBuilder()->keySelectMultistage(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'select_multistage', $options, $default, $verify);
 		}
 
 		/**
@@ -489,14 +608,19 @@
 		 */
 		public function keyStatus($options = null, $tips = null, $default = '', $verify = null)
 		{
-			$options = $options ?: [
-				-2 => '删除',
-				-1 => '禁用',
-				1 => '启用',
-				0 => '未审核',
-				2 => '推荐',
-			];
-			return $this->keySelect('status', '状态', $options, $tips, $default, $verify);
+		$this->formItemBuilder()->keyStatus(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$options = $options ?: [
+		// 				-2 => '删除',
+		// 				-1 => '禁用',
+		// 				1 => '启用',
+		// 				0 => '未审核',
+		// 				2 => '推荐',
+		// 			];
+		// 			return $this->keySelect('status', '状态', $options, $tips, $default, $verify);
 		}
 
 		/**
@@ -510,7 +634,12 @@
 		 */
 		public function keyCheckBox($field, $title, $options, $tips = null, $default = [], $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'checkbox', $options, $default, $verify);
+		$this->formItemBuilder()->keyCheckBox(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'checkbox', $options, $default, $verify);
 		}
 
 //		/**
@@ -544,7 +673,12 @@
 		 */
 		public function keyTextArea($field, $title, $tips = null, $default = '', $cols = 50, $rows = 2, $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'textarea', null, $default, $verify, [$cols, $rows]);
+		$this->formItemBuilder()->keyTextArea(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'textarea', null, $default, $verify, [$cols, $rows]);
 		}
 
 		/**
@@ -557,7 +691,12 @@
 		 */
 		public function keyLabel($field, $title, $tips = null)
 		{
-			return $this->key($field, $title, $tips, 'label');
+		$this->formItemBuilder()->keyLabel(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'label');
 		}
 
 		/**
@@ -570,8 +709,13 @@
 		 */
 		public function keyClosure($title, $closure, $tips = null)
 		{
-			$pinyin = new Pinyin();
-			return $this->key($pinyin->permalink($title, '_'), text($title), $tips, $closure);
+		$this->formItemBuilder()->keyClosure(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$pinyin = new Pinyin();
+		// 			return $this->key($pinyin->permalink($title, '_'), text($title), $tips, $closure);
 		}
 
 		/**
@@ -584,7 +728,12 @@
 		 */
 		public function keyPassword($field, $title, $tips = null, $default = null)
 		{
-			return $this->key($field, $title, $tips, 'password', null, $default);
+		$this->formItemBuilder()->keyPassword(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'password', null, $default);
 		}
 
 
@@ -600,7 +749,12 @@
 		 */
 		public function keyUrl($field, $title, $tips = '需要以http或者https开头', $default = '', $size = 50, $verify = '')
 		{
-			return $this->key($field, $title, $tips, 'url', null, $default, $verify ? ($verify . '|url') : 'url', $size);
+		$this->formItemBuilder()->keyUrl(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'url', null, $default, $verify ? ($verify . '|url') : 'url', $size);
 		}
 
 		/**
@@ -613,7 +767,12 @@
 		 */
 		public function keyColor($field, $title, $tips = null, $default = '')
 		{
-			return $this->key($field, $title, $tips, 'color', null, $default);
+		$this->formItemBuilder()->keyColor(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'color', null, $default);
 		}
 
 		/**
@@ -625,7 +784,12 @@
 		 */
 		public function keyDragsortLi($field, $title, $tips = null, $options = null)
 		{
-			return $this->key($field, $title, $tips, 'dragsort_li', $options);
+		$this->formItemBuilder()->keyDragsortLi(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'dragsort_li', $options);
 		}
 
 		/**
@@ -639,7 +803,12 @@
 		 */
 		public function keyTags($field, $title, $tips = null, $default = '', $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'tags', null, $default, $verify);
+		$this->formItemBuilder()->keyTags(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'tags', null, $default, $verify);
 		}
 
 		/**
@@ -654,14 +823,19 @@
 		 */
 		public function keySlider($field, $title, $tips = null, $default = '', $option = [], $verify = null)
 		{
-			$option_default = [
-				'min' => 0,
-				'max' => 255,
-				'step' => 1,
-				'decimal-place' => 0,
-			];
-			$option = is_array($option) ? array_merge($option_default, $option) : $option_default;
-			return $this->key($field, $title, $tips, 'slider', $option, $default, $verify);
+		$this->formItemBuilder()->keySlider(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$option_default = [
+		// 				'min' => 0,
+		// 				'max' => 255,
+		// 				'step' => 1,
+		// 				'decimal-place' => 0,
+		// 			];
+		// 			$option = is_array($option) ? array_merge($option_default, $option) : $option_default;
+		// 			return $this->key($field, $title, $tips, 'slider', $option, $default, $verify);
 		}
 
 		/**
@@ -677,14 +851,19 @@
 		 */
 		public function keyDecimal($field, $title, $tips = null, $default = '', $verify = null, $size = '')
 		{
-			$verify_default = [
-				'rule' => 'money',
-				'rule-money' => '[/^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/, \'金额必须大于0并且只能精确到分\']',
-				'tip' => '请填写金额',
-				'ok' => '',
-			];
-			$verify = is_array($verify) ? array_merge($verify_default, $verify) : $verify_default;
-			return $this->key($field, $title, $tips, 'number', null, $default, $verify, $size, null, '￥');
+		$this->formItemBuilder()->keyDecimal(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$verify_default = [
+		// 				'rule' => 'money',
+		// 				'rule-money' => '[/^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/, \'金额必须大于0并且只能精确到分\']',
+		// 				'tip' => '请填写金额',
+		// 				'ok' => '',
+		// 			];
+		// 			$verify = is_array($verify) ? array_merge($verify_default, $verify) : $verify_default;
+		// 			return $this->key($field, $title, $tips, 'number', null, $default, $verify, $size, null, '￥');
 		}
 
 		/**
@@ -698,7 +877,12 @@
 		 */
 		public function keySort($field = 'sort', $title = '排序', $tips = '数值越大越靠前，最大255', $default = 0)
 		{
-			return $this->key($field, $title, $tips, 'number', null, $default, 'require|number|sort');
+		$this->formItemBuilder()->keySort(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'number', null, $default, 'require|number|sort');
 		}
 
 		/**
@@ -712,7 +896,12 @@
 		 */
 		public function keyNumber($field, $title, $tips = null, $default = '', $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'number', null, $default, $verify);
+		$this->formItemBuilder()->keyNumber(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'number', null, $default, $verify);
 		}
 
 		/**
@@ -726,7 +915,12 @@
 		 */
 		public function keyTimeCycle($field, $title, $tips = null, $default = '', $verify = null)
 		{
-			return $this->key($field, $title, $tips, 'time_cycle', null, $default, $verify);
+		$this->formItemBuilder()->keyTimeCycle(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'time_cycle', null, $default, $verify);
 		}
 
 		/**
@@ -740,7 +934,12 @@
 		 */
 		public function keyEmail($field, $title, $tips = null, $default = '', $verify = 'email')
 		{
-			return $this->key($field, $title, $tips, 'email', null, $default, $verify);
+		$this->formItemBuilder()->keyEmail(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'email', null, $default, $verify);
 		}
 
 
@@ -755,7 +954,12 @@
 		 */
 		public function keyMobile($field, $title, $tips = null, $default = '')
 		{
-			return $this->key($field, $title, $tips, 'inline', null, $default, 'mobile');
+		$this->formItemBuilder()->keyMobile(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'inline', null, $default, 'mobile');
 		}
 
 		/**
@@ -769,7 +973,12 @@
 		 */
 		public function keyRate($field, $title, $tips = '', $default = 3)
 		{
-			return $this->key($field, $title, $tips, 'rate', null, $default);
+		$this->formItemBuilder()->keyRate(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'rate', null, $default);
 		}
 
 		//        /**
@@ -860,8 +1069,58 @@
 				'style' => $style,
 				'default' => $default,
 			];
-			$this->_keyList[] = $key;
+			$this->formItemBuilder()->keyList[] = $key; // 2026-09-06 拆分重构：改为写入FormItemBuilder
+			// $this->_keyList[] = $key;
 			return $this;
+		}
+
+		/**
+		 * Markdown 所见即所得编辑器（Vditor）
+		 * 普通用户友好：左侧所见即所得编辑，底层存储 Markdown，与 keyEditor 体验接近但更现代
+		 * 图片批量/在线管理后续处理，此处仅引入编辑器本体
+		 * http://b3log.org/vditor/
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string $default
+		 * @param array $config
+		 * @param array $style
+		 * @return $this
+		 */
+		// [Buddy 2026-09-03] 新增：keyVditor —— 引入 Vditor 所见即所得 Markdown 编辑器
+		public function keyVditor($field, $title, $tips = null, $default = '', $config = [], $style = ['width' => '900', 'height' => '400'])
+		{
+		$this->formItemBuilder()->keyVditor(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$default_config = [
+		// 				'mode'   => 'wysiwyg', // 所见即所得，普通用户友好
+		// 				'cdn'    => '/static/vditor',
+		// 				'upload' => [
+		// 					'url'          => '/file/vditor/upload',
+		// 					'fieldName'    => 'file',
+		// 					'linkToImgUrl' => '/file/vditor/link',
+		// 					'accept'       => 'image/*',
+		// 					'max'          => 10485760,
+		// 					'multiple'     => true,
+		// 					'handler'      => 'form-data',
+		// 				],
+		// 			];
+		// 			$config = array_merge($default_config, $config);
+		// 			$key = [
+		// 				'id_name' => uniqid(),
+		// 				'field'   => $field,
+		// 				'title'   => $title,
+		// 				'tips'    => $tips,
+		// 				'type'    => 'vditor',
+		// 				'config'  => $config,
+		// 				'style'   => $style,
+		// 				'default' => $default,
+		// 			];
+		// 			$this->_keyList[] = $key;
+		// 			return $this;
 		}
 
 		/**
@@ -876,7 +1135,12 @@
 		 */
 		public function keyTime($field, $title, $tips = null, $value = null, $min = '', $max = '')
 		{
-			return $this->keyDate($field, $title, $tips, $value, $min, $max, 'time');
+		$this->formItemBuilder()->keyTime(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->keyDate($field, $title, $tips, $value, $min, $max, 'time');
 		}
 
 		/**
@@ -891,7 +1155,12 @@
 		 */
 		public function keyDateTime($field, $title, $tips = null, $value = null, $min = '', $max = '')
 		{
-			return $this->keyDate($field, $title, $tips, $value, $min, $max, 'datetime');
+		$this->formItemBuilder()->keyDateTime(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->keyDate($field, $title, $tips, $value, $min, $max, 'datetime');
 		}
 
 		/**
@@ -909,29 +1178,34 @@
 		 */
 		public function keyDate($field, $title, $tips = null, $default = null, $min = '', $max = '', $type = 'date', $range = false, $done = '')
 		{
-			$formats = [
-				'year' => 'yyyy',
-				'month' => 'MM',
-				'date' => 'MM-dd',
-				'time' => 'HH:mm:ss',
-				'datetime' => 'yyyy-MM-dd HH:mm:ss',
-			];
-			$opiton = [
-				'elem' => '#j_builder_' . (strpos($field, '|') ? md5($field) : $field),
-				'type' => $type,
-				'range' => $range,
-				'format ' => $formats[$type],
-				'mark ' => [],
-				'min' => $min,
-				'max' => $max,
-				'done' => $done
-			];
-			foreach ($opiton as $key => $item) {
-				if (!$item) {
-					unset($opiton[$key]);
-				}
-			}
-			return $this->key($field, $title, $tips, 'date', $opiton, $default, null, 50);
+		$this->formItemBuilder()->keyDate(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$formats = [
+		// 				'year' => 'yyyy',
+		// 				'month' => 'MM',
+		// 				'date' => 'MM-dd',
+		// 				'time' => 'HH:mm:ss',
+		// 				'datetime' => 'yyyy-MM-dd HH:mm:ss',
+		// 			];
+		// 			$opiton = [
+		// 				'elem' => '#j_builder_' . (strpos($field, '|') ? md5($field) : $field),
+		// 				'type' => $type,
+		// 				'range' => $range,
+		// 				'format ' => $formats[$type],
+		// 				'mark ' => [],
+		// 				'min' => $min,
+		// 				'max' => $max,
+		// 				'done' => $done
+		// 			];
+		// 			foreach ($opiton as $key => $item) {
+		// 				if (!$item) {
+		// 					unset($opiton[$key]);
+		// 				}
+		// 			}
+		// 			return $this->key($field, $title, $tips, 'date', $opiton, $default, null, 50);
 		}
 
 		/**
@@ -946,7 +1220,12 @@
 		 */
 		public function keyDateTimeRange($field, $title, $tips = null, $default = null, $min = '', $max = '')
 		{
-			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'datetime', true);
+		$this->formItemBuilder()->keyDateTimeRange(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'datetime', true);
 		}
 
 		/**
@@ -961,13 +1240,18 @@
 		 */
 		public function keyDateRange($field, $title, $tips = null, $default = null, $min = '', $max = '')
 		{
-			//            $default = '2020-05-01 - 2020-06-30';
-			if (is_null($default)) {
-				$default = time_format(time(), 'Y-m-d') . ' - ' . time_format('1 month', 'Y-m-d');
-			} else if (!is_null($default) && false === strpos($default, '-')) {
-				$default = time_format(time(), 'Y-m-d') . ' - ' . time_format($default, 'Y-m-d');
-			}
-			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'date', true);
+		$this->formItemBuilder()->keyDateRange(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			//            $default = '2020-05-01 - 2020-06-30';
+		// 			if (is_null($default)) {
+		// 				$default = time_format(time(), 'Y-m-d') . ' - ' . time_format('1 month', 'Y-m-d');
+		// 			} else if (!is_null($default) && false === strpos($default, '-')) {
+		// 				$default = time_format(time(), 'Y-m-d') . ' - ' . time_format($default, 'Y-m-d');
+		// 			}
+		// 			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'date', true);
 		}
 
 		/**
@@ -982,7 +1266,12 @@
 		 */
 		public function keyTimeRange($field, $title, $tips = null, $default = null, $min = '', $max = '')
 		{
-			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'time', true);
+		$this->formItemBuilder()->keyTimeRange(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->keyDate($field, $title, $tips, $default, $min, $max, 'time', true);
 		}
 
 		/**
@@ -994,7 +1283,12 @@
 		 */
 		public function keyShowImg($field, $title, $tips = '点击图片即可下载')
 		{
-			return $this->key($field, $title, $tips, 'showImg');
+		$this->formItemBuilder()->keyShowImg(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			return $this->key($field, $title, $tips, 'showImg');
 		}
 
 		/**
@@ -1008,8 +1302,13 @@
 		 */
 		public function keyVoice($field, $title, $remark = null, $size = 50, $verify = null)
 		{
-			$extensions = 'mp3,wav,wma,amr';
-			return $this->key($field, $title, $remark, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions, 'size' => $size], 30, $verify);
+		$this->formItemBuilder()->keyVoice(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$extensions = 'mp3,wav,wma,amr';
+		// 			return $this->key($field, $title, $remark, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions, 'size' => $size], 30, $verify);
 		}
 
 		/**
@@ -1023,8 +1322,13 @@
 		 */
 		public function keyVideo($field, $title, $remark = null, $size = 300, $verify = null)
 		{
-			$extensions = 'mp4,avi,rmvb,rm,wmv';
-			return $this->key($field, $title, $remark, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions, 'size' => $size], 30, $verify);
+		$this->formItemBuilder()->keyVideo(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$extensions = 'mp4,avi,rmvb,rm,wmv';
+		// 			return $this->key($field, $title, $remark, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions, 'size' => $size], 30, $verify);
 		}
 
 		/**
@@ -1040,12 +1344,17 @@
 		 */
 		public function keyImage($field, $title, $tips = null, $button = '上传单个图片', $default = null, $verify = null)
 		{
-			$max_size = 0;
-			$exts = '';
-			$mimes = '';
-			return $this->key($field, $title, $tips, 'image',
-				['button' => $button, 'limit' => 1, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
-				, $default, $verify);
+		$this->formItemBuilder()->keyImage(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$max_size = 0;
+		// 			$exts = '';
+		// 			$mimes = '';
+		// 			return $this->key($field, $title, $tips, 'image',
+		// 				['button' => $button, 'limit' => 1, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
+		// 				, $default, $verify);
 		}
 
 
@@ -1062,12 +1371,17 @@
 		 */
 		public function keyImageModel($field, $title, $tips = null, $button = '上传单个图片', $default = null, $verify = null)
 		{
-			$max_size = 0;
-			$exts = '';
-			$mimes = '';
-			return $this->key($field, $title, $tips, 'image_model',
-				['button' => $button, 'limit' => 1, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
-				, $default, $verify);
+		$this->formItemBuilder()->keyImageModel(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$max_size = 0;
+		// 			$exts = '';
+		// 			$mimes = '';
+		// 			return $this->key($field, $title, $tips, 'image_model',
+		// 				['button' => $button, 'limit' => 1, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
+		// 				, $default, $verify);
 		}
 
 		/**
@@ -1082,13 +1396,18 @@
 		 */
 		public function keyImageMultiple($field, $title, $tips = null, $default = null, $limit = 5, $verify = null)
 		{
-
-			$max_size = 0;
-			$exts = '';
-			$mimes = '';
-			return $this->key($field, $title, $tips, 'ImageMultiple',
-				['limit' => $limit, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
-				, $default, $verify);
+		$this->formItemBuilder()->keyImageMultiple(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		//
+		// 			$max_size = 0;
+		// 			$exts = '';
+		// 			$mimes = '';
+		// 			return $this->key($field, $title, $tips, 'ImageMultiple',
+		// 				['limit' => $limit, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
+		// 				, $default, $verify);
 		}
 
 		/**
@@ -1103,13 +1422,18 @@
 		 */
 		public function keyImageMultipleModel($field, $title, $tips = null, $default = null, $limit = 5, $verify = null)
 		{
-
-			$max_size = 0;
-			$exts = '';
-			$mimes = '';
-			return $this->key($field, $title, $tips, 'ImageMultiple',
-				['limit' => $limit, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
-				, $default, $verify);
+		$this->formItemBuilder()->keyImageMultipleModel(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		//
+		// 			$max_size = 0;
+		// 			$exts = '';
+		// 			$mimes = '';
+		// 			return $this->key($field, $title, $tips, 'ImageMultiple',
+		// 				['limit' => $limit, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
+		// 				, $default, $verify);
 		}
 
 		/**
@@ -1122,12 +1446,17 @@
 		 */
 		public function keyImageShowMultiple($field, $title, $tips = null)
 		{
-			$max_size = 0;
-			$exts = '';
-			$mimes = '';
-			return $this->key($field, $title, $tips, 'ImageShowMultiple',
-				['limit' => 5, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
-				, null, null);
+		$this->formItemBuilder()->keyImageShowMultiple(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$max_size = 0;
+		// 			$exts = '';
+		// 			$mimes = '';
+		// 			return $this->key($field, $title, $tips, 'ImageShowMultiple',
+		// 				['limit' => 5, 'max_size' => $max_size, 'mimes' => $mimes, 'exts' => $exts]
+		// 				, null, null);
 		}
 
 		/**
@@ -1139,8 +1468,13 @@
 		 */
 		public function keyAuth($title = '实名认证', $tips = null, $need_hand = 1)
 		{
-			$options['need_hand'] = $need_hand ?: 0;
-			return $this->key('_auth', $title, $tips, 'auth', $options);
+		$this->formItemBuilder()->keyAuth(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$options['need_hand'] = $need_hand ?: 0;
+		// 			return $this->key('_auth', $title, $tips, 'auth', $options);
 		}
 
 		/**
@@ -1155,12 +1489,39 @@
 		 */
 		public function keyAttachment($field, $title, $tips = null, $default = 0, $verify = null)
 		{
-			$extensions = '*';
-			$remark = '';
-			return $this->key($field, $title, $tips, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions], $default, $verify);
+		$this->formItemBuilder()->keyAttachment(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$extensions = '*';
+		// 			$remark = '';
+		// 			return $this->key($field, $title, $tips, 'attachment', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions], $default, $verify);
 		}
 
-		/**
+        /**
+         * 上传单个附件
+         * @param string $field
+         * @param string $title
+         * @param string|null $tips
+         * @param int $default
+         * @param string|null $verify
+         * @return $this
+         * @author  : 微尘 <yicmf@qq.com>
+         */
+        public function keyAttachmentModel($field, $title, $tips = null, $default = 0, $verify = null)
+        {
+		$this->formItemBuilder()->keyAttachmentModel(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		//             $extensions = '*';
+		//             $remark = '';
+		//             return $this->key($field, $title, $tips, 'attachment_model', ['remark' => $remark, 'limit' => 1, 'extensions' => $extensions], $default, $verify);
+        }
+
+        /**
 		 * 上传多个附件
 		 * @param      $field
 		 * @param      $title
@@ -1172,9 +1533,14 @@
 		 */
 		public function keyAttachmentMultiple($field, $title, $tips = null, $limit = 5, $verify = null)
 		{
-			$extensions = '*';
-			$remark = '';
-			return $this->key($field, $title, $tips, 'attachmentMultiple', ['remark' => $remark, 'limit' => $limit, 'extensions' => $extensions], 0, $verify);
+		$this->formItemBuilder()->keyAttachmentMultiple(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$extensions = '*';
+		// 			$remark = '';
+		// 			return $this->key($field, $title, $tips, 'attachmentMultiple', ['remark' => $remark, 'limit' => $limit, 'extensions' => $extensions], 0, $verify);
 		}
 
 		/**
@@ -1188,8 +1554,13 @@
 		 */
 		public function keyCity($field, $title, $tips = null, $default = 110101)
 		{
-			// 修正在编辑信息时无法正常显示已经保存的地区信息
-			return $this->key($field, $title, $tips, 'city', null, $default, null);
+		$this->formItemBuilder()->keyCity(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			// 修正在编辑信息时无法正常显示已经保存的地区信息
+		// 			return $this->key($field, $title, $tips, 'city', null, $default, null);
 		}
 
 		/**
@@ -1200,8 +1571,13 @@
 		 */
 		public function setKeys($fields = [])
 		{
-			$this->_keyList = empty($this->_keyList) ? $fields : array_merge($this->_keyList, $fields);
-			return $this;
+		$this->formItemBuilder()->setKeys(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			$this->_keyList = empty($this->_keyList) ? $fields : array_merge($this->_keyList, $fields);
+		// 			return $this;
 		}
 
 		/**
@@ -1220,29 +1596,35 @@
 		 */
 		protected function key($field, $title, $tips, $type, $options = null, $default = '', $verify = null, $size = null, $disabled = null, $placeholder = '')
 		{
-			if (is_array($verify)) {
-				$verify = implode('|', $verify);
-			}
-			if (strpos($verify, ',')) {
-				$verify = str_replace(',', '|', $verify);
-			}
-			if (false !== strpos($verify, 'require')) {
-				$verify = str_replace('require', 'required', $verify);
-			}
-			$key = [
-				'field' => $field,
-				'title' => $title,
-				'tips' => (string)$tips,
-				'type' => $type,
-				'default' => $default,
-				'disabled' => $disabled,
-				'placeholder' => $placeholder,
-				'size' => $size,
-				'verify' => $verify,
-				'options' => $options,
-			];
-			$this->_keyList[] = $key;
-			return $this;
+		$this->formItemBuilder()->key(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 		if (is_array($verify)) {
+		// 			$verify = implode('|', $verify);
+		// 		}
+		// 		// [Buddy 2026-09-02] 调整：null 安全 + 修正 strpos 位置 0 被判为 falsy 的逻辑缺陷
+		// 		if (is_string($verify) && strpos($verify, ',') !== false) {
+		// 			$verify = str_replace(',', '|', $verify);
+		// 		}
+		// 		if (is_string($verify) && false !== strpos($verify, 'require')) {
+		// 				$verify = str_replace('require', 'required', $verify);
+		// 			}
+		// 			$key = [
+		// 				'field' => $field,
+		// 				'title' => $title,
+		// 				'tips' => (string)$tips,
+		// 				'type' => $type,
+		// 				'default' => $default,
+		// 				'disabled' => $disabled,
+		// 				'placeholder' => $placeholder,
+		// 				'size' => $size,
+		// 				'verify' => $verify,
+		// 				'options' => $options,
+		// 			];
+		// 			$this->_keyList[] = $key;
+		// 			return $this;
 		}
 
 		/**
@@ -1253,19 +1635,24 @@
 		 */
 		public function keys($keyList)
 		{
-			foreach ($keyList as $index => $item) {
-				$this->key($item['field']
-					, isset($item['title']) ? $item['title'] : ''
-					, isset($item['tips']) ? $item['tips'] : ''
-					, $item['type']
-					, isset($item['options']) ? $item['options'] : null
-					, isset($item['default']) ? $item['default'] : ''
-					, isset($item['verify']) ? $item['verify'] : null
-					, isset($item['size']) ? $item['size'] : 30
-					, isset($item['disabled']) ? $item['disabled'] : null
-				);
-			}
-			return $this;
+		$this->formItemBuilder()->keys(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		// 2026-09-06 拆分重构：key*系列迁至 edit/FormItemBuilder，原实现注释保留
+		//
+		// 			foreach ($keyList as $index => $item) {
+		// 				$this->key($item['field']
+		// 					, isset($item['title']) ? $item['title'] : ''
+		// 					, isset($item['tips']) ? $item['tips'] : ''
+		// 					, $item['type']
+		// 					, isset($item['options']) ? $item['options'] : null
+		// 					, isset($item['default']) ? $item['default'] : ''
+		// 					, isset($item['verify']) ? $item['verify'] : null
+		// 					, isset($item['size']) ? $item['size'] : 30
+		// 					, isset($item['disabled']) ? $item['disabled'] : null
+		// 				);
+		// 			}
+		// 			return $this;
 		}
 
 
@@ -1442,7 +1829,8 @@
 		{
 			if ($this->request->has('ajax')) {
 				$field = $this->request->param('ajax');
-				foreach ($this->_keyList as $item) {
+				foreach ($this->formItemBuilder()->getKeyList() as $item) { // 2026-09-06 拆分重构：改为从FormItemBuilder读取
+				// foreach ($this->_keyList as $item) {
 					if ($item['field'] == $field) {
 						$key = $item;
 						break;
@@ -1502,8 +1890,10 @@
 				} else {
 					$this->assign('filter', $this->module . '-' . $this->request->controller() . '-' . $this->request->action());
 				}
-				if (count($this->_keyList)) {
-					$this->assign('keyList', $this->_keyList);
+				if (count($this->formItemBuilder()->getKeyList())) { // 2026-09-06 拆分重构：改为从FormItemBuilder读取
+				// if (count($this->_keyList)) {
+					$this->assign('keyList', $this->formItemBuilder()->getKeyList()); // 2026-09-06 拆分重构：改为从FormItemBuilder读取
+					// $this->assign('keyList', $this->_keyList);
 				}
 				$this->assign('form_buttons', $this->_form_buttons);
 				// 在有赋值的情况展示
@@ -1536,7 +1926,8 @@
 			$this->_triggers = [];
 			foreach ($triggers as $field => $trigger) {
 				$field_key = '';
-				foreach ($this->_keyList as $data) {
+				foreach ($this->formItemBuilder()->getKeyList() as $data) { // 2026-09-06 拆分重构：改为从FormItemBuilder读取
+				// foreach ($this->_keyList as $data) {
 					if ($field == $data['field']) {
 						$field_key = $data;
 						break;
@@ -1665,10 +2056,12 @@
 		 */
 		private function _formatData()
 		{
-			if ('id' !== $this->_default_pk && is_object($this->_data)) {
+			if ('id' !== $this->formItemBuilder()->getDefaultPk() && is_object($this->_data)) { // 2026-09-06 拆分重构：改为从FormItemBuilder读取
+			// if ('id' !== $this->_default_pk && is_object($this->_data)) {
 				$pk = $this->_data->getPk();
 			} else {
-				$pk = $this->_default_pk;
+				$pk = $this->formItemBuilder()->getDefaultPk(); // 2026-09-06 拆分重构：改为从FormItemBuilder读取
+				// $pk = $this->_default_pk;
 			}
 			$flag = false;
 //			foreach ($this->_keyList as $key => $e) {
@@ -1676,7 +2069,9 @@
 //					$this->_data[$e['field']] = $e['default'];
 //				}
 //			}
-			foreach ($this->_keyList as $key => $e) {
+			$keyList = &$this->formItemBuilder()->getKeyListRef();
+			foreach ($keyList as $key => $e) { // 2026-09-06 拆分重构：改为从FormItemBuilder读取
+			// foreach ($this->_keyList as $key => $e) {
 				$pk == $e['field'] && $flag = true;
 				$e['data'] = $this->_data;
 				$e['jquery_id'] = $this->_jquery_md5($e['field']);
@@ -1743,7 +2138,8 @@
 //                    $conver_data[$key['field']] = $data[$key['field']];
 //                }
 //
-				$this->_keyList[$key] = $e;
+				$keyList[$key] = $e; // 2026-09-06 拆分重构：改为写入FormItemBuilder
+				// $this->_keyList[$key] = $e;
 			}
 //            dump($this->_keyList);
 			if (!$flag && isset($this->_data[$pk])) {
@@ -1751,7 +2147,8 @@
 				$edit['field'] = $pk;
 				$edit['type'] = 'hidden';
 				$edit['value'] = $this->_data[$pk];
-				$this->_keyList[] = $edit;
+				$keyList[] = $edit; // 2026-09-06 拆分重构：改为写入FormItemBuilder
+				// $this->_keyList[] = $edit;
 			}
 		}
 

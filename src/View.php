@@ -16,22 +16,31 @@
 
 	class View extends Builder
 	{
+		/** 页面标题 */
 		private $_title;
 
+		/** 标题边上的提示信息 */
 		private $_suggest;
 
+		/** 标题边上的警告信息 */
 		private $_warning;
 
+		/** 字段键列表 */
 		private $_keyList = [];
 
+		/** 详情数据 */
 		private $_data = [];
 
+		/** 按钮列表 */
 		private $_buttonList = [];
 
+		/** 保存提交地址 */
 		private $_savePostUrl = [];
 
+		/** 配置分组 */
 		private $_group = [];
 
+		/** 回调函数 */
 		private $_callback = null;
 
 		// 提示信息
@@ -85,6 +94,11 @@
 			return $this;
 		}
 
+		/**
+		 * 设置回调闭包，用于自定义处理
+		 * @param callable $callback 回调函数
+		 * @return $this
+		 */
 		public function callback($callback)
 		{
 			$this->_callback = $callback;
