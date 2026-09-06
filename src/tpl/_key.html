@@ -1563,7 +1563,7 @@ $checked = $field['value']==$key ? 'checked' : '';
                     //    }
                     // });
                     // $("#file_value_{$field.field}").val(arr.join(','));
-                    // getUploadValue('{$field.field}');
+                   // getUploadValue('{$field.field}');
                 }
                 , error: function(index, upload){ //错误回调
                     // var that = this;
@@ -1603,7 +1603,7 @@ $checked = $field['value']==$key ? 'checked' : '';
     $images = $field['value'];
     }
 
-    $arr = [];
+     $arr = [];
     foreach ($images as $index=>$item) {
     $arr[] = [
     'id'=>$index,
@@ -1639,7 +1639,7 @@ $checked = $field['value']==$key ? 'checked' : '';
                         }
                     });
 
-                })
+            })
 
             });
         </script>
@@ -1983,7 +1983,7 @@ $field['url'] = $default_image_url;
 
             window.removeUploadImage = function (obj,field) {
                 console.log(obj);
-                // $(obj).parent().remove();
+               // $(obj).parent().remove();
                 //  getUploadValue(field);
                 $("#upload-normal-image-"+field).attr('src','{$default_image_url}')
                 $("#upload-normal-image-val-"+field).val('')
