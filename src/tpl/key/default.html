@@ -2,7 +2,7 @@
 
     <div class="layui-input-inline">
         <input type="text" class="layui-input" value="{$field['value']}" size="{$field['size']}" name="{$field.field}"
-               lay-verify="{$field['verify']" value="{$field['value']}">
+               lay-verify="{$field['verify']|raw}" value="{$field['value']}">
 
     </div>
     {notempty name='field.tips'}

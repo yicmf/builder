@@ -1,7 +1,7 @@
 
     <div class="layui-input-block">
         <textarea name="{$field.field}" class="layui-textarea" cols="{$field['size'][0]}" rows="{$field['size'][1]}"
-                  lay-verify="{$field['verify']">{$field.value|htmlspecialchars}</textarea>
+                  lay-verify="{$field['verify']|raw}">{$field.value|htmlspecialchars}</textarea>
         {notempty name='field.tips'}
         <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
         {/notempty}

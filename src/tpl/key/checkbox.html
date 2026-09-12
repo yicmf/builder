@@ -17,7 +17,7 @@
         $checked = in_array($key,$field['value_array']) ? 'checked' : '';
         $inputId = 'id_'.$field['field'].'_$key';
         {/php}
-        <input type="checkbox" name="{$field.field}[]" lay-filter="filter_{$name_space}_{$field.field}" lay-verify="{$field['verify']" value="{$key}" {$checked}
+        <input type="checkbox" name="{$field.field}[]" lay-filter="filter_{$name_space}_{$field.field}" lay-verify="{$field['verify']|raw}" value="{$key}" {$checked}
                title="{$option}">
         {/volist}
 

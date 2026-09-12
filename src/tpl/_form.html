@@ -94,11 +94,13 @@
 
 					</div>
 </form>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
+{/* 2026-09-12 修复（模板拆分回归）：此处原先继承自 edit.html.bak 的 5 个收尾 </div> 已删除。
+   原因：dialog 模式（dialog.html 壳）没有对应容器，page 模式的容器由 edit.html 壳第 34-38 行自行收尾；
+   保留这 5 个多余 </div> 会提前闭合 layuiAdmin view.parse() 注入的临时包裹 div，
+   使紧随其后的本文件表单 <script>（layui.define + form.on('submit(...)') 注册）落到包裹 div 之外，
+   不在 elem.children() 里 → 永不插入 DOM、永不执行，
+   表现为点「保存」时 layui 取不到 submit 处理器，直接走原生 GET 提交（URL 带表单参数跳转）。
+   dialog.html.bak 原实现此处即为 </form> 后直接接 templets，无任何 </div>。 */}
 {volist name='templets' id='vo'}
 {$vo}
 {/volist}

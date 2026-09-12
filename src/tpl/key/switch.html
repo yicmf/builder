@@ -1,7 +1,7 @@
 
 
     <div class="layui-input-inline">
-        <input type="checkbox" lay-verify="{$field['verify']"  lay-filter="filter_{$name_space}_{$field.field}"  {php}
+        <input type="checkbox" lay-verify="{$field['verify']|raw}"  lay-filter="filter_{$name_space}_{$field.field}"  {php}
                if($field['value']){ echo 'checked=""';}{/php} value="{$field['value']}" lay-skin="switch"
         lay-text="{php}echo implode('|',$field['options']);{/php}">
 

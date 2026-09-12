@@ -1,6 +1,6 @@
 
     <div class="layui-input-inline" style="width:{$field.size}px">
-        <input type="number" name="{$field.field}" value="{$field['value']}" class="layui-input" placeholder="{$field.placeholder}"   lay-verify="{$field['verify']">
+        <input type="number" name="{$field.field}" value="{$field['value']}" class="layui-input" placeholder="{$field.placeholder}"   lay-verify="{$field['verify']|raw}">
     </div>
 
     {notempty name='field.tips'}

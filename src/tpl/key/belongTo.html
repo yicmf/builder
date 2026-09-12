@@ -6,7 +6,7 @@
     {/php}
     <div class="layui-input-block">
         <input type="hidden" name="{$field['field']}" value="{$field['value']}" id="find_dialog_id_{$field['jquery_id']}">
-        <input type="text" class="layui-input" value="{$field.options.show_field_value}" size="{$field['size']}"  lay-verify="{$field['verify']" id="find_dialog_{$field['jquery_id']}" readonly>
+        <input type="text" class="layui-input" value="{$field.options.show_field_value}" size="{$field['size']}"  lay-verify="{$field['verify']|raw}" id="find_dialog_{$field['jquery_id']}" readonly>
         <div class="layui-form-mid layui-word-aux"  style="display: none" >清空选择</div>
         {notempty name='field.tips'}
         <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>

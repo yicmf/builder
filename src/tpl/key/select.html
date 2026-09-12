@@ -1,7 +1,7 @@
 
     <div class="layui-input-inline">
         <!-- 单选菜单 -->
-        <select name="{$field.field}" id="key_{$field.field}" lay-filter="filter_{$name_space}_{$field.field}"  lay-verify="{$field['verify']" data-width="{$field['size']}" data-toggle="selectpicker" >
+        <select name="{$field.field}" id="key_{$field.field}" lay-filter="filter_{$name_space}_{$field.field}"  lay-verify="{$field['verify']|raw}" data-width="{$field['size']}" data-toggle="selectpicker" >
             {volist name="field.options" id="option"}
             {php} $selected = $field['value']==$key ? 'selected' : '';{/php}
             <option value="{$key}" {$selected}>{$option}</option>
