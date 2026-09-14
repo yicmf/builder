@@ -429,6 +429,41 @@ class FormItemBuilder
     }
 
     /**
+     * 意图配置可视化编辑器（intent_config）
+     * [Buddy 2026-09-12] 新增：将 fa_ai_flow_node.config 的 JSON（keywords/llm_labels/llm_enabled）以结构化表单编辑，
+     * 提交前由模板 JS 实时序列化回隐藏 input（name=字段名），存储/读取端零侵入。
+     * @param string $field
+     * @param string $title
+     * @param string|null $tips
+     * @param string $default
+     * @param string|null $verify
+     * @return $this
+     */
+    public function keyIntentConfig($field, $title, $tips = null, $default = '', $verify = null)
+    {
+        // [ZCode 2026-09-14] 调整：改为委托 keyJson 通用 JSON 编辑器（兼容旧调用，原专用 intent_config 模板不再使用）
+        return $this->keyJson($field, $title, $tips, $default, $verify);
+    }
+
+    /**
+     * 任意 JSON 结构可视化编辑器（json）
+     * [ZCode 2026-09-14] 新增：支持 对象(分类子项)/数组(逗号分隔)/开关(is_ 前缀按 0/1 存储，已定义为非数字则按字符串)/字符串/数字 任意组合；
+     * 深层嵌套等复杂结构自动回退为该键独立「原始 JSON」编辑，保存无损。$title 缺省直接用字段名，也可传入自定义标题。
+     * [ZCode 2026-09-14] 调整：新增 $titles 参数（键名=>标题 映射），定义 JSON 内部各字段的展示标题，缺省仍用键名。
+     * @param string $field
+     * @param string|null $title 缺省用字段名
+     * @param string|null $tips
+     * @param string $default
+     * @param string|null $verify
+     * @param array $titles JSON 内部字段标题映射：['scene'=>'场景','is_llm'=>'启用LLM']
+     * @return $this
+     */
+    public function keyJson($field, $title = null, $tips = null, $default = '', $verify = null, $titles = [])
+    {
+        return $this->key($field, (null === $title || '' === $title) ? $field : $title, $tips, 'json', ['titles' => (array)$titles], $default, $verify);
+    }
+
+    /**
      * 显示文本
      * @param string $field
      * @param string $title

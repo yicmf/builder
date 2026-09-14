@@ -1,0 +1,285 @@
+<!--
+  json.html：任意 JSON 结构可视化编辑器（通用 keyJson 类型）
+  [ZCode 2026-09-14] 新增：由 intent_config.html 泛化而来，沿用其三种编辑形态——
+  ① 对象 → 分类子项（子键名 + 逗号分隔值列表）；② 数组 → 逗号分隔单行输入；③ 开关 → is_ 前缀键按 0/1 存储（已定义为非数字则按字符串渲染）；
+  另支持 字符串/数字 单行输入与布尔保真；深层嵌套等复杂结构自动回退为该键独立「原始 JSON」编辑，保存无损。
+  value 转义链尾带 |raw：阻止 think-template 自动追加 htmlentities 造成双重转义（JSON 解析误报）。
+-->
+<div class="layui-input-block" id="kj_wrap_{$field.field}">
+    <input type="hidden" name="{$field.field}" id="{$field.field}" value="{$field.value|default=''|htmlspecialchars|raw}">
+    <div class="layui-form-mid" style="color:#f00;display:none;" id="kj_error_{$field.field}">JSON 解析失败，已切换为原始编辑，请在下方「原始 JSON」修正后点「应用」</div>
+
+    <div id="kj_fields_{$field.field}"></div>
+
+    <div class="kj-block" style="border:1px dashed #e6e6e6;border-radius:4px;padding:10px;margin-bottom:10px;">
+        <input type="text" class="layui-input" id="kj_newkey_{$field.field}" placeholder="新字段名" style="width:160px;display:inline-block;">
+        <select id="kj_newtype_{$field.field}" style="width:130px;height:30px;margin-left:6px;">
+            <option value="string">字符串</option>
+            <option value="number">数字</option>
+            <option value="switch">开关(is_)</option>
+            <option value="array">数组(逗号分隔)</option>
+            <option value="object">对象(分类子项)</option>
+        </select>
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="kj_add_{$field.field}" style="margin-left:6px;">+ 新增字段</button>
+    </div>
+
+    <div class="kj-raw">
+        <details>
+            <summary style="cursor:pointer;color:#1E9FFF;">查看 / 编辑原始 JSON</summary>
+            <textarea class="layui-textarea" id="kj_raw_{$field.field}" rows="6" style="margin-top:6px;"></textarea>
+            <button type="button" class="layui-btn layui-btn-sm" id="kj_apply_raw_{$field.field}" style="margin-top:6px;">应用原始 JSON</button>
+        </details>
+    </div>
+
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}
+
+    <script type="text/javascript">
+    layui.use(['form', 'jquery'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var field = '{$field.field}';
+        var $hidden = $('#' + field);
+        var $fields = $('#kj_fields_' + field);
+        var $raw = $('#kj_raw_' + field);
+
+        // 每个顶层键的编辑形态注册表：type = object/array/switch/bool/number/string/raw（deleted 标记删除，不物理删除以保持索引稳定）
+        var meta = [];
+        // 字段标题映射（keyJson $titles 参数传入）：块标题优先取映射值，缺省回退键名
+        var titles = {$field.options.titles|json_encode|raw} || {};
+
+        // 依据键名与值类型判定编辑形态（is_ 前缀默认开关存 0/1，已定义为非数字则按字符串）
+        function decideType(key, val) {
+            var result = 'raw';
+            var t = typeof val;
+            if (val === null || t === 'undefined') {
+                result = 'raw';
+            } else if (t === 'object') {
+                if ($.isArray(val)) {
+                    result = 'array';
+                } else {
+                    result = 'object';
+                    for (var k in val) {
+                        if (val.hasOwnProperty(k) && val[k] !== null && typeof val[k] === 'object' && !$.isArray(val[k])) {
+                            result = 'raw';
+                        }
+                    }
+                }
+            } else if (key.indexOf('is_') === 0) {
+                if (t === 'boolean' || t === 'number' || val === '' || val === '0' || val === '1' || !isNaN(Number(val))) {
+                    result = 'switch';
+                } else {
+                    result = 'string';
+                }
+            } else if (t === 'boolean') {
+                result = 'bool';
+            } else if (t === 'number') {
+                result = 'number';
+            } else if (t === 'string') {
+                result = 'string';
+            }
+            return result;
+        }
+
+        function typeName(type) {
+            var names = {object: '对象', array: '数组', switch: '开关', bool: '布尔', number: '数字', string: '字符串', raw: 'JSON'};
+            return names[type] || type;
+        }
+
+        // 顶层键编辑块：标题行含删除按钮（删除仅标记，索引保持稳定）
+        function block(title, idx) {
+            var $b = $('<div class="kj-block" data-idx="' + idx + '" style="border:1px solid #e6e6e6;border-radius:4px;padding:10px;margin-bottom:10px;"></div>');
+            var $title = $('<div style="font-weight:600;margin-bottom:8px;"></div>').text(title + ' (' + typeName(meta[idx].type) + ')');
+            var $del = $('<button type="button" class="layui-btn layui-btn-xs layui-btn-danger" style="float:right;">删除字段</button>');
+            $del.on('click', function () {
+                meta[idx].deleted = true;
+                $b.remove();
+                serialize();
+            });
+            $title.append($del);
+            $b.append($title);
+            return $b;
+        }
+
+        // 对象形态的子项行：子键名 + 值(数组按逗号分隔)；data-arr 记录原子值是否数组以保证序列化还原
+        function objRow(k, v) {
+            var isArr = $.isArray(v);
+            var $row = $('<div class="kj-obj-row" style="margin-bottom:6px;"></div>');
+            $row.attr('data-arr', isArr ? '1' : '0');
+            var $name = $('<input class="kj-obj-name" style="width:140px;" placeholder="子键名">');
+            $name.val(k || '');
+            var $words = $('<input class="kj-obj-words" style="width:320px;margin-left:6px;" placeholder="值，逗号分隔(数组)">');
+            $words.val(isArr ? v.join(',') : (v === null ? '' : v));
+            var $del = $('<button type="button" class="layui-btn layui-btn-xs layui-btn-danger" style="margin-left:6px;">删除</button>');
+            $del.on('click', function () {
+                $row.remove();
+                serialize();
+            });
+            $row.append($name).append($words).append($del);
+            $row.find('input').on('input change', serialize);
+            return $row;
+        }
+
+        // 添加一个顶层键的可视化控件（forceType 供「新增字段」显式指定形态）
+        function addControl(key, val, forceType) {
+            var type = forceType || decideType(key, val);
+            meta.push({key: key, type: type, deleted: false, rawVal: val});
+            var idx = meta.length - 1;
+            var $b = block(titles[key] || key, idx);
+            var $input = null;
+            if (type === 'object') {
+                var $rows = $('<div></div>');
+                $.each(val, function (k, v) {
+                    $rows.append(objRow(k, v));
+                });
+                $b.append($rows);
+                $b.append($('<button type="button" class="layui-btn layui-btn-sm layui-btn-normal" style="margin-top:6px;">+ 新增子项</button>')
+                    .on('click', function () {
+                        $rows.append(objRow('', []));
+                        serialize();
+                    }));
+            } else if (type === 'array') {
+                $input = $('<input type="text" class="layui-input kj-array" placeholder="逗号分隔" style="max-width:520px;">');
+                $input.val(val.join(','));
+            } else if (type === 'switch' || type === 'bool') {
+                var fid = 'kj_sw_' + field + '_' + idx;
+                var checked = (val === true || parseInt(val, 10) === 1) ? ' checked' : '';
+                $b.append($('<input type="checkbox" id="' + fid + '" lay-skin="switch" lay-text="开|关"' + checked + '>'));
+                form.on('switch(' + fid + ')', function () {
+                    serialize();
+                });
+            } else if (type === 'raw') {
+                $input = $('<textarea class="layui-textarea kj-rawkey" rows="3" placeholder="该键为复杂结构，以原始 JSON 编辑"></textarea>');
+                $input.val(JSON.stringify(val, null, 2));
+            } else {
+                // string / number 共用单行输入，序列化时按 meta 类型区分
+                $input = $('<input type="text" class="layui-input kj-scalar" style="max-width:520px;">');
+                $input.val(val);
+            }
+            if ($input) {
+                $b.append($input);
+                $input.on('input change', serialize);
+            }
+            $fields.append($b);
+        }
+
+        // 收集全部控件回写隐藏域（raw 形态解析失败时该键保持原值不动）
+        function serialize() {
+            var obj = {};
+            $.each(meta, function (i, m) {
+                if (m.deleted) {
+                    return;
+                }
+                var $b = $fields.children('[data-idx="' + i + '"]');
+                var v = '';
+                if (m.type === 'object') {
+                    var o = {};
+                    $b.find('.kj-obj-row').each(function () {
+                        var name = $(this).find('.kj-obj-name').val().trim();
+                        if (!name) {
+                            return;
+                        }
+                        var words = $(this).find('.kj-obj-words').val();
+                        if ($(this).attr('data-arr') === '1') {
+                            o[name] = words.split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+                        } else {
+                            o[name] = words;
+                        }
+                    });
+                    v = o;
+                } else if (m.type === 'array') {
+                    v = $b.find('.kj-array').val().split(',').map(function (s) { return s.trim(); }).filter(function (s) { return s; });
+                } else if (m.type === 'switch') {
+                    v = $b.find('input[type=checkbox]').prop('checked') ? 1 : 0;
+                } else if (m.type === 'bool') {
+                    v = $b.find('input[type=checkbox]').prop('checked');
+                } else if (m.type === 'number') {
+                    var txt = $b.find('.kj-scalar').val();
+                    var n = Number(txt);
+                    v = (txt.trim() === '' || isNaN(n)) ? txt : n;
+                } else if (m.type === 'raw') {
+                    var ok = true;
+                    try {
+                        v = JSON.parse($b.find('.kj-rawkey').val());
+                    } catch (e) {
+                        ok = false;
+                    }
+                    if (!ok) {
+                        v = m.rawVal; // 解析失败回退原值，保证该键不丢
+                    }
+                } else {
+                    v = $b.find('.kj-scalar').val();
+                }
+                obj[m.key] = v;
+            });
+            var json = JSON.stringify(obj);
+            $hidden.val(json);
+            $raw.val(JSON.stringify(obj, null, 2));
+        }
+
+        // 初始反填：顶层必须为对象；解析失败或顶层非对象则整体走「原始 JSON」
+        var initVal = $hidden.val();
+        var init = {};
+        var parseError = false;
+        try {
+            init = initVal ? JSON.parse(initVal) : {};
+        } catch (e) {
+            parseError = true;
+        }
+        if (parseError) {
+            $('#kj_error_' + field).show();
+            $raw.val(initVal);
+        } else if (init === null || typeof init !== 'object' || $.isArray(init)) {
+            $raw.val(initVal ? JSON.stringify(init, null, 2) : '');
+        } else {
+            $.each(init, function (k, v) {
+                addControl(k, v);
+            });
+            form.render();
+            serialize();
+        }
+
+        // 新增字段：按所选形态创建空值控件
+        $('#kj_add_' + field).on('click', function () {
+            var key = $('#kj_newkey_' + field).val().trim();
+            var type = $('#kj_newtype_' + field).val();
+            var def = '';
+            if (type === 'array') {
+                def = [];
+            } else if (type === 'object') {
+                def = {};
+            } else if (type === 'switch' || type === 'number') {
+                def = 0;
+            }
+            addControl(key, def, type);
+            form.render();
+            serialize();
+        });
+
+        // 应用原始 JSON：整体重建控件
+        $('#kj_apply_raw_' + field).on('click', function () {
+            var o = null;
+            var ok = true;
+            try {
+                o = JSON.parse($raw.val());
+            } catch (e) {
+                ok = false;
+                alert('JSON 解析失败：' + e.message);
+            }
+            if (ok) {
+                $fields.empty();
+                meta = [];
+                if (o !== null && typeof o === 'object' && !$.isArray(o)) {
+                    $.each(o, function (k, v) {
+                        addControl(k, v);
+                    });
+                    form.render();
+                }
+                serialize();
+                $('#kj_error_' + field).hide();
+            }
+        });
+    });
+    </script>
+</div>
