@@ -1,0 +1,138 @@
+
+<div class="layui-input-block" id="ic_wrap_{$field.field}">
+    <!-- [ZCode 2026-09-14] 调整：value 链尾补 |raw，阻止 think-template 自动追加 htmlentities 造成双重转义（JSON 解析失败误报） -->
+    <input type="hidden" name="{$field.field}" id="{$field.field}" value="{$field.value|default=''|htmlspecialchars|raw}">
+    <div class="layui-form-mid" style="color:#f00;display:none;" id="ic_error_{$field.field}">JSON 解析失败，已切换为原始编辑，请在下方「原始 JSON」修正后点「应用」</div>
+
+    <div class="ic-block" style="border:1px solid #e6e6e6;border-radius:4px;padding:10px;margin-bottom:10px;">
+        <div class="ic-block-title" style="font-weight:600;margin-bottom:8px;">关键词分类 (keywords)</div>
+        <div class="ic-cats" id="ic_cats_{$field.field}"></div>
+        <button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="ic_add_cat_{$field.field}">+ 新增分类</button>
+    </div>
+
+    <div class="ic-block" style="border:1px solid #e6e6e6;border-radius:4px;padding:10px;margin-bottom:10px;">
+        <div class="ic-block-title" style="font-weight:600;margin-bottom:8px;">LLM 标签 (llm_labels)</div>
+        <input type="text" class="layui-input" id="ic_labels_{$field.field}" placeholder="逗号分隔，如 faq,rag,tool,transfer,chat" style="max-width:520px;">
+    </div>
+
+    <div class="ic-block" style="border:1px solid #e6e6e6;border-radius:4px;padding:10px;margin-bottom:10px;">
+        <div class="ic-block-title" style="font-weight:600;margin-bottom:8px;">启用 LLM (llm_enabled)</div>
+        <input type="checkbox" id="ic_enabled_{$field.field}" lay-skin="switch" lay-text="开|关" lay-filter="ic_enabled_{$field.field}">
+    </div>
+
+    <div class="ic-raw">
+        <details>
+            <summary style="cursor:pointer;color:#1E9FFF;">查看 / 编辑原始 JSON</summary>
+            <textarea class="layui-textarea" id="ic_raw_{$field.field}" rows="4" style="margin-top:6px;"></textarea>
+            <button type="button" class="layui-btn layui-btn-sm" id="ic_apply_raw_{$field.field}" style="margin-top:6px;">应用原始 JSON</button>
+        </details>
+    </div>
+
+    {notempty name='field.tips'}
+    <div class="layui-form-mid layui-word-aux">{$field.tips|raw|html_entity_decode}</div>
+    {/notempty}
+
+    <script type="text/javascript">
+    layui.use(['form', 'jquery'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var field = '{$field.field}';
+        var $wrap = $('#ic_wrap_' + field);
+        var $hidden = $('#' + field);
+        var $cats = $('#ic_cats_' + field);
+        var $labels = $('#ic_labels_' + field);
+        var $enabled = $('#ic_enabled_' + field);
+        var $raw = $('#ic_raw_' + field);
+
+        function serialize() {
+            var keywords = {};
+            $cats.find('.ic-cat').each(function () {
+                var name = $(this).find('.ic-cat-name').val().trim();
+                var words = $(this).find('.ic-cat-words').val();
+                if (!name) {
+                    return;
+                }
+                keywords[name] = words.split(',')
+                    .map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s; });
+            });
+            var labels = $labels.val().split(',')
+                .map(function (s) { return s.trim(); })
+                .filter(function (s) { return s; });
+            var obj = {
+                keywords: keywords,
+                llm_labels: labels,
+                llm_enabled: $enabled.prop('checked') ? 1 : 0
+            };
+            var json = JSON.stringify(obj);
+            $hidden.val(json);
+            $raw.val(json);
+        }
+
+        function addCat(name, words) {
+            var $row = $('<div class="ic-cat" style="margin-bottom:6px;"></div>');
+            var $name = $('<input class="ic-cat-name layui-input-inline" style="width:140px;" placeholder="分类名(如 transfer)">');
+            var $words = $('<input class="ic-cat-words layui-input-inline" style="width:320px;margin-left:6px;" placeholder="关键词，逗号分隔">');
+            var $del = $('<button type="button" class="layui-btn layui-btn-xs layui-btn-danger ic-cat-del" style="margin-left:6px;">删除</button>');
+            $name.val(name || '');
+            $words.val($.isArray(words) ? words.join(',') : (words || ''));
+            $del.on('click', function () {
+                $(this).closest('.ic-cat').remove();
+                serialize();
+            });
+            $row.append($name).append($words).append($del);
+            $row.find('input').on('input change', serialize);
+            $cats.append($row);
+        }
+
+        // 初始反填
+        var initVal = $hidden.val();
+        var init = {};
+        var parseError = false;
+        try {
+            init = initVal ? JSON.parse(initVal) : {};
+        } catch (e) {
+            parseError = true;
+        }
+        if (parseError) {
+            $('#ic_error_' + field).show();
+            $raw.val(initVal);
+        } else {
+            init.keywords = init.keywords || {};
+            $.each(init.keywords, function (k, v) {
+                addCat(k, v);
+            });
+            $labels.val((init.llm_labels || []).join(','));
+            $enabled.prop('checked', parseInt(init.llm_enabled, 10) === 1);
+            form.render();
+        }
+        serialize();
+
+        $('#ic_add_cat_' + field).on('click', function () {
+            addCat('', []);
+            serialize();
+        });
+        $labels.on('input', serialize);
+        form.on('switch(ic_enabled_' + field + ')', function () {
+            serialize();
+        });
+        $('#ic_apply_raw_' + field).on('click', function () {
+            try {
+                var o = JSON.parse($raw.val());
+                $cats.empty();
+                o.keywords = o.keywords || {};
+                $.each(o.keywords, function (k, v) {
+                    addCat(k, v);
+                });
+                $labels.val((o.llm_labels || []).join(','));
+                $enabled.prop('checked', parseInt(o.llm_enabled, 10) === 1);
+                form.render();
+                serialize();
+                $('#ic_error_' + field).hide();
+            } catch (e) {
+                alert('JSON 解析失败：' + e.message);
+            }
+        });
+    });
+    </script>
+</div>
