@@ -680,24 +680,7 @@
 		//
 		// 			return $this->key($field, $title, $tips, 'textarea', null, $default, $verify, [$cols, $rows]);
 		}
-
-		/**
-		 * 意图配置可视化编辑器（intent_config）
-		 * [Buddy 2026-09-12] 新增：委托 FormItemBuilder::keyIntentConfig，结构化编辑 fa_ai_flow_node.config。
-		 * @param string $field
-		 * @param string $title
-		 * @param string|null $tips
-		 * @param string $default
-		 * @param string|null $verify
-		 * @return $this
-		 */
-		public function keyIntentConfig($field, $title, $tips = null, $default = '', $verify = null)
-		{
-		// [ZCode 2026-09-14] 调整：改为委托 keyJson 通用 JSON 编辑器（兼容旧调用，原专用 intent_config 模板不再使用）
-		$this->formItemBuilder()->keyJson(...func_get_args());
-		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
-		return $this;
-		}
+ 
 
 		/**
 		 * 任意 JSON 结构可视化编辑器（json）
