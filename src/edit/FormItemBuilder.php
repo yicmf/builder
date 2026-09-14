@@ -429,6 +429,22 @@ class FormItemBuilder
     }
 
     /**
+     * 意图配置可视化编辑器（intent_config）
+     * [Buddy 2026-09-12] 新增：将 fa_ai_flow_node.config 的 JSON（keywords/llm_labels/llm_enabled）以结构化表单编辑，
+     * 提交前由模板 JS 实时序列化回隐藏 input（name=字段名），存储/读取端零侵入。
+     * @param string $field
+     * @param string $title
+     * @param string|null $tips
+     * @param string $default
+     * @param string|null $verify
+     * @return $this
+     */
+    public function keyIntentConfig($field, $title, $tips = null, $default = '', $verify = null)
+    {
+        return $this->key($field, $title, $tips, 'intent_config', null, $default, $verify);
+    }
+
+    /**
      * 显示文本
      * @param string $field
      * @param string $title

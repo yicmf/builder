@@ -682,6 +682,23 @@
 		}
 
 		/**
+		 * 意图配置可视化编辑器（intent_config）
+		 * [Buddy 2026-09-12] 新增：委托 FormItemBuilder::keyIntentConfig，结构化编辑 fa_ai_flow_node.config。
+		 * @param string $field
+		 * @param string $title
+		 * @param string|null $tips
+		 * @param string $default
+		 * @param string|null $verify
+		 * @return $this
+		 */
+		public function keyIntentConfig($field, $title, $tips = null, $default = '', $verify = null)
+		{
+		$this->formItemBuilder()->keyIntentConfig(...func_get_args());
+		// 2026-09-06 拆分重构：保持原链式语义，返回 Edit 自身
+		return $this;
+		}
+
+		/**
 		 * 显示文本
 		 * @param string $field
 		 * @param string $title
