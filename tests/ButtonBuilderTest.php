@@ -79,6 +79,48 @@ class ButtonBuilderTest extends TestCase
         $this->assertSame('doajax', $group[0]['toggle']);
     }
 
+    /**
+     * 回归 2026-09 修复：导入按钮必须使用 id 键（而非 data-id），
+     * 否则模板 {case import} 中 {$button.attr.id} 取不到值，按钮失效。
+     * 同时锁定 event=import 与 module/controller 补全逻辑。
+     */
+    public function testButtonExcelImportUsesIdKeyNotDataId()
+    {
+        $table = $this->makeTable();
+        // buttonExcelImport 内部依赖 request->controller()/time() 与 module，构造假桩
+        $request = new class {
+            public function controller()
+            {
+                return 'demo';
+            }
+
+            public function time()
+            {
+                return 12345;
+            }
+        };
+        $this->setProp($table, 'request', $request);
+        $this->setProp($table, 'module', 'admin');
+
+        $builder = new ButtonBuilder($table);
+        $result = $builder->buttonExcelImport('import', '导入');
+
+        // 链式返回自身
+        $this->assertSame($builder, $result);
+
+        $list = $builder->getButtonList();
+        $this->assertCount(1, $list, '导入按钮应写入 buttonList');
+        $attr = $list[0]['attr'];
+
+        // 关键修复点：attr 键名为 id（修复前误写为 data-id）
+        $this->assertArrayHasKey('id', $attr, 'attr 必须包含 id 键（修复点）');
+        $this->assertArrayNotHasKey('data-id', $attr, 'attr 不应包含 data-id 键（修复前的 bug）');
+        // event 必须为 import，模板 switch 才能命中 {case import}
+        $this->assertSame('import', $attr['event'], 'event 必须为 import');
+        // 未带斜杠的 url 应被补全为 module/controller/action
+        $this->assertSame('admin/demo/import', $attr['url'], 'url 应补全为 admin/demo/import');
+    }
+
     // ==================== Table 门面链式语义 ====================
 
     public function testFacadeChainReturnsTable()
