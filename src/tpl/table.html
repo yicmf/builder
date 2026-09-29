@@ -157,6 +157,17 @@
             </button>
 
             {/case}
+            {case import}
+
+            <button class="layui-btn layui-btn-sm {$button.attr.class}"
+                    data-id="{$button.attr.id|default=''}"
+                    lay-event="{$button.attr.event}"
+                    data-url="{$button.attr.url}" >
+                <i class="layui-icon layui-icon-face-smile layui-hide"></i>
+                {$button.title}
+            </button>
+
+            {/case}
             {default /}
             <a class="layui-btn layui-btn-sm  {$button.attr.class} " lay-href="{$button.attr.url}" >
                 <i class="layui-icon layui-icon-face-smile layui-hide"></i>

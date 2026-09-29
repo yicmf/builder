@@ -113,7 +113,7 @@ class ButtonBuilder
         $default['class'] = 'layui-bg-green';
         $default['icon'] = 'plus';
         $default['event'] = 'import';
-        $default['data-id'] = 'id' . md5('dialog-' . $this->table->getRequest()->controller() . '-add-' . $this->table->getRequest()->time());
+        $default['id'] = 'id' . md5('dialog-' . $this->table->getRequest()->controller() . '-add-' . $this->table->getRequest()->time());
 
         return $this->button($title, array_merge($default, $attr));
     }
