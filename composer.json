@@ -20,7 +20,14 @@
         "files": [
             "src/helper.php"
         ]
-    }, "extra": {
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.0"
+    },
+    "scripts": {
+        "test": "phpunit --colors=always"
+    },
+    "extra": {
     "think":{
         "config":{
             "builder": "src/config.php"

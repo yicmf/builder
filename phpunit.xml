@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/12.5/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerNotices="true">
+    <testsuites>
+        <testsuite name="yicmf/builder">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <groups>
+        <exclude>
+            <!-- 依赖外网真实请求的用例，可用 group network 单独执行 -->
+            <group>network</group>
+        </exclude>
+    </groups>
+</phpunit>
