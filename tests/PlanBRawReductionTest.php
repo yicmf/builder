@@ -36,7 +36,7 @@ class PlanBRawReductionTest extends TestCase
         foreach ($this->tplFiles() as $file) {
             $count += substr_count(file_get_contents($file), '|json_encode=271|raw}');
         }
-        $this->assertSame(11, $count, 'JSON HEX flags 输出点应为 11 处');
+        $this->assertSame(12, $count, 'JSON HEX flags 输出点应为 12 处');
     }
 
     public function testNoRawVerifyAttribute()

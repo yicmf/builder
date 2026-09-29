@@ -1692,9 +1692,10 @@
 			} else {
 				$url = url($url);
 			}
-			if (strpos($url, '/Admin')) {
-				$url = str_replace('/Admin', '/admin', $url);
-			}
+		// [Buddy 2026-09-29] 调整：strpos 位置 0 返回 0 被判 falsy，补 !== false 判定
+		if (strpos($url, '/Admin') !== false) {
+			$url = str_replace('/Admin', '/admin', $url);
+		}
 			$attr = [
 				'class' => 'layui-btn',
 				'lay-filter' => "LAY-app-workorder-submit",

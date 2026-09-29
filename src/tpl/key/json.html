@@ -47,7 +47,7 @@
         // 每个顶层键的编辑形态注册表：type = object/array/switch/bool/number/string/raw（deleted 标记删除，不物理删除以保持索引稳定）
         var meta = [];
         // 字段标题映射（keyJson $titles 参数传入）：块标题优先取映射值，缺省回退键名
-        var titles = {$field.options.titles|json_encode|raw} || {};
+        var titles = {$field.options.titles|json_encode=271|raw} || {};
 
         // 依据键名与值类型判定编辑形态（is_ 前缀默认开关存 0/1，已定义为非数字则按字符串）
         function decideType(key, val) {

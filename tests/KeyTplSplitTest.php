@@ -32,7 +32,7 @@ class KeyTplSplitTest extends TestCase
         $content = file_get_contents($this->dispatcher);
         preg_match_all('/\{case value="([A-Za-z0-9_]+)"\}\{include file="\$key_tpl_[A-Za-z0-9_]+" \/\}\{\/case\}/', $content, $m);
 
-        $this->assertSame(46, count($m[1]), '分发器 case 数量应为 46');
+        $this->assertSame(48, count($m[1]), '分发器 case 数量应为 48');
 
         foreach ($m[1] as $type) {
             $this->assertFileExists($this->keyDir . DIRECTORY_SEPARATOR . $type . '.html', "缺少子模板: {$type}");
