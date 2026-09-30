@@ -778,21 +778,28 @@ EOF;
      */
     public function keyUser($field, $title, $url = '/ucenter/admin/User/view', $width = 150, $style = '')
     {
-
+        // [Buddy 2026-09-30] 调整：支持 field 三段式 `外键|关联名|显示字段` 指定关联显示字段（如 user_id|user|account 显示 account）
         if (strpos($field, '|')) {
             $temp = explode('|', $field);
-            $with_field = $temp[0];
-            $field = $temp[1];
+            $with_field = $temp[1] ?? $temp[0];
+            $field = $temp[0];
+            $display = $temp[2] ?? 'nickname';
         } else {
             $temp = explode('_', $field);
             unset($temp[count($temp) - 1]);
             $with_field = implode('_', $temp);
+            $display = 'nickname';
+        }
+        // [Buddy 2026-09-30] 调整：将显示字段纳入关联预载入，确保前端可取到（getWith 裁剪只保留 with 列表字段）
+        $userFields = ['id', 'avatar', 'nickname'];
+        if ($display !== 'nickname' && !in_array($display, $userFields, true)) {
+            $userFields[] = $display;
         }
         if (isset($this->with[$with_field]))
         {
-            $this->with[$with_field] = array_merge($this->with[$with_field], ['id', 'avatar', 'nickname']);
+            $this->with[$with_field] = array_values(array_unique(array_merge($this->with[$with_field], $userFields)));
         }else{
-            $this->with[$with_field] = ['id', 'avatar', 'nickname'];
+            $this->with[$with_field] = $userFields;
         }
         $templet_name = 'k'.uniqid();
         $common = config('view.tpl_replace_string.__COMMON__') . '/images/avatar_default.png';
@@ -801,7 +808,7 @@ EOF;
 <script type="text/html" id="$templet_name">
   {{#  if(d.{$with_field}){ }}
     <a style="cursor:pointer " lay-href="$url" >
-  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}.avatar?d.{$with_field}.avatar:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.nickname:'无用户' }}
+  <img style="display: inline-block; width: 25px; height: 25px;border-radius: 50%;" src= {{ d.{$with_field}.avatar?d.{$with_field}.avatar:'{$common}' }}>  {{ d.{$with_field}?d.{$with_field}.{$display}:'无用户' }}
   </a>
   {{#  }else{ }}    
        <div style="cursor:pointer ">
