@@ -29,7 +29,7 @@
 <!--</script>-->
 
 
-<div class="layui-fluid">
+<div class="layui-fluid" id="builder-fluid-{$namespace}">
 
     <div class="layui-row layui-col-space15">
 
@@ -221,6 +221,108 @@
     {volist name='templets' id='vo'}
     {$vo|raw}
     {/volist}
+    <!-- [WorkBuddy 2026-11-08] 新增：窄屏响应式样式。
+         选择器用本视图唯一 id 限定（{$namespace} 每请求由 uniqid 生成），其它列表页不会被命中；
+         再叠 @media，桌面端与内置模板表现完全一致。
+         [WorkBuddy 2026-11-08] 调整：按「操作按钮两排」重做。
+         根因：layui 的 .layui-table-cell 自带 padding:0 15px，操作列 150px 只剩 120px 内容宽；
+         本页 5 个行操作配置里「禁用/启用」按 status 互斥，每行实际 4 个按钮，且每个按钮都带 layui-icon，
+         单枚约 48~60px，120px 内容宽下被挤成 3 排，88px 行高又留大片空白。
+         处理：窄屏把左右内边距统一压到 6px（顺带让 id 列内容宽从 30px 放宽到 48px，不再显示省略号），
+         操作列再降到 4px 得到 142px 内容宽，用 flex-wrap 折行后 4 个按钮稳定 2+2 两排；
+         行高 88px → 64px，两排 22px 按钮（44px）+ 间距 8px + 内边距 8px = 60px，刚好放下且不裁切。
+         td[data-off="true"] 是 layui 给行工具栏列加的标记（table.js:815），可精确命中操作列而不影响信息列。 -->
+    <style>
+    /* [WorkBuddy 2026-11-08] 新增：窄屏「一行一张卡」布局（方案 A：只重排 CSS，不复制 DOM）。
+       上方 HTML 注释是上一版「压单元格 + 按钮两排」方案的说明，按「注释只增不删」保留供回滚参考。
+       本版规则仅当 __builderCardLayout() 给外层挂上 .wb-card-mode 才命中；该 class 由 mobile_fit 开关 +
+       视口宽度双重控制，其它列表页 / 桌面端完全不受影响；桌面端仍是原来的横滚表格。
+       列标题由 done 回调按 th[data-field] 写进 td[data-label]，故标签不硬编码，列增减自动跟随。
+       ⚠️ layui 给 td 写内联 width/height、.layui-table-cell 有固定高，且 .layui-table-body 自带 overflow:auto/hidden，
+          下面必须全用 !important 覆盖，否则 15 张卡片会被裁成 1 张、标签与值被压成一行。 */
+    @media screen and (max-width: 768px) {
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-header { display: none; }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-body {
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main { width: 100% !important; }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main table,
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main tbody {
+            display: block;
+            width: 100% !important;
+            height: auto !important;
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main tr {
+            display: block;
+            position: relative;
+            background: #fff;
+            border: 1px solid #e6e6e6;
+            border-radius: 6px;
+            margin: 0 8px 10px;
+            padding: 10px 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.03);
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main td {
+            display: flex;
+            align-items: flex-start;
+            width: auto !important;
+            height: auto !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            text-align: left !important;
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main td::before {
+            content: attr(data-label);
+            flex: 0 0 88px;
+            color: #999;
+            font-size: 13px;
+            line-height: 24px;
+            white-space: nowrap;
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main td[data-label=""]::before { display: none; }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main td .layui-table-cell {
+            flex: 1 1 auto;
+            display: block;
+            width: auto !important;
+            height: auto !important;
+            min-height: 24px;
+            line-height: 24px;
+            padding: 0 !important;
+            white-space: normal;
+            text-align: left !important;
+            overflow: visible !important;
+        }
+        /* 操作列置底：按钮沿用 layui 原 DOM 与 lay-event（事件委托绑在 layBody，未搬出容器），
+           flex-wrap 保持两排，避免 4 个带图标按钮被挤到一行外 */
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main td[data-off="true"] {
+            display: block;
+            margin-top: 6px;
+            padding-top: 6px !important;
+            border-top: 1px dashed #eee !important;
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main td[data-off="true"]::before {
+            display: block;
+            content: attr(data-label);
+            color: #999;
+            font-size: 13px;
+            line-height: 20px;
+            margin-bottom: 4px;
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main td[data-off="true"] .layui-table-cell {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100% !important;
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-main td[data-off="true"] .layui-btn-xs {
+            margin: 2px 4px 2px 0;
+            flex: 0 0 auto;
+        }
+        #builder-fluid-{$namespace}.wb-card-mode .layui-table-page { margin-top: 4px; }
+    }
+    </style>
     <!-- 2026-09-06 新增：keyCopy 可点击复制列的委托处理器（配合 ColumnBuilder::keyCopy 生成的 .builder-copy-text） -->
     <script>
         layui.use(['jquery', 'layer'], function () {
@@ -295,6 +397,61 @@
                 ,element = layui.element
                 ,soulTable = layui.soulTable
                 ,table = layui.table , r = layui.device();
+            // [WorkBuddy 2026-11-08] 新增：按视口宽度生成列配置，不依赖 UA / 设备类型（桌面拖窄窗口同样生效）。
+            // 根因：builder 默认把 ID 列 fixed:left、操作列 fixed:right 且按按钮数算出 380px 宽，
+            // 375px 手机视口下两侧固定列合计 460px，中间主体列被完全挤出，屏幕只剩操作按钮。
+            // [WorkBuddy 2026-11-08] 新增：窄屏开关挂在 keyList 首列的自定义属性上（控制器写入）。
+            // 不用 fetch($vars) 传参：think\Template::fetch() 会把 $vars 持久写进 $this->data，
+            // 同进程后续渲染（含常驻 worker）会残留开关，导致其它列表页被误启用。
+            // keyList 每请求由 ColumnBuilder 重建并 assign，天然无残留；未配置时 fit=false，下面逻辑自动空转。
+            // [WorkBuddy 2026-11-08] 调整：用户要求「显示的内容不要少」⇒ 取消列白名单 + hide + 压窄列宽。
+            // 窄屏只做两件事：去掉两侧 fixed（遮挡主体的元凶）、操作列收窄 150px 配合 CSS 排成两排。
+            // 其余列保持桌面原始宽度，cellMinWidth 回到 120，所有 14 列一字不落，靠 .layui-table-body 横向滚动看全。
+            var __builderRawCols = [{$keyList|raw|json_encode}];
+            var __builderMobileFit = !!(__builderRawCols[0] && __builderRawCols[0][0] && __builderRawCols[0][0].mobile_fit);
+            function __builderIsNarrow() {
+                return __builderMobileFit && window.innerWidth <= 768;
+            }
+            function __builderCols(raw) {
+                var cols = JSON.parse(JSON.stringify(raw));
+                if (!__builderIsNarrow()) { return cols; }
+                var list = cols[0] || [];
+                for (var i = 0; i < list.length; i++) {
+                    var col = list[i];
+                    delete col.fixed;                        // 两侧固定列是遮挡主体的元凶
+                    col.hide = false;                        // 显式不隐藏任何列，内容一列不少
+                    if (col.toolbar) {
+                        col.width = 150;                     // 仅操作列收窄，配合上面的 CSS 让按钮排两排
+                    }
+                }
+                return cols;
+            }
+            // [WorkBuddy 2026-11-08] 新增：窄屏卡片布局（方案 A，只重排 CSS，不复制 DOM）。
+            // 仅挂了 mobile_fit 的页面启用；表头 th[data-field] 与表体 td[data-field] 天然对应，
+            // 标题写入 data-label 后由 CSS 的 td::before 渲染成左列标签，字段值 / templet / lay-event 全部原样保留
+            // （layui 的 tool 事件委托绑在 layBody，DOM 未搬出容器，故行按钮不会失效）。
+            // 调用点在 done 回调的 soulTable.render(this) 之后，避免列筛选插件按原表格结构测宽时被干扰。
+            function __builderCardLayout() {
+                var $root = $('#builder-fluid-{$namespace}');
+                if (!__builderMobileFit || !__builderIsNarrow()) {
+                    $root.removeClass('wb-card-mode');
+                    return;
+                }
+                var titles = {};
+                $root.find('.layui-table-header th[data-field]').each(function () {
+                    var $th = $(this);
+                    titles[$th.attr('data-field')] = String($th.text() || '').trim();
+                });
+                $root.find('.layui-table-main tbody tr').each(function () {
+                    $(this).children('td[data-field]').each(function () {
+                        var $td = $(this);
+                        var label = titles[$td.attr('data-field')] || '';
+                        if ($td.attr('data-off') === 'true') { label = '操作'; }
+                        $td.attr('data-label', label);
+                    });
+                });
+                $root.addClass('wb-card-mode');
+            }
             form.render(null, 'app-{$namespace}-forum-list');
 
 
@@ -304,7 +461,7 @@
                     ,url:'{$searchPostUrl|raw}&__method=ajax'
                     ,where:{field: {$search_value|raw|json_encode}}
                     ,escape:0
-                    ,cellMinWidth:120
+                    ,cellMinWidth: 120
                    // ,lineStyle: 'height:auto'
                     ,skin: 'row'//设置表格边框风格。可选值：grid|line|row|nob
                     , loading: true
@@ -323,7 +480,7 @@
                     ,toolbar: '#{$namespace}-table-search'
                     ,defaultToolbar: {$toolbar|raw|json_encode}
                 ,title: '用户数据表'
-                ,cols: [{$keyList|raw|json_encode}]
+                ,cols: __builderCols(__builderRawCols)
                 ,page: { // 支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
                    // layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'], //自定义分页布局
                     //curr: 5, //设定初始在第 5 页
@@ -402,10 +559,23 @@
                             });
                         });
                    soulTable.render(this)
+                   // [WorkBuddy 2026-11-08] 新增：窄屏卡片布局，必须放在 soulTable.render 之后
+                   __builderCardLayout();
                 }
 
             }
         });
+            // [WorkBuddy 2026-11-08] 新增：视口跨越窄屏阈值时重载列配置，桌面拖动窗口即可实时看到效果，无需刷新
+            var __builderLastNarrow = __builderIsNarrow();
+            $(window).on('resize', function () {
+                var narrow = __builderIsNarrow();
+                if (narrow === __builderLastNarrow) { return; }
+                __builderLastNarrow = narrow;
+                table.reload('{$namespace}-table', {
+                    cols: __builderCols(__builderRawCols),
+                    cellMinWidth: 120
+                });
+            });
             element.on('tab(tab-f-sub-{$namespace}-table)', function(elem){
 
                 console.log(elem)

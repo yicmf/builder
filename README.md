@@ -57,3 +57,23 @@ think-template 按「路径 + include 文件 mtime」缓存（`runtime/temp`）�
 
 - `{switch}`（`_key.html`）内只允许 `case`/`default` 与空白行；`{include}` 编译期内联，路径须为单一变量。
 - 新增/修改方法遵循项目留痕规范（方法首行加「调整记录」注释）。
+## 手机端卡片式列表（tpl/table.html，2026-11-08）
+
+窄屏（window.innerWidth <= 768）把「一行一张表」重排成「一行一张卡」：左列灰标签、右列值，操作列置底；
+只重排 DOM 不复制，templet / lay-event / 复选框 / 分页 / 列筛选全部原样保留，零横向滚动。
+
+启用方式（消费方控制器，在 fetch() 前）：
+
+```php
+$keyList = &$builder->getColumnBuilder()->getKeyListRef();
+if (isset($keyList[0])) {
+    $keyList[0]["mobile_fit"] = true;   // 首列挂布尔开关，每请求重建，无跨请求残留
+}
+return $builder->fetch();
+```
+
+- 开关缺省即桌面原行为，**其它列表页零影响**；列标题取自表头 th[data-field]，不硬编码字段名。
+- 跨窄屏阈值会自动 table.reload，桌面拖窄窗口可实时预览；隐藏表头后全选复选框不可用，仅保留行级复选框。
+- 改完 tpl/table.html 必须清 runtime/temp/*.php（见上文「改模板后必清缓存」）。
+- 不要用 Table::fetch("自定义模板名") 指定模板：fetch() 会无条件把模板名覆盖成 table。
+- 不要用 fetch($vars) 传开关：think\Template::fetch() 会把 $vars 持久写入实例数据，常驻 worker 下会串页。
