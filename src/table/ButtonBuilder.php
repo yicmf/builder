@@ -259,7 +259,8 @@ class ButtonBuilder
      */
     public function buttonDelete($url, $title = '删除选中', $attr = [])
     {
-        $attr['class'] = 'btn-blue';
+        // [WorkBuddy 2026-11-12] 调整：批量删除改用 danger 危险色，与行内 actionDelete 的 layui-btn-danger 保持一致
+        $attr['class'] = 'layui-btn-danger';
         $attr['message'] = '确定要' . $title . '么？';
         $attr['icon'] = 'trash-o';
         $attr['data-idname'] = 'id';

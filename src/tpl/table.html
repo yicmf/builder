@@ -855,7 +855,20 @@ console.log(obj.event)
                                 {
                                     url = url+'&id='+ids.join(',');
                                 }
-                                eventAjax(url,data,this);
+                                // [WorkBuddy 2026-11-12] 新增：头工具栏复用行内按钮既有的 data-message 确认契约。
+                                // buttonDelete/buttonDisable/buttonRestore 本就带确认文案，此前 toolbar 分支直接发请求导致提示丢失
+                                var message = $(this).data('message');
+                                if (message) {
+                                    var objThis = this;
+                                    layer.confirm(message, {
+                                        btn: ['确认','取消']
+                                    }, function(index){
+                                        eventAjax(url,data,objThis);
+                                        layer.close(index);
+                                    });
+                                } else {
+                                    eventAjax(url,data,this);
+                                }
                                 break;
                             case 'popup':
                                 var url = $(this).data('url');
