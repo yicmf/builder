@@ -15,6 +15,11 @@
         <div class="col-md-9" id="show-upload-normal-file-{$field.field}">
             {notempty name='attachment' }
             文件大小：{$attachment['size_info']|default=''}
+            <!-- [Buddy 2026-11-19] 调整：edit 表单展示已上传附件的文件名与可点击直链（文件直链取模型 url 字段，getUrlAttr 已补全域名） -->
+            <div class="attachment-link" style="margin-top:6px;">
+                <a href="{$attachment['url']}" target="_blank" title="点击打开文件">{$attachment['name']}</a>
+                <span style="color:#999;margin-left:10px;">{$attachment['url']}</span>
+            </div>
             <input type="hidden" id='singel_file_{$field.field}' name="{$field.field}" value="{$field['value']}">
             {/notempty}
             <div class="mask"></div>
