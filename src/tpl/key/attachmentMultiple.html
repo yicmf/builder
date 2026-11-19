@@ -155,6 +155,13 @@
                         if(res.code == 0){ //上传成功
                             var tr = that.elemList.find('tr#upload-'+ index)
                                 ,tds = tr.children();
+                            // [Buddy 2026-11-19] 调整：上传后名称改用服务端 name 字段并补可点击直链（非 http 开头按当前域名补全）
+                            var fileUrl = res.data.url || '';
+                            if (fileUrl && !/^https?:\/\//i.test(fileUrl)) {
+                                fileUrl = location.origin + '/' + fileUrl.replace(/^\/+/, '');
+                            }
+                            tds.eq(0).html('<a href="'+fileUrl+'" target="_blank" title="点击打开文件">'+res.data.name+'</a>'
+                                +'<br><span style="color:#999;">'+fileUrl+'</span>');
                             tds.eq(3).find('.demo-reload').remove(); //清空操作
                             delete this.files[index]; //删除文件队列已经上传成功的文件
                             tr.data('id',res.data.id);

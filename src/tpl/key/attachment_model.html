@@ -120,9 +120,18 @@
                             save_path = '';
                             element.progress('uploadProgress', '100%');
                             //上传成功
+                            // [Buddy 2026-11-19] 调整：上传后即时显示改用 name 字段作文件名，并补可点击直链（非 http 开头按当前域名补全）
+                            var fileUrl = res.data.url || '';
+                            if (fileUrl && !/^https?:\/\//i.test(fileUrl)) {
+                                fileUrl = location.origin + '/' + fileUrl.replace(/^\/+/, '');
+                            }
                             $("#show-upload-normal-file-{$field.field}").html('' +
                                 '  文件大小：'+res.data.size +'\n' +
-                                '            <input type="hidden" id=\'singel_file_{$field.field}\' name="{$field.field}" value="'+res.data.id+'">' +
+                                '  <div class="attachment-link" style="margin-top:6px;">' +
+                                '    <a href="'+fileUrl+'" target="_blank" title="点击打开文件">'+res.data.name+'</a>' +
+                                '    <span style="color:#999;margin-left:10px;">'+fileUrl+'</span>' +
+                                '  </div>' +
+                                '  <input type="hidden" id=\'singel_file_{$field.field}\' name="{$field.field}" value="'+res.data.id+'">' +
                                 '');
                             $("[name='{$field.field}']").val(res.data.id);
 
